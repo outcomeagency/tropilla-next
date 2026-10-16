@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { api, ApiError } from "./api";
 import { requireContexto } from "./establecimiento";
+import { estadoDeError, fdStr, isFecha, type EventoActionState } from "./eventos-api";
 import type { S } from "./schemas";
 
 export interface EventoState {
@@ -92,4 +94,33 @@ export async function cambioLoteGrupalAction(_prev: EventoState, fd: FormData): 
   revalidatePath("/hacienda");
   revalidatePath("/hacienda/lotes");
   return { ok: { cantidad: ids.length } };
+}
+
+/**
+ * Confirmar recategorizaciones sugeridas en bloque (TPA-25): la API crea un
+ * evento `hacienda.recategorizacion` (sugerida, con su regla) por animal.
+ */
+export async function confirmarRecategorizacionAction(_prev: EventoActionState, fd: FormData): Promise<EventoActionState> {
+  const ctx = await requireContexto();
+  if (!ctx.can("hacienda.crear")) return { error: "Tu rol no permite recategorizar." };
+  const fecha = fdStr(fd, "ocurrido_en");
+  if (!isFecha(fecha)) return { fields: { ocurrido_en: "Indicá la fecha." }, error: "Indicá la fecha." };
+  const items = fd
+    .getAll("item")
+    .map(String)
+    .map((s) => {
+      const [animal_id, categoria] = s.split("|");
+      return { animal_id, categoria };
+    })
+    .filter((i) => /^[0-9a-f-]{36}$/i.test(i.animal_id) && /^[A-Z0-9_]{2,64}$/.test(i.categoria))
+    .slice(0, 500);
+  if (!items.length) return { error: "Elegí al menos un animal." };
+  try {
+    await api(`/establecimientos/${ctx.activa.establecimiento_id}/animales/recategorizar`, { method: "POST", body: { items, ocurrido_en: fecha } });
+  } catch (e) {
+    return estadoDeError(e, {}, "No pudimos confirmar las recategorizaciones. Probá de nuevo.");
+  }
+  revalidatePath("/hacienda", "layout");
+  revalidatePath("/inicio");
+  redirect(`/hacienda/recategorizacion?ok=${items.length}`);
 }

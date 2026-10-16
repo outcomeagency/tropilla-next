@@ -389,3 +389,17 @@ muestra el peso anterior con su fecha y la ganancia diaria en vivo, y marca en a
 Lo que la API advierte no se guarda hasta confirmarlo, y las filas ya guardadas salen de la lista (cada fila tiene su clave de
 idempotencia: reintentar no duplica). La curva de la ficha es SVG propio con tokens; los promedios de lote heredados se distinguen
 de los pesajes individuales. Pedido a la API: un endpoint de serie de pesos por animal evitaría leer el kg del `resumen`.
+
+## TPA-25 · Recategorización sugerida · ✅ (web)
+
+**Rutas:** `/hacienda/recategorizacion` (accesos: pendiente de Inicio y «Confirmar sugerencias en bloque» en los filtros de Hacienda)
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Sugerencias agrupadas por cambio (Bucerra → Bubilla) con motivo | `GET …/animales?sugerencia_categoria=1` + `reglas_categoria` de `GET /catalogos` | 🔌 API real |
+| Confirmación en bloque con fecha → un evento `hacienda.recategorizacion` por animal | `POST …/animales/recategorizar` | 🔌 probado en el campo de prueba |
+
+**Comentario del dev:** Las sugerencias se agrupan por transición, con el motivo de la regla que la dispara (destete, parto, castración,
+edad o dentición) tomado del catálogo de reglas, no de un `if especie`. Todo viene marcado y se destilda lo que no corresponde; la
+barra fija dice cuántas se confirman y con qué fecha. Lo que no se confirma sigue sugerido (la API no tiene «descartar sugerencia»:
+anotado como pedido). Al confirmar, Hacienda, Inicio y las existencias se revalidan.

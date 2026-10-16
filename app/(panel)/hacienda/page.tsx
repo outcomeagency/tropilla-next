@@ -164,6 +164,11 @@ async function Listado({ searchParams }: { searchParams: Promise<SP> }) {
               <input type="checkbox" name="sugerencia_categoria" value="1" defaultChecked={!!f.sugerencia_categoria} className="h-4 w-4 accent-monte" />
               Con recategorización sugerida
             </label>
+            {ctx.can("hacienda.crear") && (
+              <Link href="/hacienda/recategorizacion" className="text-[13px] font-medium text-campo hover:underline">
+                Confirmar sugerencias en bloque
+              </Link>
+            )}
             <button type="submit" className={buttonClass("outline", "sm")}>
               <IconFilter size={16} /> Aplicar filtros
             </button>

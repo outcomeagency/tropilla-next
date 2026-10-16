@@ -91,7 +91,7 @@ export async function getInicio(est: string, hoy: string): Promise<InicioData> {
   if (retiro.length)
     pendientes.push({ id: "retiro", icon: "syringe", titulo: `${retiro.length} ${retiro.length === 1 ? "animal" : "animales"} con retiro vigente`, bajada: "No faenar ni vender para faena todavía", estado: "pendiente", href: "/hacienda?sanidad=retiro" });
   if (recat.length)
-    pendientes.push({ id: "recat", icon: "list", titulo: `${recat.length} ${recat.length === 1 ? "animal" : "animales"} con recategorización sugerida`, bajada: "Según peso, edad y eventos", estado: "sugerencia", href: "/hacienda?sugerencia_categoria=1" });
+    pendientes.push({ id: "recat", icon: "list", titulo: `${recat.length} ${recat.length === 1 ? "animal" : "animales"} con recategorización sugerida`, bajada: "Según peso, edad y eventos", estado: "sugerencia", href: "/hacienda/recategorizacion" });
   for (const it of inicio?.data.pendientes?.items ?? []) {
     pendientes.push({ id: `${it.tipo}-${it.entidad_id}`, icon: "file", titulo: it.titulo ?? "", bajada: it.fecha ?? "", estado: "pendiente", href: it.ruta ?? "/inicio" });
   }
