@@ -264,3 +264,22 @@ de comprador se ve un bloque bloqueado que explica por qué y ofrece crear la cu
 contrato). Con cuenta, el selector de tokens calcula kg y anticipo en vivo; los datos de cobro del productor se
 muestran recién después de reservar (Claude Design, duda 8) y el pago es fuera de TROPILLA. Falta «Seguir
 productores» y el vencimiento de 2 días hábiles propuesto por Claude Design (duda 7) depende de la API.
+
+## TPA-13 · Datos del establecimiento y zonas sanitarias · ✅ (web)
+
+**Rutas:** `/establecimiento` (ficha: encabezado con mapa, productor, instalaciones, historia, zonas sanitarias), `/establecimiento/editar` (formulario por secciones con barra fija de guardado)
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Ficha y edición (datos, superficie, actividades, especies, instalaciones, historia, zonas) | `GET/PATCH /establecimientos/{e}` (`row_version`, 409 → mensaje) | 🔌 API real (probado con un establecimiento propio de prueba) |
+| Productor (razón social, CUIT, contacto) | `GET/PATCH /productores/{p}` | 🔌 (sólo con `establecimiento.ver_privados`) |
+| Garrapata sugerida por departamento | `GET /catalogos` → `geo.departamentos[].garrapata_sugerida` | 🔌 (Corrientes; el resto del NEA desde `lib/geo.ts`) |
+| Ubicación por punto (privada) | `ubicacion {lat, lon}` decimal canónico | 🔌 mapa Leaflet + teselas OSM / satélite Esri |
+| Interdicción / levantamiento | `POST …/eventos` (`establecimiento.interdiccion`, `…levantamiento_interdiccion`) → `interdiccion_vigente` | 🔌 probado |
+
+**Piezas nuevas reutilizables:** `components/dialog.tsx` (modal nativo), `components/panel/form-state.tsx` (`useActionForm`/`useDialogForm` con idempotencia y «Guardar igual» para advertencias), `lib/eventos-api.ts` (`postEvento`, `estadoDeError`, decimales canónicos), `components/map/campo-map.tsx` (punto, polígonos y dibujo; trazos con tokens vía clases `.tp-*` en `globals.css`). `npm run api:types` ahora lee `../tropilla-api/docs/openapi-v1.yaml` (incluye los desvíos aditivos de la API).
+
+**Comentario del dev:** La ficha arranca con lo que el productor reconoce de un vistazo: nombre, paraje, especies y el campo en satélite; lo privado (CUIT, RENSPA, ubicación) lleva candado y desaparece para quien no tiene `ver_privados`.
+Las zonas sanitarias se muestran como estados con ícono + texto y explican para qué sirven (arman el plan sugerido). La garrapata
+sugerida por departamento sale del catálogo de la API y se ofrece con un clic, nunca se impone. La interdicción es un evento
+(queda en la historia con autor), no un tilde. Los decimales viajan canónicos (`-27.7`, no `-27.70`): la API rechaza ceros sobrantes.

@@ -34,3 +34,72 @@
     animation-duration: 0.01ms !important;
   }
 }
+
+/* ── Mapa del campo (components/map/campo-map.tsx): trazos con tokens, sin hex ── */
+.tp-map .leaflet-container {
+  font-family: var(--font-sans);
+  background: var(--color-surface-2);
+}
+.tp-map .leaflet-control-attribution {
+  font-size: 10.5px;
+}
+.tp-map--drawing,
+.tp-map--drawing .leaflet-interactive {
+  cursor: crosshair !important;
+}
+.tp-poly {
+  stroke: var(--color-crema);
+  stroke-width: 2;
+  fill: var(--color-campo);
+  fill-opacity: 0.32;
+}
+.tp-poly--click:hover {
+  fill-opacity: 0.45;
+}
+.tp-poly--sel {
+  stroke: var(--color-tierra);
+  stroke-width: 3;
+  fill: var(--color-tierra);
+  fill-opacity: 0.35;
+}
+.tp-poly--muted {
+  fill: var(--color-subtle);
+  fill-opacity: 0.2;
+  stroke-dasharray: 4 4;
+}
+.tp-poly--draw {
+  stroke: var(--color-tierra);
+  stroke-width: 2.5;
+  stroke-dasharray: 6 5;
+  fill: var(--color-tierra);
+  fill-opacity: 0.18;
+}
+.tp-vertex {
+  stroke: var(--color-blanco);
+  stroke-width: 2;
+  fill: var(--color-tierra);
+  fill-opacity: 1;
+}
+.tp-pin span {
+  display: block;
+  width: 26px;
+  height: 26px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: var(--color-monte);
+  border: 3px solid var(--color-blanco);
+}
+.tp-map-label.leaflet-tooltip {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  box-shadow: none;
+  padding: 2px 7px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tp-map-label.leaflet-tooltip::before {
+  display: none;
+}

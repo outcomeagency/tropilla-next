@@ -3888,6 +3888,8 @@ export interface components {
             recurso_forrajero?: string | null;
             agua?: boolean;
             revolcadero?: boolean;
+            /** @description GeoJSON Polygon (lon, lat) en WGS84. Desvío aditivo de tropilla-api (TPA-14): PostGIS geography(Polygon). Si no hay superficie_ha, se calcula del polígono al crear. */
+            poligono?: Record<string, never> | null;
             notas?: string | null;
             ocupacion?: {
                 cabezas?: number;
@@ -3907,6 +3909,8 @@ export interface components {
             recurso_forrajero?: string | null;
             agua?: boolean;
             revolcadero?: boolean;
+            /** @description GeoJSON Polygon (lon, lat) en WGS84. Desvío aditivo de tropilla-api (TPA-14): PostGIS geography(Polygon). Si no hay superficie_ha, se calcula del polígono al crear. */
+            poligono?: Record<string, never> | null;
             notas?: string | null;
             /** @description Obligatorio en PATCH */
             row_version?: string;
@@ -3957,6 +3961,11 @@ export interface components {
             retirada_en?: components["schemas"]["Fecha"] | null;
         };
         AnimalResumen: {
+            /**
+             * @description Aditivo tropilla-api (TPA-48, duda nº 1 de Claude Design): compromiso comercial derivado. No se publica ni tokeniza lo comprometido (409 comprometido).
+             * @enum {string}
+             */
+            compromiso?: "libre" | "en_oferta" | "en_contrato" | "vendido";
             id?: components["schemas"]["Uuid"];
             /** @enum {string} */
             especie?: "BOV" | "BUB";
@@ -5630,7 +5639,7 @@ export interface components {
                 "application/json": components["schemas"]["Error"];
             };
         };
-        /** @description Conflicto (code: conflicto_row_version | version_no_vigente | tokens_insuficientes | identificacion_duplicada | version_api) */
+        /** @description Conflicto (code: conflicto_row_version | version_no_vigente | tokens_insuficientes | identificacion_duplicada | version_api | comprometido) */
         Conflicto: {
             headers: {
                 [name: string]: unknown;
@@ -8771,6 +8780,14 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ImportacionInput"];
+                "multipart/form-data": {
+                    /** Format: binary */
+                    archivo: string;
+                    /** @enum {string} */
+                    formato?: "csv" | "xlsx";
+                    /** @enum {string} */
+                    especie_default?: "BOV" | "BUB";
+                };
             };
         };
         responses: {
