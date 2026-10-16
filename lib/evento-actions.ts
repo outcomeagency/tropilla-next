@@ -25,6 +25,8 @@ export interface AnimalElegido {
   pesoFecha?: string | null;
   raza?: string | null;
   estadoReproductivo?: string | null;
+  retiro?: boolean;
+  reactor?: boolean;
 }
 
 /**
@@ -52,6 +54,8 @@ export async function buscarAnimalAction(valor: string): Promise<{ animal?: Anim
         pesoFecha: a.peso_fecha ?? null,
         raza: a.raza ?? null,
         estadoReproductivo: a.estado_reproductivo ?? null,
+        retiro: !!a.retiro_vigente,
+        reactor: !!a.reactor,
       },
     };
   } catch {

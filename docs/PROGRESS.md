@@ -585,3 +585,20 @@ el resultado en vivo con los umbrales del catálogo (datos versionados, no const
 veterinario (duda 16 de Claude Design). Un positivo pinta la fila y no deja guardar sin tildar «Confirmo los positivos: pasan a
 reactores»; ese tilde es la confirmación que pide la API. El servidor recalcula el resultado: el navegador sólo muestra. Los informes
 se suben server-side a la URL prefirmada (el navegador nunca ve token ni URL) y quedan en Documentos con su huella (`lib/archivos.ts`).
+
+## TPA-35 · Retiro vigente y reactores · ✅ (web)
+
+**Dónde:** `/sanidad` (listas destacadas «Con retiro vigente» y «Reactores»), `/comercializacion/ofertas/nueva` (badges por lote), `/hacienda/eventos/nuevo?tipo=hacienda.egreso|hacienda.faena` (aviso antes de vender o faenar).
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Animales y lotes anónimos con retiro vigente (hasta cuándo) | `GET …/sanidad/retiros` (`data` + `lotes`) | 🔌 API real (probado: lote «Bucerros 2026» hasta 20/11/2026) |
+| Reactores, privados | `GET …/sanidad/reactores` | 🔌 (probado: 0102, tuberculina positiva) |
+| Aviso al vender/faenar animales o un lote con retiro, o reactores | flags `retiro_vigente`/`reactor` de `AnimalResumen` + retiros por lote; la API además pide confirmar | 🔌 |
+| Aviso al ofertar | badges en el selector de lotes + `GET …/ofertas/{id}/avisos` (retiro y reactores) | 🔌 |
+
+**Comentario del dev:** Lo que no se puede vender sin pensarlo queda arriba de todo en Sanidad: dos listas con borde de color, una
+amarilla (retiro, con la fecha hasta la que corre) y una roja con candado (reactores, «dato privado»). Al registrar una venta o
+una faena aparece el aviso antes de cargar los datos, sin bloquear (la venta para invernada es válida), y la API vuelve a pedir
+confirmación. El selector de lotes para ofertar dejó de usar una fecha fija y datos de ejemplo: muestra retiro y reactores reales
+por lote. El reactor nunca llega a lo público (lo filtra la API; la web no lo pinta fuera del panel).
