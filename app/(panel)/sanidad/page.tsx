@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Badge, Button, Card, CardHeader, EmptyState, KpiCard, PageHeader, Table, Td, Th, Tr, TrustInline } from "@/components/ui";
-import { IconAlert, IconArrowRight, IconCalendar, IconChevronRight, IconClock, IconList, IconFile, IconHeart, IconPlus, IconRuler, IconShield, IconShieldCheck, IconSyringe } from "@/components/icons";
+import { IconAlert, IconArrowRight, IconCalendar, IconChevronRight, IconClock, IconList, IconFile, IconHeart, IconLock, IconPlus, IconRuler, IconShield, IconShieldCheck, IconSyringe } from "@/components/icons";
 import { SanidadTabs } from "@/components/panel/sanidad/tabs";
 import { requireContexto } from "@/lib/establecimiento";
 import { listProductos, listReactores, listRetiros, listTareas, type Tarea } from "@/lib/data/sanidad";
@@ -22,6 +22,14 @@ function sumarDias(iso: string, n: number) {
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
 }
+
+const REACTOR: Record<string, string> = {
+  tuberculina_anocaudal: "Tuberculina positiva",
+  tuberculina_cervical_simple: "Tuberculina positiva",
+  tuberculina_cervical_comparada: "Tuberculina positiva",
+  brucelosis_bpa: "Brucelosis positiva",
+  brucelosis_fpa: "Brucelosis positiva",
+};
 
 const ATAJOS = [
   { tipo: "sanidad.vacunacion", titulo: "Vacunar", bajada: "Un lote, un potrero o animales sueltos", Icon: IconSyringe },
@@ -62,6 +70,95 @@ async function Contenido() {
         <KpiCard label="reactores (privado)" value={nf.format(reactores.length)} icon={<IconAlert size={22} />} />
         <KpiCard label="productos en el catálogo" value={nf.format(productos.filter((p) => !p.archivado_en).length)} icon={<IconList size={22} />} href="/sanidad/productos" />
       </div>
+
+      {(enRetiro > 0 || reactores.length > 0) && (
+        <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <Card className={enRetiro ? "border-warning-border" : undefined}>
+            <CardHeader
+              title={
+                <span className="flex items-center gap-2">
+                  <IconClock size={18} className="text-warning" /> Con retiro vigente
+                </span>
+              }
+              description="No faenar ni vender para faena hasta la fecha. TROPILLA lo avisa al vender u ofertar."
+            />
+            {enRetiro ? (
+              <ul className="divide-y divide-border">
+                {(retiros.lotes ?? []).map((l) => (
+                  <li key={l.id}>
+                    <Link href={`/hacienda/lotes/${l.id}`} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-surface-2">
+                      <span className="min-w-0">
+                        <span className="block font-semibold text-ink">{l.nombre}</span>
+                        <span className="block text-[12.5px] text-muted">
+                          Lote por cantidades · {nf.format(l.cabezas ?? 0)} cab.
+                        </span>
+                      </span>
+                      <Badge tone="warning" icon={<IconClock size={14} />}>
+                        Hasta {fecha(l.retiro_carne_hasta ?? l.retiro_leche_hasta)}
+                      </Badge>
+                    </Link>
+                  </li>
+                ))}
+                {retiros.data.slice(0, 8).map((a) => (
+                  <li key={a.id}>
+                    <Link href={`/hacienda/${a.id}?tab=sanidad`} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-surface-2">
+                      <span className="min-w-0">
+                        <span className="block font-semibold tabular-nums text-ink">{a.identificacion_principal ?? "Sin caravana"}</span>
+                        <span className="block text-[12.5px] text-muted">
+                          {a.categoria_nombre}
+                          {a.lote?.nombre ? ` · ${a.lote.nombre}` : ""}
+                        </span>
+                      </span>
+                      <Badge tone="warning" icon={<IconClock size={14} />}>
+                        Retiro vigente
+                      </Badge>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="px-5 py-6 text-[14px] text-muted">Nadie tiene retiro vigente hoy.</p>
+            )}
+            {retiros.data.length > 8 && (
+              <Link href="/hacienda?sanidad=retiro" className="block border-t border-border px-5 py-3 text-[13px] font-medium text-campo hover:underline">
+                Ver los {nf.format(retiros.data.length)} animales con retiro
+              </Link>
+            )}
+          </Card>
+          <Card className={reactores.length ? "border-danger-border" : undefined}>
+            <CardHeader
+              title={
+                <span className="flex items-center gap-2">
+                  <IconLock size={18} className="text-danger" /> Reactores
+                </span>
+              }
+              description="Dato privado: nunca se publica en el perfil ni en ofertas. Consultá con tu veterinario el destino."
+            />
+            {reactores.length ? (
+              <ul className="divide-y divide-border">
+                {reactores.map((a) => (
+                  <li key={a.id}>
+                    <Link href={`/hacienda/${a.id}?tab=sanidad`} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-surface-2">
+                      <span className="min-w-0">
+                        <span className="block font-semibold tabular-nums text-ink">{a.identificacion_principal ?? "Sin caravana"}</span>
+                        <span className="block text-[12.5px] text-muted">
+                          {a.categoria_nombre}
+                          {a.lote?.nombre ? ` · ${a.lote.nombre}` : ""}
+                        </span>
+                      </span>
+                      <Badge tone="danger" icon={<IconAlert size={14} />}>
+                        {REACTOR[a.reactor ?? ""] ?? "Reactor"}
+                      </Badge>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="px-5 py-6 text-[14px] text-muted">No hay reactores registrados.</p>
+            )}
+          </Card>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-4">

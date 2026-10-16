@@ -31,11 +31,11 @@ import { fecha as fmtFecha } from "@/lib/format";
 import { uuidv7 } from "@/lib/uuid";
 import { ChoiceChip } from "@/components/choice";
 import { Badge, Button, Card, CardHeader, Field, Input, Select, Spinner, Textarea, buttonClass, cx, fieldAria } from "@/components/ui";
-import { IconArrowLeft, IconClose, IconPlus, IconSearch } from "@/components/icons";
+import { IconAlert, IconArrowLeft, IconClose, IconPlus, IconSearch } from "@/components/icons";
 
 type Opt = { codigo: string; nombre: string };
 export type CategoriaOpt = Opt & { especie: string; sexo?: string | null };
-export type LoteOpt = { id: string; nombre: string; especie: string; anonimo: boolean; conteo: Record<string, number> };
+export type LoteOpt = { id: string; nombre: string; especie: string; anonimo: boolean; conteo: Record<string, number>; retiroHasta?: string | null };
 export type ProductoOpt = {
   id: string;
   nombre: string;
@@ -291,6 +291,7 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
             {/* 3. Datos */}
             <Card className="overflow-hidden">
               <CardHeader title={<Paso n={3}>Datos del evento</Paso>} />
+              {(tipo === "hacienda.egreso" || tipo === "hacienda.faena") && <AvisoVenta animales={sujetoEfectivo === "animales" ? animales : []} lote={sujetoEfectivo === "lote" ? lote : undefined} />}
               <div className="grid gap-4 px-5 py-5 sm:grid-cols-2">
                 <Field label={tipo === "reproduccion.servicio_natural" ? "Inicio del servicio" : "Fecha"} htmlFor="ocurrido_en" error={f.ocurrido_en}>
                   <Input id="ocurrido_en" name="ocurrido_en" type="date" defaultValue={p.hoy} max={p.hoy} {...fieldAria("ocurrido_en", f.ocurrido_en)} />
@@ -1213,5 +1214,39 @@ function CamposPrueba({ f, p, n }: { f: Record<string, string>; p: RegistrarEven
         <Input id="protocolo_numero" name="protocolo_numero" maxLength={200} />
       </Field>
     </>
+  );
+}
+
+/** TPA-35: antes de vender o faenar, avisar retiro vigente y reactores (no bloquea: la API pide confirmar). */
+function AvisoVenta({ animales, lote }: { animales: AnimalElegido[]; lote?: LoteOpt }) {
+  const conRetiro = animales.filter((a) => a.retiro);
+  const reactores = animales.filter((a) => a.reactor);
+  const loteRetiro = lote?.retiroHasta && lote.retiroHasta >= new Date().toISOString().slice(0, 10) ? lote.retiroHasta : null;
+  if (!conRetiro.length && !reactores.length && !loteRetiro) return null;
+  return (
+    <div className="space-y-2 border-b border-border px-5 py-4">
+      {(conRetiro.length > 0 || loteRetiro) && (
+        <div role="alert" className="flex gap-3 rounded-[10px] border border-warning-border bg-warning-bg px-4 py-3 text-[14px] text-warning">
+          <IconAlert size={18} className="mt-0.5 shrink-0" />
+          <span>
+            <span className="block font-semibold">
+              {loteRetiro ? `El lote tiene retiro vigente hasta el ${fmtFecha(loteRetiro)}` : `${conRetiro.map((a) => a.ident).join(", ")} ${conRetiro.length === 1 ? "tiene" : "tienen"} retiro vigente`}
+            </span>
+            No se pueden faenar ni vender para faena hasta que termine el retiro. Si es una venta para invernada, aclaralo en las observaciones.
+          </span>
+        </div>
+      )}
+      {reactores.length > 0 && (
+        <div role="alert" className="flex gap-3 rounded-[10px] border border-danger-border bg-danger-bg px-4 py-3 text-[14px] text-danger">
+          <IconAlert size={18} className="mt-0.5 shrink-0" />
+          <span>
+            <span className="block font-semibold">
+              {reactores.map((a) => a.ident).join(", ")} {reactores.length === 1 ? "es reactor" : "son reactores"}
+            </span>
+            Consultá con tu veterinario el destino que corresponde antes de venderlo. El dato es privado: no se muestra al comprador.
+          </span>
+        </div>
+      )}
+    </div>
   );
 }

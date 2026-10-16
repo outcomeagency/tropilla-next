@@ -6,13 +6,14 @@ import { IconAlert, IconArrowLeft, IconArrowRight, IconList, IconMap } from "@/c
 import { PasosOferta } from "@/components/panel/ofertas/estado";
 import { requireContexto } from "@/lib/establecimiento";
 import { listLotes } from "@/lib/data/ofertas";
+import { listReactores, listRetiros } from "@/lib/data/sanidad";
+import { connection } from "next/server";
 import { crearDesdeLoteAction } from "@/lib/oferta-actions";
 import { categoriaNombre } from "@/lib/catalogo";
 import { especieDe } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Publicar oferta" };
 
-const HOY = new Date("2026-10-16T12:00:00Z");
 const fmt = (iso: string) => iso.split("-").reverse().join("/");
 
 async function Lotes() {
@@ -24,7 +25,19 @@ async function Lotes() {
       </Card>
     );
   }
-  const { data: lotes, source } = await listLotes(ctx.activa.establecimiento_id);
+  const est = ctx.activa.establecimiento_id;
+  await connection();
+  const HOY = new Date();
+  const [{ data: lotes, source }, retiros, reactores] = await Promise.all([
+    listLotes(est),
+    listRetiros(est).catch(() => ({ data: [], lotes: [] })),
+    listReactores(est).catch(() => []),
+  ]);
+  // TPA-35: retiro vigente y reactores por lote (los animales con retiro cuentan para su lote).
+  const retiroLote = new Map<string, string | null>((retiros.lotes ?? []).map((l) => [l.id ?? "", l.retiro_carne_hasta ?? null]));
+  for (const a of retiros.data) if (a.lote?.id && !retiroLote.has(a.lote.id)) retiroLote.set(a.lote.id, null);
+  const reactoresLote = new Map<string, number>();
+  for (const a of reactores) if (a.lote?.id) reactoresLote.set(a.lote.id, (reactoresLote.get(a.lote.id) ?? 0) + 1);
   const disponibles = lotes.filter((l) => (l.cabezas_individuales ?? 0) + (l.cabezas_anonimas ?? 0) > 0);
 
   if (!disponibles.length) {
@@ -55,7 +68,9 @@ async function Lotes() {
         {disponibles.map((l) => {
           const cabezas = (l.cabezas_individuales ?? 0) + (l.cabezas_anonimas ?? 0);
           const dias = l.peso_promedio_fecha ? Math.round((HOY.getTime() - new Date(l.peso_promedio_fecha).getTime()) / 86_400_000) : null;
-          const retiro = l.extra?.retiroHasta && new Date(l.extra.retiroHasta) > HOY;
+          const retiro = retiroLote.has(l.id ?? "") || (l.extra?.retiroHasta && new Date(l.extra.retiroHasta) > HOY);
+          const retiroHasta = retiroLote.get(l.id ?? "") ?? l.extra?.retiroHasta ?? null;
+          const nReactores = reactoresLote.get(l.id ?? "") ?? 0;
           return (
             <Card key={l.id} className="flex flex-col">
               <div className="flex items-start justify-between gap-3 px-5 pt-4">
@@ -95,7 +110,12 @@ async function Lotes() {
                 )}
                 {retiro && (
                   <Badge tone="warning" icon={<IconAlert size={14} />}>
-                    Retiro vigente
+                    Retiro vigente{retiroHasta ? ` hasta ${fmt(retiroHasta)}` : ""}
+                  </Badge>
+                )}
+                {nReactores > 0 && (
+                  <Badge tone="danger" icon={<IconAlert size={14} />}>
+                    {nReactores} {nReactores === 1 ? "reactor" : "reactores"} (privado)
                   </Badge>
                 )}
               </div>
