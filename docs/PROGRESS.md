@@ -516,3 +516,19 @@ se confirma; el detalle muestra la advertencia confirmada en castellano y las cr
 un gráfico de partos esperados por mes apilado bovino/bubalino, donde los meses ya pasados se pintan en rojo. El calendario es una
 grilla lunes–domingo con el conteo por día (verde, amarillo si está atrasado, rojo si venció) y al lado la lista del mes con la
 fuente de la fecha (tacto/servicio). Sin mocks: todo sale de los dos endpoints de la API.
+
+## TPA-31 · Catálogo de productos sanitarios · ✅ (web)
+
+**Rutas:** `/sanidad/productos?tipo=&archivados=1` (pestaña «Productos» de Sanidad)
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Catálogo con tipo, vía, enfermedades, especies, dosis declarada y retiro carne/leche | `GET …/productos-sanitarios?archivados=` | 🔌 API real |
+| Alta desde la base sugerida (genéricos sin dosis ni retiro) o producto propio | `GET /catalogos/productos-sugeridos` + `POST …/productos-sanitarios` (`sugerido_codigo`) | 🔌 probado en el campo de prueba (Ivomec 1%) |
+| Editar (row_version) / archivar con motivo | `PATCH …/productos-sanitarios/{id}`, `POST …/archivar` | 🔌 |
+| Enfermedades y principios activos | `GET /catalogos` (`items.enfermedades`, `items.principios_activos`) | 🔌 |
+
+**Comentario del dev:** El catálogo es la base de todo Sanidad: al registrar una aplicación se elige de acá y el retiro se calcula solo.
+Por eso el dato más visible de cada fila es el retiro de carne/leche, y si un antiparasitario o antibiótico no lo tiene aparece «Falta
+el retiro» con un aviso arriba que explica por qué importa. La base sugerida trae genéricos a propósito sin dosis ni retiro: el
+diálogo lo dice y pide la marca y el marbete. La dosis es texto declarado («la indicada por el Dr. Pérez»): TROPILLA no prescribe.

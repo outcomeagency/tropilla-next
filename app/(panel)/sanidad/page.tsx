@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { IconShield } from "@/components/icons";
 import { ModulePlaceholder } from "@/components/panel/module-placeholder";
@@ -7,6 +8,7 @@ export const metadata: Metadata = { title: "Sanidad" };
 
 export default function SanidadPage() {
   return (
+    <>
     <ModulePlaceholder
       title="Sanidad"
       subtitle="Plan sanitario, aplicaciones, retiros y controles."
@@ -26,5 +28,13 @@ export default function SanidadPage() {
         </Notice>
       }
     />
+      <p className="mt-4 text-[14px] text-muted">
+        El catálogo de productos ya está disponible:{" "}
+        <Link href="/sanidad/productos" className="font-medium text-campo hover:underline">
+          ver productos sanitarios
+        </Link>
+        .
+      </p>
+    </>
   );
 }
