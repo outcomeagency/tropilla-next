@@ -3878,6 +3878,14 @@ export interface components {
             } | null;
             instalaciones?: string[];
             historia?: string | null;
+            /** @description Bloques de ficha extendida; lectura pública filtrada por visibilidad_ficha; clima incluye fuente y fecha. */
+            ficha_ampliada?: {
+                [key: string]: unknown;
+            };
+            /** @description Visibilidad por bloque. Privado por defecto. */
+            visibilidad_ficha?: {
+                [key: string]: boolean;
+            };
             /** @enum {string} */
             mi_rol: "dueno" | "admin" | "encargado" | "asesor" | "lectura";
             abilities?: string[];
@@ -3901,6 +3909,14 @@ export interface components {
             zonas_sanitarias?: components["schemas"]["ZonasSanitarias"];
             instalaciones?: string[];
             historia?: string | null;
+            /** @description Datos extendidos por bloques (sanidad, superficies, potreros, infraestructura, personal, rodeo, clima y logística). */
+            ficha_ampliada?: {
+                [key: string]: unknown;
+            };
+            /** @description Opt-in público por bloque; los campos no marcados permanecen privados. */
+            visibilidad_ficha?: {
+                [key: string]: boolean;
+            };
             /** @description Obligatorio en PATCH */
             row_version?: string;
         };
