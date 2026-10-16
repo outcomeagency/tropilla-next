@@ -134,3 +134,19 @@ productor ve exactamente lo que ve el comprador, en los tres idiomas. Sólo se p
 Resource público (lo privado no llega ni se oculta con CSS). Rodeo en rangos, sanidad sin datos individuales,
 trazabilidad con % de integridad registrada e insignias sólo por hechos medibles. La primera publicación exige
 aceptar la vista previa; las secciones derivadas se pueden congelar. Leyenda fija en el pie con el texto del Resource.
+
+## TPA-41 · Página pública de verificación · ✅ (web)
+
+**Rutas:** `/[locale]/v/[huella]` (resultado), `/[locale]/v` (buscar huella o verificar archivo), `/api/verificaciones/[huella]/prueba` (descarga de prueba.json, server-side)
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Registro por huella (qué, cuándo, quién por rol, versiones, nivel, anclaje, eslabón) | `GET /public/verificaciones/{huella}` | 🧪 mock (huellas de ofertas/documentos de ejemplo) |
+| Prueba descargable | `GET /public/verificaciones/{huella}/prueba` | 🧪 mock vía route handler |
+| Verificar un archivo | SHA-256 con WebCrypto en el navegador → `GET /public/verificaciones/archivo/{sha256}` | 🧪 si no existe: «no coincide» marcado como demostración |
+
+**Comentario del dev:** La huella del archivo se calcula en el navegador (WebCrypto) y sólo viaja el SHA-256: el
+archivo nunca se sube. La página dice explícitamente qué prueba (que el registro no cambió desde la fecha) y qué
+no (veracidad, habilitaciones); muestra correcciones con transparencia («tuvo N correcciones · esta es / NO es la
+vigente») y el anclaje con su red y fecha. Las verificaciones no se indexan. Huella inválida o inexistente: estado
+claro con buscador y verificación de archivo como salida.

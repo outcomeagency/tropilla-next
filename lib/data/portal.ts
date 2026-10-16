@@ -70,3 +70,15 @@ export async function getPerfilPublico(slug: string, locale: Locale) {
     () => mockPerfilPublico(slug, locale),
   );
 }
+
+/** Verificación pública de un registro por huella (TPA-41). */
+export async function getVerificacion(huella: string, locale: Locale) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(`verificacion:${huella}`);
+  const { mockVerificacion } = await import("@/lib/mock/verificaciones");
+  return withMockIf(
+    async () => (await api<One<S<"Verificacion">>>(`/public/verificaciones/${encodeURIComponent(huella)}${query({ locale })}`, { auth: false, locale })).data,
+    () => mockVerificacion(huella, locale),
+  );
+}
