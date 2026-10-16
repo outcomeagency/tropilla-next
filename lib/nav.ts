@@ -30,6 +30,7 @@ export const PANEL_NAV: NavItem[] = [
   { href: "/trazabilidad", label: "Trazabilidad", icon: "route" },
   { href: "/comercializacion", label: "Comercialización", icon: "chart" },
   { href: "/perfil-publico", label: "Perfil público", icon: "user" },
+  { href: "/organizaciones", label: "Organizaciones", icon: "user" },
 ];
 
 export const PANEL_NAV_FOOTER: NavItem[] = [{ href: "/configuracion", label: "Configuración", icon: "settings" }];

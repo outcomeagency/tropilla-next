@@ -637,3 +637,17 @@ huella con enlace a la verificación. Los archivos viajan server-side a la URL p
 puede revocar, con el contador de visitas a la vista. El token se muestra una sola vez (la API no lo guarda) con copiar y WhatsApp,
 y si el documento es fiscal se avisa antes. El comprador ve una página sobria en su idioma con el nivel de confianza, la versión y el
 botón de verificación, más la aclaración de qué prueba la integridad. Si el enlace venció o lo revocaron lo dice sin rodeos.
+
+## TPA-51 · Organizaciones y adhesión con consentimiento · 🟦
+
+**Rutas:** `/organizaciones` (organizaciones disponibles, mis adhesiones, consentimientos y revocación); Configuración → Organizaciones.
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Organizaciones disponibles | `GET /organizaciones` | 🔌 API real |
+| Mis organizaciones | `GET /productores/{productor}/adhesiones` | 🔌 API real |
+| Adhesión con alcances granulares, nueva versión y huella | `POST …/adhesiones`, `POST …/{adhesion}/consentimiento` | 🔌 API real |
+| Revocación con motivo | `POST …/{adhesion}/revocar` | 🔌 API real |
+| Alta de organización y administración de integrantes | `POST /organizaciones` (solo staff, no expuesto como operación en el OpenAPI), `POST …/miembros` (cuerpo no documentado) | No implementado: contrato incompleto y alta restringida a staff |
+
+**Comentario del dev:** La pantalla permite encontrar organizaciones disponibles y adherirse eligiendo de forma explícita qué datos agregados se comparten. Desde cada adhesión activa se puede registrar otra versión del consentimiento o revocarla con motivo; se muestran versión, huella y cantidad de cambios del historial cuando la API los devuelve. El detalle aclara que la adhesión no publica datos en el directorio. No se usan datos de ejemplo. El OpenAPI vigente reserva la creación de organizaciones a staff y omite el cuerpo de la operación para administrar integrantes, por lo que esas acciones quedan pendientes del contrato administrativo.

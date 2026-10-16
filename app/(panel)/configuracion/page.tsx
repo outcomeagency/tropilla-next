@@ -11,7 +11,7 @@ const SECCIONES: Array<{ href?: string; titulo: string; texto: string; Icon: Com
   { href: "/establecimientos", titulo: "Mis establecimientos", texto: "Los campos donde tenés acceso y tu rol en cada uno.", Icon: IconBuilding },
   { href: "/perfil-publico", titulo: "Perfil público y privacidad", texto: "Qué se muestra en el directorio y qué queda privado.", Icon: IconGlobe },
   { titulo: "Mi cuenta", texto: "Nombre, idioma, contraseña y dispositivos con sesión.", Icon: IconUser },
-  { titulo: "Organizaciones", texto: "Asociaciones a las que adherís, con consentimiento revocable.", Icon: IconBuilding },
+  { href: "/organizaciones", titulo: "Organizaciones", texto: "Asociaciones a las que adherís, con consentimiento revocable.", Icon: IconBuilding },
 ];
 
 export default function ConfiguracionPage() {
