@@ -1,0 +1,121 @@
+/*
+ * TROPILLA — tokens de marca y de interfaz (Tailwind v4).
+ * Fuente: brain/visual-identity/visual-identity.md + previews aprobadas (brain/design/previews).
+ *
+ * Regla: los hex viven SOLO en este archivo. Los componentes usan las utilidades
+ * que generan estos tokens (bg-monte, text-ink, border-border, bg-success-bg…),
+ * nunca un color literal.
+ *
+ * Proporción de marca: 60 % blanco/beige · 25 % verde monte/carbón · 10 % verde campo · 5 % tierra.
+ * Tierra = acento: nunca fondo de interfaces densas ni texto chico sobre crema.
+ */
+
+@theme {
+  /* ── Marca ── */
+  --color-monte: #163f2e; /* primario: navegación, marca, botón principal */
+  --color-monte-700: #0f2f22; /* hover del primario */
+  --color-monte-600: #1d4a37; /* ítem activo de la sidebar */
+  --color-campo: #2e6b4a; /* acentos, seleccionados, íconos */
+  --color-campo-50: #e8f1ec; /* fondo tonal del verde (chips, íconos KPI) */
+  --color-tierra: #b37a4a; /* acento controlado: curvas, gráficos */
+  --color-tierra-50: #f6ece2;
+  --color-crema: #f6efe7; /* fondos cálidos */
+  --color-crema-300: #e6d9c8; /* serie clara de gráficos */
+  --color-carbon: #2b2b2b;
+  --color-blanco: #ffffff;
+
+  /* ── Superficies y texto ── */
+  --color-base: #faf8f5; /* fondo de página del panel (blanco cálido) */
+  --color-surface: #ffffff; /* tarjetas */
+  --color-surface-2: #f4f1ec; /* hover de filas, tabs, botón secundario */
+  --color-ghost: #ece7df; /* fondo de barras de progreso */
+  --color-border: #e7e2da; /* borde de 1 px */
+  --color-border-strong: #d6cfc4;
+  --color-ink: #2b2b2b; /* texto principal */
+  --color-muted: #5f6460; /* texto secundario (≥ 4.5:1 sobre blanco y base) */
+  --color-subtle: #8b8f8a; /* sólo metadata chica, íconos y bordes; nunca párrafos */
+
+  /* ── Sidebar (verde monte) ── */
+  --color-sidebar: #163f2e;
+  --color-sidebar-hover: #1d4a37;
+  --color-sidebar-active: #245a43;
+  --color-sidebar-ink: #f6efe7;
+  --color-sidebar-muted: #b9c9c0;
+  --color-sidebar-border: #2a5541;
+
+  /* ── Semánticos (separados de la marca, WCAG AA) ── */
+  --color-success: #1f7a4d;
+  --color-success-bg: #e6f3ec;
+  --color-success-border: #c3e2d0;
+  --color-warning: #8a5a04; /* texto oscuro sobre fondo al 10 % */
+  --color-warning-bg: #fdf3dc;
+  --color-warning-border: #f2dca6;
+  --color-danger: #b42318;
+  --color-danger-bg: #fdecea;
+  --color-danger-border: #f5c6c1;
+  --color-info: #1d5fa8;
+  --color-info-bg: #e8f1fb;
+  --color-info-border: #c6dbf3;
+  --color-neutral: #4b504c;
+  --color-neutral-bg: #f1efeb;
+  --color-neutral-border: #e1ddd5;
+
+  /* ── Series de gráficos (existencias por categoría) ── */
+  --color-chart-1: #163f2e;
+  --color-chart-2: #4f8a68;
+  --color-chart-3: #b37a4a;
+  --color-chart-4: #e6d9c8;
+  --color-chart-5: #2b2b2b;
+
+  /* ── Tipografía (las variables las inyecta next/font en <html>) ── */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-montserrat), var(--font-inter), ui-sans-serif, sans-serif;
+
+  /* ── Radios ── */
+  --radius-card: 14px;
+  --radius-control: 8px;
+  --radius-chip: 6px;
+
+  /* ── Sombra: sólo hover de elementos clickeables, nunca por defecto ── */
+  --shadow-hover: 0 1px 2px rgb(22 63 46 / 0.06), 0 2px 6px rgb(22 63 46 / 0.06);
+}
+
+/*
+ * Modo oscuro (opcional, opt-in con data-theme="dark" en <html>).
+ * El panel es mayormente claro (legible bajo sol); esto queda preparado para
+ * uso nocturno en escritorio. Sólo se redefinen superficies, texto y semánticos.
+ */
+[data-theme="dark"] {
+  --color-base: #101613;
+  --color-surface: #161e1a;
+  --color-surface-2: #1d2722;
+  --color-ghost: #26312b;
+  --color-border: #2a3530;
+  --color-border-strong: #3a4740;
+  --color-ink: #eef0ec;
+  --color-muted: #b4bbb5;
+  --color-subtle: #87908a;
+  --color-campo-50: #1c3328;
+  --color-tierra-50: #33261b;
+
+  --color-sidebar: #0d1f17;
+  --color-sidebar-hover: #142c21;
+  --color-sidebar-active: #1b3a2c;
+  --color-sidebar-border: #1d3529;
+
+  --color-success: #7fd1a3;
+  --color-success-bg: #15301f;
+  --color-success-border: #24503a;
+  --color-warning: #f1c46b;
+  --color-warning-bg: #33280f;
+  --color-warning-border: #57441a;
+  --color-danger: #f19a91;
+  --color-danger-bg: #3a1714;
+  --color-danger-border: #5c2621;
+  --color-info: #8dbcf0;
+  --color-info-bg: #13263b;
+  --color-info-border: #21405f;
+  --color-neutral: #c9cec9;
+  --color-neutral-bg: #232b27;
+  --color-neutral-border: #333d38;
+}
