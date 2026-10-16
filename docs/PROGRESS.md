@@ -711,3 +711,17 @@ botón de verificación, más la aclaración de qué prueba la integridad. Si el
 | Perfil profesional y publicación | `GET/PUT /me/profesional`, `GET /public/profesionales/{slug}` | 🔌 API real |
 
 **Comentario del dev:** El comprador carga especie, categorías, cantidad, zona o cualquier zona, plazo, peso objetivo y mensaje; puede decidir si muestra su nombre, editar o cerrar. La API mantiene el control de perfil comprador y verificación de email requeridos para publicar. Comercialización muestra el puntaje y los datos de cada coincidencia, con respuesta directa desde el establecimiento. El profesional declara matrícula, especialidades, provincias e idiomas, y decide si publica su perfil; la ficha pública está disponible en ES/EN/PT y aclara que esos datos son declarados. No se usan datos de ejemplo.
+
+## TPA-57 · Cuenta de comprador y toma de tokens · 🟦
+
+**Rutas:** `/comprador/cuenta` (cuenta liviana), `/comprador` (mis contratos, tomas y pagos informados), `/comprador/seguimientos`, `/[locale]/contratos/[codigo]` (tomar tokens y seguir productor).
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Perfil comprador y verificación de email | `GET/PUT /me/comprador`, `GET /auth/me` | 🔌 API real |
+| Reserva de tokens y anticipo a pagar | `POST /contratos/{codigo}/tomas` (`Idempotency-Key`) | 🔌 API real |
+| Mis tomas, entregas y vencimiento | `GET /comprador/tomas` | 🔌 API real; incluye `contrato.fecha_entrega` |
+| Informar pago del anticipo | `POST /comprador/tomas/{toma}/pago-informado` | 🔌 API real |
+| Seguir/dejar de seguir productores | `GET/POST /seguimientos`, `DELETE /seguimientos/{establecimiento_slug}` | 🔌 API real |
+
+**Comentario del dev:** La cuenta usa empresa, país y tipo de comprador; la API decide si el email está verificado. En el contrato el comprador calcula kg y anticipo por cantidad, y la reserva se envía con clave de idempotencia para no duplicar. «Mis contratos» muestra fecha de entrega, estado, anticipo y vencimiento devueltos por la API; el pago se informa como una transferencia externa y el productor confirma la recepción. Los seguimientos se gestionan desde perfiles/contratos y la API activa avisos por nuevas ofertas y contratos. Se retiraron fallbacks de muestra para todos estos endpoints.

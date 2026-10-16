@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/public/site-header";
 import { SiteFooter } from "@/components/public/site-footer";
 import { TakeTokens } from "@/components/public/take-tokens";
 import { Qr } from "@/components/qr";
-import { Badge, MockNotice, Progress, SpeciesChip, buttonClass } from "@/components/ui";
+import { Badge, Progress, SpeciesChip, buttonClass } from "@/components/ui";
 import { IconArrowRight, IconCalendar, IconCheckCircle, IconLock, IconPin } from "@/components/icons";
 import { getDictionary, hasLocale, LOCALE_HTML_LANG, LOCALES, type Locale } from "@/lib/i18n";
 import { getPortalDict } from "@/lib/i18n/portal";
@@ -14,6 +14,7 @@ import { getContratoPublico } from "@/lib/data/comprador";
 import { categoriaNombre } from "@/lib/catalogo";
 import { especieDe } from "@/lib/types";
 import { SITE_URL } from "@/lib/site";
+import { FollowProducer } from "@/components/comprador/follow-producer";
 
 type Params = Promise<{ locale: string; codigo: string }>;
 const LANG: Record<Locale, string> = { es: "es-AR", en: "en-US", pt: "pt-BR" };
@@ -50,11 +51,6 @@ async function Contrato({ params }: { params: Params }) {
       <SiteHeader locale={locale} dict={dict} path={`/contratos/${codigo}`} context={c.establecimiento?.nombre} cta={res.me ? { href: "/comprador", label: "Mis contratos" } : undefined} />
       <main className="bg-base">
         <div className="mx-auto max-w-[1180px] px-[clamp(16px,4vw,40px)] py-[clamp(24px,4vw,48px)]">
-          {res.source === "mock" && (
-            <div className="mb-4">
-              <MockNotice text={t.common.sampleData} />
-            </div>
-          )}
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_400px]">
             <div>
               <p className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-muted">
@@ -114,6 +110,7 @@ async function Contrato({ params }: { params: Params }) {
                   )}
                 </div>
               </div>
+              {res.me && c.establecimiento?.slug && <div className="mt-4"><FollowProducer slug={c.establecimiento.slug} name={c.establecimiento.nombre} /></div>}
             </div>
 
             <aside className="lg:sticky lg:top-24 lg:self-start">

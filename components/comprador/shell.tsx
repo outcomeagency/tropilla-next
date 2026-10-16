@@ -13,7 +13,7 @@ export function CompradorShell({ children }: { children: ReactNode }) {
           <Link href="/es" aria-label="TROPILLA">
             <Logo height={30} />
           </Link>
-          <nav className="flex items-center gap-5 text-[14px]">
+          <nav className="flex min-w-0 items-center gap-4 overflow-x-auto text-[14px]">
             <Link href="/comprador" className="font-semibold text-ink">
               Mis contratos
             </Link>
@@ -24,6 +24,7 @@ export function CompradorShell({ children }: { children: ReactNode }) {
               Mi perfil de comprador
             </Link>
             <Link href="/comprador/buscos" className="text-muted hover:text-ink">Mis Busco</Link>
+            <Link href="/comprador/seguimientos" className="text-muted hover:text-ink">Productores que sigo</Link>
           </nav>
           <form action={logoutAction} className="ml-auto">
             <button type="submit" className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-muted hover:text-ink">

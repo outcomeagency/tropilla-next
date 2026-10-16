@@ -9,6 +9,7 @@ import { getDictionary, hasLocale, LOCALE_HTML_LANG, LOCALES } from "@/lib/i18n"
 import { getPortalDict } from "@/lib/i18n/portal";
 import { getPerfilPublico } from "@/lib/data/portal";
 import { departamentoNombre, provinciaNombre } from "@/lib/geo";
+import { FollowProducer } from "@/components/comprador/follow-producer";
 
 type Params = Promise<{ locale: string; slug: string }>;
 
@@ -53,6 +54,7 @@ async function Perfil({ params }: { params: Params }) {
         context={[p.productor, p.nombre].filter(Boolean).join(" · ")}
         cta={formulario ? { href: "#consultar", label: t.common.contact } : undefined}
       />
+      {p.slug && <div className="mx-auto max-w-[1240px] px-4 pt-4 sm:px-8"><FollowProducer slug={p.slug} name={p.nombre} /></div>}
       <main className="bg-base">
         <PerfilView
           p={p}
