@@ -335,3 +335,21 @@ ahora son genéricos para estados extendidos. El timeline muestra «Reposición:
 | Cambio de lote de animales identificados (selección) | `POST …/eventos` `hacienda.cambio_lote` | 🔌 probado |
 
 **Comentario del dev:** Los lotes viven como pestaña de Hacienda (no en la nav lateral): «Animales» para lo caravaneado, «Lotes» para el manejo por grupo; la composición reutiliza las celdas de la ficha de potrero. Potrero, conteo y pesos son eventos, nunca campos: al crear un lote por cantidades el conteo inicial y el potrero se registran como alta + traslado (si fallan, el lote queda y la ficha avisa qué falta). Las bajas validan que no salgan más cabezas que las del conteo (la API no lo bloquea: abriría una revisión `conteo_negativo`). Individualizar crea hasta 50 animales por vez con caravana visual opcional; el sexo sale de la categoría. Pendientes: la API no tiene un evento para pasar cabezas *anónimas* de un lote a otro (sólo `cambio_lote` de animales) ni recategorización por conteo en la UI; el resumen del traslado de lote dice «Traslado de 0 cabezas» (lo arma la API); «Ofertar este lote» lleva al selector de ofertas sin preseleccionar.
+
+## TPA-21 · Carga inicial de stock por planilla · ✅ (web)
+
+**Rutas:** `/hacienda/importar` (pasos, plantillas por especie, subida y referencia de columnas; aviso «Tenés una planilla sin confirmar»), `/hacienda/importar/[id]` (revisando → revisión editable → importando → resultado / cancelada), `/hacienda/importar/plantilla?especie=` (descarga). Entradas: botón «Importar planilla» en Hacienda, estado vacío de Hacienda y «Subir mi planilla» de `/bienvenida/listo` («Cargar por cantidades» ahora va a `/hacienda/lotes/nuevo`).
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Plantilla descargable (CSV con BOM y `;` para Excel en español) | `GET /importaciones/plantilla?especie=&formato=csv` vía route handler | 🔌 real |
+| Subida CSV/XLSX ≤ 10 MB (Server Action, multipart server-side; `bodySizeLimit` y `proxyClientMaxBodySize` 11 MB) | `POST …/importaciones` (multipart, desvío aditivo) → 202 + polling | 🔌 probado con CSV y XLSX |
+| Estado y previsualización por fila (todas las filas por cursor, hasta 3.000) | `GET …/importaciones/{id}`, `GET …/importaciones/{id}/filas` | 🔌 |
+| Corregir fila en línea / descartar / volver a incluir | `PATCH …/filas/{numero}` (`datos` = columnas de la planilla, `accion`) | 🔌 probado |
+| Confirmar (un `hacienda.alta` por fila válida) y resultado con filas que quedaron afuera | `POST …/confirmar` → 202 + polling | 🔌 probado: 6 altas en el establecimiento de prueba |
+| Cancelar | `POST …/cancelar` | 🔌 probado |
+| Alternativa lote anónimo por categoría | `/hacienda/lotes/nuevo` (TPA-20) | 🔌 |
+
+**Comentario del dev:** La API guarda cada fila ya normalizada y descarta lo que no entiende («Vaquillona» para búfalos, «2020-02-30»), así que para corregir el navegador lee el CSV al elegirlo y guarda lo escrito en `localStorage`: la celda en error muestra el valor original y el editor lo precarga; con XLSX (o en otro navegador) la celda dice «Falta». Lo ideal es que la API devuelva el valor original por fila (pedido para api). El editor rearma la fila completa (códigos → nombres, ids de lote/potrero → nombres) porque el PATCH revalida desde cero.
+Probado de punta a punta en «Campo de Prueba Web» con una planilla con RFID corto, categoría que no corresponde al sexo, categoría inexistente, fecha futura e inválida, caravana repetida, sexo «X», potrero y lote inexistentes y una fila sin identificación: 3 filas corregidas en línea, 1 descartada, 1 dejada con error; se importaron 6 y el resultado lista las 2 que quedaron afuera. También XLSX y cancelar.
+Confirmar con filas en error importa sólo las válidas (así lo hace la API) y el diálogo avisa que esas filas no se pueden importar después desde la misma planilla. No hay listado de importaciones en la API: la última sin confirmar se recuerda en la cookie `tropilla_imp`.

@@ -15,6 +15,9 @@ const nextConfig: NextConfig = {
     // Hay tres root layouts ((panel), (auth) y [locale]): el 404 global no puede
     // componerse desde un layout único (ver docs: file-conventions/not-found).
     globalNotFound: true,
+    // Planilla de stock (TPA-21): la Server Action reenvía hasta 10 MB a la API (+ margen multipart).
+    serverActions: { bodySizeLimit: "11mb" },
+    proxyClientMaxBodySize: "11mb",
   },
   turbopack: {
     rules: {

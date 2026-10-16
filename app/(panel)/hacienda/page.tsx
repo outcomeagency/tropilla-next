@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Card, EmptyState, FilterTabs, PageHeader, Select, buttonClass, inputClass } from "@/components/ui";
-import { IconArrowLeft, IconArrowRight, IconCow, IconFilter, IconSearch } from "@/components/icons";
+import { IconArrowLeft, IconArrowRight, IconCow, IconFilter, IconSearch, IconUpload } from "@/components/icons";
 import { HaciendaTabla, type FilaAnimal } from "@/components/panel/hacienda/tabla";
 import { PersistFilters } from "@/components/panel/hacienda/persist-filters";
 import { HaciendaTabs } from "@/components/panel/hacienda/tabs";
@@ -201,9 +201,16 @@ async function Listado({ searchParams }: { searchParams: Promise<SP> }) {
                   Ver todo el rodeo
                 </Link>
               ) : (
-                <Link href="/hacienda/lotes" className={buttonClass("outline", "md")}>
-                  Ver lotes por cantidades
-                </Link>
+                <>
+                  {ctx.can("importaciones.gestionar") && (
+                    <Link href="/hacienda/importar" className={buttonClass("primary", "md")}>
+                      <IconUpload size={18} /> Cargar stock por planilla
+                    </Link>
+                  )}
+                  <Link href="/hacienda/lotes" className={buttonClass("outline", "md")}>
+                    Ver lotes por cantidades
+                  </Link>
+                </>
               )
             }
           />
@@ -230,11 +237,30 @@ async function Listado({ searchParams }: { searchParams: Promise<SP> }) {
   );
 }
 
+/** Acceso a la carga por planilla (TPA-21), sólo para quien puede importar. */
+async function AccionImportar() {
+  const ctx = await requireContexto();
+  if (!ctx.can("importaciones.gestionar")) return null;
+  return (
+    <Link href="/hacienda/importar" className={buttonClass("outline", "md")}>
+      <IconUpload size={18} /> Importar planilla
+    </Link>
+  );
+}
+
 /** Listado de hacienda con búsqueda y filtros (TPA-18). Paginado server-side por cursor. */
 export default function HaciendaPage(props: { searchParams: Promise<SP> }) {
   return (
     <>
-      <PageHeader title="Hacienda" subtitle="Animales identificados del establecimiento. Buscá por cualquier identificador y trabajá sobre un grupo." />
+      <PageHeader
+        title="Hacienda"
+        subtitle="Animales identificados del establecimiento. Buscá por cualquier identificador y trabajá sobre un grupo."
+        actions={
+          <Suspense fallback={null}>
+            <AccionImportar />
+          </Suspense>
+        }
+      />
       <HaciendaTabs activo="animales" />
       <Suspense fallback={<div className="h-[520px] rounded-[var(--radius-card)] border border-border bg-surface" />}>
         <Listado searchParams={props.searchParams} />

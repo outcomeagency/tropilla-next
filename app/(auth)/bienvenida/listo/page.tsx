@@ -10,8 +10,8 @@ export const metadata: Metadata = { title: "Establecimiento creado" };
 async function Listo({ searchParams }: { searchParams: Promise<{ establecimiento?: string; demo?: string }> }) {
   const { establecimiento = "Tu establecimiento", demo } = await searchParams;
   const NEXT = [
-    { icon: <IconUpload size={22} />, title: "Subir mi planilla", body: "CSV o Excel. Te mostramos los errores fila por fila antes de importar.", href: "/hacienda" },
-    { icon: <IconList size={22} />, title: "Cargar por cantidades", body: "«380 búfalos en estas categorías». Después identificás animal por animal.", href: "/hacienda" },
+    { icon: <IconUpload size={22} />, title: "Subir mi planilla", body: "CSV o Excel. Te mostramos los errores fila por fila antes de importar.", href: "/hacienda/importar" },
+    { icon: <IconList size={22} />, title: "Cargar por cantidades", body: "«380 búfalos en estas categorías». Después identificás animal por animal.", href: "/hacienda/lotes/nuevo" },
     { icon: <IconArrowRight size={22} />, title: "Entrar sin hacienda", body: "Empezás vacío y cargás desde el celular en la manga.", href: "/inicio" },
   ];
   return (
