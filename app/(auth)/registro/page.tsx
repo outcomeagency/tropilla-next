@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { RegisterForm } from "./register-form";
@@ -21,7 +22,9 @@ export default function RegistroPage() {
         </p>
       }
     >
-      <RegisterForm />
+      <Suspense fallback={<div className="h-[420px]" aria-hidden="true" />}>
+        <RegisterForm />
+      </Suspense>
     </AuthShell>
   );
 }

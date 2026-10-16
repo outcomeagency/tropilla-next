@@ -208,3 +208,21 @@ documentos van a decir «Pedí la nueva constancia» cuando la API los publique.
 - **Duda 12** (TPA-48): la ficha pública ya no dice «Sanidad al día» (es una conclusión no verificada); muestra «Vacunas cargadas: aftosa, rabia…» en es/en/pt.
 - **Duda 21** (TPA-48): la columna y el contador de consultas sólo se ven con `consultas.ver` (el encargado no ve consultas que pueden traer precios).
 - **Duda 24** (TPA-54): el directorio vacío ofrece «Publicar un Busco» y «Seguir esta zona».
+
+## TPA-11 · Invitar usuarios al establecimiento con roles · ✅ (web)
+
+**Rutas:** `/configuracion` (hub), `/configuracion/usuarios` (equipo, invitaciones, matriz), `/invitacion/[token]` (aceptar)
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Equipo con rol | `GET …/membresias?estado=activa` | 🔌 API real |
+| Invitar por email o teléfono con rol; enlace + WhatsApp (sólo en la creación) | `POST …/invitaciones` | 🔌 probado |
+| Invitaciones pendientes / revocar | `GET …/invitaciones`, `POST …/invitaciones/{id}/revocar` | 🔌 probado |
+| Cambiar rol / revocar acceso | `POST …/membresias/{id}/rol`, `POST …/membresias/{id}/revocar` | 🔌 (revocar probado) |
+| Ver invitación sin sesión y aceptar | `GET /public/invitaciones/{token}`, `POST /invitaciones/{token}/aceptar` | 🔌 probado end-to-end (registro → aceptar → entra como Asesor) |
+
+**Comentario del dev:** Matriz de permisos legible con texto + ícono en cada celda (functional/04 §12), resaltando
+la columna del rol propio; quien no gestiona usuarios ve sólo la matriz y qué le permite su rol. La invitación muestra
+el enlace una única vez (la API no guarda el token) con «Mandar por WhatsApp». El invitado sin cuenta se registra o
+ingresa con `next` y vuelve a aceptar; al aceptar, ese campo queda activo. Dueño y uno mismo no se pueden editar
+desde la tabla. Las pruebas contra el demo se revirtieron (membresía e invitación revocadas).
