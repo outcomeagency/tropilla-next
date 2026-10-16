@@ -8,7 +8,6 @@ export const metadata: Metadata = { title: "Nueva contraseña" };
 export default function RestablecerPage() {
   return (
     <AuthShell
-      photo="estero"
       title="Elegí una contraseña nueva"
       subtitle="Al guardarla se cierran las sesiones abiertas en otros dispositivos."
     >

@@ -9,7 +9,6 @@ export const metadata: Metadata = { title: "Recuperar contraseña" };
 export default function RecuperarPage() {
   return (
     <AuthShell
-      photo="estero"
       title="Recuperá tu contraseña"
       subtitle="Escribí el email o el teléfono de tu cuenta y te mandamos un enlace para crear una nueva."
       footer={

@@ -83,7 +83,7 @@ async function Invitacion({ params, searchParams }: Props) {
 /** El invitado ve a qué campo y con qué rol, y acepta (flujo 16). */
 export default function InvitacionPage(props: Props) {
   return (
-    <AuthShell photo="campoCorral" headline="Sumate al equipo del campo." title="Te invitaron a TROPILLA" subtitle="Vas a poder cargar y ver lo que tu rol permite. Tus datos y los del campo quedan privados.">
+    <AuthShell headline="Sumate al equipo del campo." title="Te invitaron a TROPILLA" subtitle="Vas a poder cargar y ver lo que tu rol permite. Tus datos y los del campo quedan privados.">
       <Suspense fallback={<div className="h-[280px]" aria-hidden="true" />}>
         <Invitacion {...props} />
       </Suspense>

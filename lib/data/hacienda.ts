@@ -30,6 +30,7 @@ export type Identificacion = {
 
 /** Ficha del animal (TPA-17): AnimalResumen + datos de la proyección. */
 export type AnimalDetalle = S<"AnimalResumen"> & {
+  foto?: S<"Foto"> | null;
   origen?: string | null;
   fecha_nacimiento?: string | null;
   nacimiento_estimado?: boolean;

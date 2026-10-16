@@ -10,7 +10,6 @@ import { IconArrowRight, IconPin, IconSearch } from "@/components/icons";
 import { getDictionary, hasLocale, type Locale } from "@/lib/i18n";
 import { getPortalDict } from "@/lib/i18n/portal";
 import { getDirectorio } from "@/lib/data/portal";
-import { PHOTOS } from "@/lib/photos";
 
 /**
  * Home del portal público (placeholder). Patrón de la landing de Pya'e +
@@ -55,6 +54,12 @@ async function Destacados({ locale }: { locale: Locale }) {
   );
 }
 
+async function HeroPhoto({ locale }: { locale: Locale }) {
+  const { data } = await getDirectorio({}, locale, 6);
+  const featured = data.find((producer) => producer.foto?.url || producer.foto_url);
+  return <Photo src={featured?.foto ?? featured?.foto_url} alt={featured?.foto?.alt ?? featured?.nombre ?? "Establecimiento ganadero del NEA"} sizes="(min-width:1024px) 520px, 100vw" className="aspect-[5/4] rounded-[16px] border border-border" preload />;
+}
+
 export default async function PortalHome({ params }: PageProps<"/[locale]">) {
   const { locale } = await params;
   if (!hasLocale(locale)) notFound();
@@ -95,18 +100,8 @@ export default async function PortalHome({ params }: PageProps<"/[locale]">) {
               </p>
             </div>
 
-            {/* Foto real de campo (addendum: grilla 6/5, recorte 5:4, radio 16). */}
             <figure>
-              <Photo
-                src={PHOTOS.bufalosPastizal.src}
-                alt={PHOTOS.bufalosPastizal.alt}
-                sizes="(min-width:1024px) 520px, 100vw"
-                className="aspect-[5/4] rounded-[16px] border border-border"
-                preload
-              />
-              <figcaption className="mt-2.5 flex items-center gap-1.5 text-[12.5px] text-muted">
-                <IconPin size={14} /> {t.sample.place}
-              </figcaption>
+              <Suspense fallback={<div className="aspect-[5/4] rounded-[16px] border border-border bg-base" />}><HeroPhoto locale={locale} /></Suspense>
             </figure>
           </div>
         </section>

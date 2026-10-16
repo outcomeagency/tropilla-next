@@ -71,9 +71,9 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
       <section className="mx-auto max-w-[1240px] px-[clamp(16px,4vw,40px)] pt-[clamp(16px,3vw,32px)]">
         {fotos.length > 0 && (
         <div className="grid gap-2.5 md:grid-cols-[2fr_1fr] md:grid-rows-2">
-          <Photo src={fotos[0]} alt={p.nombre ?? ""} sizes="(min-width:768px) 800px, 100vw" className="aspect-[16/9] rounded-[16px] border border-border md:row-span-2 md:aspect-auto md:h-full md:min-h-[380px]" preload />
+          <Photo src={fotos[0]} alt={fotos[0]?.alt ?? p.nombre ?? ""} sizes="(min-width:768px) 800px, 100vw" className="aspect-[16/9] rounded-[16px] border border-border md:row-span-2 md:aspect-auto md:h-full md:min-h-[380px]" preload />
           {fotos.slice(1, 3).map((f) => (
-            <Photo key={f} src={f} alt={p.nombre ?? ""} sizes="400px" className="hidden aspect-[16/10] rounded-[16px] border border-border md:block" />
+            <Photo key={f.sha256} src={f} alt={f.alt ?? p.nombre ?? ""} sizes="400px" className="hidden aspect-[16/10] rounded-[16px] border border-border md:block" />
           ))}
         </div>
         )}
@@ -303,8 +303,8 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
                     href={`/${locale}/ofertas/${o.codigo}`}
                     className="group overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface transition-shadow hover:shadow-[var(--shadow-hover)]"
                   >
-                    {o.foto_url ? (
-                      <Photo src={o.foto_url} alt={o.titulo ?? ""} sizes="(min-width:1024px) 380px, 100vw" className="aspect-[16/10]" />
+                    {o.foto?.url || o.foto_url ? (
+                      <Photo src={o.foto ?? o.foto_url} alt={o.foto?.alt ?? o.titulo ?? ""} sizes="(min-width:1024px) 380px, 100vw" className="aspect-[16/10]" />
                     ) : (
                       <div className="flex aspect-[16/8] items-end justify-between bg-campo-50 p-4 text-monte" role="img" aria-label={o.titulo ?? ""}>
                         <span className="text-[34px] font-bold leading-none tracking-[-0.03em] tabular-nums">

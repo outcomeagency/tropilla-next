@@ -4,11 +4,9 @@
  * directorio, perfiles y ofertas mientras /public/* no exista en la API.
  * Sólo se usan a través de withMock()/withMockIf() y la UI lo avisa.
  */
-import { PHOTOS, type PhotoKey } from "@/lib/photos";
 import type { S } from "@/lib/schemas";
 
 export interface MockProductor extends S<"DirectorioItem"> {
-  foto: PhotoKey;
   /** Categorías con oferta activa (para el filtro). */
   categorias: string[];
   localidad?: string;
@@ -28,7 +26,6 @@ export const MOCK_PRODUCTORES: MockProductor[] = [
     ofertas_activas: 2,
     contratos_abiertos: 1,
     insignias: ["historial_12m", "identificacion_individual", "documentos_publicos"],
-    foto: "bufalosPastizal",
     categorias: ["BUB_BUBILLO", "BOV_TERNERO"],
     actualizado_en: d(0),
   },
@@ -42,7 +39,6 @@ export const MOCK_PRODUCTORES: MockProductor[] = [
     ofertas_activas: 1,
     contratos_abiertos: 0,
     insignias: ["historial_12m", "responde_rapido"],
-    foto: "angusMonte",
     categorias: ["BOV_VAQUILLONA"],
     actualizado_en: d(1),
   },
@@ -56,7 +52,6 @@ export const MOCK_PRODUCTORES: MockProductor[] = [
     ofertas_activas: 1,
     contratos_abiertos: 1,
     insignias: ["identificacion_individual"],
-    foto: "bufaloLaguna",
     categorias: ["BUB_BUBILLA"],
     actualizado_en: d(2),
   },
@@ -70,7 +65,6 @@ export const MOCK_PRODUCTORES: MockProductor[] = [
     ofertas_activas: 1,
     contratos_abiertos: 0,
     insignias: ["historial_12m", "documentos_publicos"],
-    foto: "brahmanToros",
     categorias: ["BOV_TORITO"],
     actualizado_en: d(3),
   },
@@ -84,7 +78,6 @@ export const MOCK_PRODUCTORES: MockProductor[] = [
     ofertas_activas: 0,
     contratos_abiertos: 1,
     insignias: ["identificacion_individual"],
-    foto: "brahmanRodeo",
     categorias: [],
     actualizado_en: d(4),
   },
@@ -99,7 +92,6 @@ export const MOCK_PRODUCTORES: MockProductor[] = [
     ofertas_activas: 1,
     contratos_abiertos: 0,
     insignias: ["historial_12m"],
-    foto: "bufaloAgua",
     categorias: ["BUB_BUFALA"],
     actualizado_en: d(6),
   },
@@ -113,7 +105,6 @@ export const MOCK_PRODUCTORES: MockProductor[] = [
     ofertas_activas: 0,
     contratos_abiertos: 0,
     insignias: [],
-    foto: "vacaHumedal",
     categorias: [],
     actualizado_en: d(9),
   },
@@ -127,7 +118,6 @@ export const MOCK_PRODUCTORES: MockProductor[] = [
     ofertas_activas: 1,
     contratos_abiertos: 0,
     insignias: ["responde_rapido"],
-    foto: "estero",
     categorias: ["BUB_BUBILLO"],
     actualizado_en: d(12),
   },
@@ -141,7 +131,6 @@ export const MOCK_PRODUCTORES: MockProductor[] = [
     ofertas_activas: 1,
     contratos_abiertos: 0,
     insignias: ["documentos_publicos"],
-    foto: "campoCorral",
     categorias: ["BOV_NOVILLO"],
     actualizado_en: d(15),
   },
@@ -169,5 +158,5 @@ export function mockDirectorio(query: DirectorioQuery, nombres: (p: MockProducto
     if (query.con_contrato && !p.contratos_abiertos) return false;
     if (q && !nombres(p).toLowerCase().includes(q)) return false;
     return true;
-  }).map((p) => ({ ...p, foto_url: PHOTOS[p.foto].src }));
+  });
 }

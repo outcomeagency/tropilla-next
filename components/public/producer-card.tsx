@@ -46,8 +46,8 @@ export function ProducerCard({ p, locale, t }: { p: S<"DirectorioItem">; locale:
   return (
     <article className="group overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface transition-shadow hover:shadow-[var(--shadow-hover)]">
       <Link href={`/${locale}/p/${p.slug}`} className="flex h-full flex-col">
-        {p.foto_url ? (
-          <Photo src={p.foto_url} alt={p.nombre ?? ""} sizes="(min-width:1280px) 340px, (min-width:768px) 45vw, 100vw" className="aspect-[16/10]" />
+        {p.foto?.url || p.foto_url ? (
+          <Photo src={p.foto ?? p.foto_url} alt={p.foto?.alt ?? p.nombre ?? ""} sizes="(min-width:1280px) 340px, (min-width:768px) 45vw, 100vw" className="aspect-[16/10]" />
         ) : (
           <SinFoto nombre={p.nombre ?? ""} especies={p.especies ?? []} />
         )}

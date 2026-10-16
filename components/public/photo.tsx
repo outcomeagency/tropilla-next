@@ -1,25 +1,28 @@
 import Image from "next/image";
 import { cx } from "@/components/ui";
 import { IconCamera } from "@/components/icons";
+import type { S } from "@/lib/schemas";
 
 /**
- * Foto de campo. Las de Unsplash (lib/photos.ts) pasan por el optimizador;
- * las de la API (URL prefirmada de 5 min) van sin optimizar para no cachear
- * una URL que vence. Sin foto: placeholder sobrio, nunca una ilustración.
+ * Foto servida por la API. Las rutas públicas son inmutables y optimizables;
+ * las privadas llevan firma temporal y se sirven directas para no cachearlas.
+ * Sin foto: placeholder sobrio, nunca una ilustración.
  */
 export function Photo({
-  src,
+  src: source,
   alt,
   sizes,
   className,
   preload,
 }: {
-  src?: string | null;
+  src?: string | S<"Foto"> | null;
   alt: string;
   sizes: string;
   className?: string;
   preload?: boolean;
 }) {
+  const src = typeof source === "string" ? source : source?.url;
+  const dimensions = typeof source === "object" && source ? { width: source.ancho, height: source.alto } : null;
   if (!src) {
     return (
       <div className={cx("grid place-items-center bg-crema text-crema-300", className)} role="img" aria-label={alt}>
@@ -27,10 +30,11 @@ export function Photo({
       </div>
     );
   }
-  const optimizable = src.startsWith("https://images.unsplash.com/");
+  const privateSigned = src.includes("/fotos/") && !src.includes("/public/fotos/");
+  const altText = typeof source === "object" && source?.alt ? source.alt : alt;
   return (
-    <div className={cx("relative overflow-hidden bg-crema", className)}>
-      <Image src={src} alt={alt} fill sizes={sizes} className="object-cover" unoptimized={!optimizable} preload={preload} quality={75} />
+    <div className={cx("relative overflow-hidden bg-crema", className)} style={dimensions?.width && dimensions.height ? { aspectRatio: `${dimensions.width}/${dimensions.height}` } : undefined}>
+      <Image src={src} alt={altText} fill sizes={sizes} className="object-cover" unoptimized={privateSigned} preload={preload} quality={75} />
     </div>
   );
 }
