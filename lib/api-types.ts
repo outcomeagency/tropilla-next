@@ -5085,7 +5085,8 @@ export interface components {
             id?: components["schemas"]["Uuid"];
             codigo_publico?: string;
             url_publica?: string;
-            tipo?: string;
+            /** @enum {string} */
+            tipo?: "lote" | "invernada" | "gordo" | "cria" | "reproductores";
             /** @enum {string} */
             especie?: "BOV" | "BUB";
             categorias?: string[];
@@ -5118,7 +5119,8 @@ export interface components {
             row_version?: number;
         };
         OfertaInput: {
-            tipo?: string;
+            /** @enum {string} */
+            tipo?: "lote" | "invernada" | "gordo" | "cria" | "reproductores";
             /** @enum {string} */
             especie?: "BOV" | "BUB";
             categorias?: string[];
@@ -5141,7 +5143,8 @@ export interface components {
         OfertaDesdeLoteInput: {
             lote_id?: components["schemas"]["Uuid"];
             animal_ids?: components["schemas"]["Uuid"][];
-            tipo: string;
+            /** @enum {string} */
+            tipo: "lote" | "invernada" | "gordo" | "cria" | "reproductores";
         };
         PublicarInput: {
             confirmar_avisos?: boolean;
