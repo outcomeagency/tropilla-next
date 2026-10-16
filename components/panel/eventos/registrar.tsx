@@ -8,6 +8,8 @@ import {
   DENTICION,
   FACILIDAD_PARTO,
   GRUPOS,
+  GRUPOS_MODULO,
+  TIPOS_IA,
   METODOS_CASTRACION,
   MOTIVOS_EGRESO,
   MOTIVOS_INGRESO,
@@ -25,6 +27,8 @@ export type CategoriaOpt = Opt & { especie: string; sexo?: string | null };
 export type LoteOpt = { id: string; nombre: string; especie: string; anonimo: boolean; conteo: Record<string, number> };
 
 export interface RegistrarEventoProps {
+  /** Qué tipos ofrece el selector (Hacienda o Reproducción). */
+  modulo?: "hacienda" | "reproduccion";
   tipoInicial?: string;
   animalesIniciales: AnimalElegido[];
   loteInicial?: string;
@@ -62,6 +66,7 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
   const [filas, setFilas] = useState<Fila[]>([{ key: 0, especie: "BOV", sexo: "", categoria: "" }]);
   const [causa, setCausa] = useState("");
   const [madre, setMadre] = useState<AnimalElegido | null>(null);
+  const [toros, setToros] = useState<AnimalElegido[]>([]);
 
   const sujetoEfectivo = meta && !meta.sujetos.includes(sujeto) ? meta.sujetos[0] : sujeto;
   const creaAnimales = sujetoEfectivo === "animales" && (tipo === "hacienda.ingreso" || tipo === "hacienda.nacimiento");
@@ -69,7 +74,7 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
   const conConteo = sujetoEfectivo === "lote" && ["hacienda.ingreso", "hacienda.nacimiento", "hacienda.egreso", "hacienda.muerte", "hacienda.perdida", "hacienda.faena"].includes(tipo);
   const especieSel = animales[0]?.especie ?? lote?.especie ?? "";
 
-  async function sumar(valor: string, destino: "animales" | "madre" = "animales") {
+  async function sumar(valor: string, destino: "animales" | "madre" | "toros" = "animales") {
     if (!valor.trim()) return;
     setBuscando(true);
     setBuscaErr("");
@@ -77,6 +82,11 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
     setBuscando(false);
     if (!r.animal) return setBuscaErr(r.error ?? "No lo encontramos.");
     if (destino === "madre") return setMadre(r.animal);
+    if (destino === "toros") {
+      if (r.animal.sexo !== "M") return setBuscaErr(`${r.animal.ident} no es macho.`);
+      if (!toros.some((t) => t.id === r.animal!.id)) setToros((xs) => [...xs, r.animal!]);
+      return;
+    }
     if (r.animal.estado && r.animal.estado !== "activo") return setBuscaErr(`${r.animal.ident} figura como ${r.animal.estado}: no se le pueden cargar eventos de manejo.`);
     if (animales.some((a) => a.id === r.animal!.id)) return setBuscaErr(`${r.animal.ident} ya está en la lista.`);
     setAnimales((xs) => [...xs, r.animal!]);
@@ -91,7 +101,7 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
     startTransition(() => formAction(fd));
   }
 
-  const grupos = Object.entries(GRUPOS).map(([g, label]) => ({ g, label, tipos: TIPOS_HACIENDA.filter((t) => t.grupo === g) }));
+  const grupos = GRUPOS_MODULO[p.modulo ?? "hacienda"].map((g) => ({ g, label: GRUPOS[g], tipos: TIPOS_HACIENDA.filter((t) => t.grupo === g) }));
 
   return (
     <form onSubmit={onSubmit} noValidate className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
@@ -100,18 +110,19 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
       <input type="hidden" name="sujeto" value={sujetoEfectivo} />
       {sujetoEfectivo === "animales" && !creaAnimales && animales.map((a) => <input key={a.id} type="hidden" name="animal_id" value={a.id} />)}
       {madre && <input type="hidden" name="madre_id" value={madre.id} />}
+      {tipo === "reproduccion.servicio_natural" && toros.map((t) => <input key={t.id} type="hidden" name="toro_id" value={t.id} />)}
 
       <div className="min-w-0 space-y-4">
         {/* 1. Qué pasó */}
         <Card className="overflow-hidden">
-          <CardHeader title={<Paso n={1}>¿Qué pasó?</Paso>} description={meta ? meta.ayuda : "Elegí el evento. Las identificaciones se cargan en la ficha del animal."} action={meta ? <button type="button" onClick={() => setTipo("")} className="text-[13px] font-medium text-campo hover:underline">Cambiar</button> : undefined} />
+          <CardHeader title={<Paso n={1}>¿Qué pasó?</Paso>} description={meta ? meta.ayuda : p.modulo === "reproduccion" ? "Elegí el evento. Las hembras que cargues actualizan su estado reproductivo y el calendario de partos." : "Elegí el evento. Las identificaciones se cargan en la ficha del animal."} action={meta ? <button type="button" onClick={() => setTipo("")} className="text-[13px] font-medium text-campo hover:underline">Cambiar</button> : undefined} />
           {meta ? (
             <div className="flex items-center gap-3 px-5 py-3.5">
               <Badge tone="info">{GRUPOS[meta.grupo]}</Badge>
               <span className="text-[15px] font-semibold text-ink">{meta.titulo}</span>
             </div>
           ) : (
-            <div className="grid gap-x-6 gap-y-5 px-5 py-5 md:grid-cols-2">
+            <div className={cx("grid gap-x-6 gap-y-5 px-5 py-5", grupos.length > 1 && "md:grid-cols-2", grupos.length === 3 && "xl:grid-cols-3")}>
               {grupos.map(({ g, label, tipos }) => (
                 <section key={g}>
                   <h3 className="mb-2 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">{label}</h3>
@@ -223,10 +234,10 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
             <Card className="overflow-hidden">
               <CardHeader title={<Paso n={3}>Datos del evento</Paso>} />
               <div className="grid gap-4 px-5 py-5 sm:grid-cols-2">
-                <Field label="Fecha" htmlFor="ocurrido_en" error={f.ocurrido_en}>
+                <Field label={tipo === "reproduccion.servicio_natural" ? "Inicio del servicio" : "Fecha"} htmlFor="ocurrido_en" error={f.ocurrido_en}>
                   <Input id="ocurrido_en" name="ocurrido_en" type="date" defaultValue={p.hoy} max={p.hoy} {...fieldAria("ocurrido_en", f.ocurrido_en)} />
                 </Field>
-                <CamposTipo tipo={tipo} f={f} p={p} causa={causa} setCausa={setCausa} especie={especieSel} madre={madre} setMadre={setMadre} sumar={sumar} buscando={buscando} creaAnimales={creaAnimales} />
+                <CamposTipo tipo={tipo} f={f} p={p} causa={causa} setCausa={setCausa} especie={especieSel} madre={madre} setMadre={setMadre} sumar={sumar} buscando={buscando} creaAnimales={creaAnimales} toros={toros} setToros={setToros} buscaErr={buscaErr} />
                 <div className="sm:col-span-2">
                   <Field label="Observaciones" htmlFor="observaciones" optional>
                     <Textarea id="observaciones" name="observaciones" maxLength={2000} rows={3} className="min-h-[84px]" placeholder="Lo que sirva para entender el evento después." />
@@ -264,8 +275,8 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
             <p className="text-[12.5px] leading-snug text-muted">Queda en la historia con tu nombre, rol y huella. No se borra: si te equivocás, se corrige o se anula con motivo.</p>
           </div>
         </Card>
-        <Link href="/hacienda/eventos" className={buttonClass("ghost", "sm")}>
-          <IconArrowLeft size={16} /> Volver al registro
+        <Link href={p.modulo === "reproduccion" ? "/reproduccion" : "/hacienda/eventos"} className={buttonClass("ghost", "sm")}>
+          <IconArrowLeft size={16} /> {p.modulo === "reproduccion" ? "Volver a Reproducción" : "Volver al registro"}
         </Link>
       </aside>
     </form>
@@ -436,6 +447,9 @@ function CamposTipo({
   sumar,
   buscando,
   creaAnimales,
+  toros,
+  setToros,
+  buscaErr,
 }: {
   tipo: string;
   f: Record<string, string>;
@@ -445,9 +459,12 @@ function CamposTipo({
   especie: string;
   madre: AnimalElegido | null;
   setMadre: (a: AnimalElegido | null) => void;
-  sumar: (v: string, d?: "animales" | "madre") => Promise<void>;
+  sumar: (v: string, d?: "animales" | "madre" | "toros") => Promise<void>;
   buscando: boolean;
   creaAnimales: boolean;
+  toros: AnimalElegido[];
+  setToros: (fn: (xs: AnimalElegido[]) => AnimalElegido[]) => void;
+  buscaErr: string;
 }) {
   const sel = (name: string, label: string, lista: readonly (readonly [string, string])[] | Opt[], vacio = "Elegí", optional = false) => (
     <Field label={label} htmlFor={name} error={f[name]} optional={optional}>
@@ -598,6 +615,85 @@ function CamposTipo({
               <Textarea id="circunstancias" name="circunstancias" rows={3} maxLength={2000} className="min-h-[84px]" />
             </Field>
           </div>
+        </>
+      );
+    case "reproduccion.servicio_natural":
+      return (
+        <>
+          <Field label="Fin del servicio" htmlFor="fin" error={f.fin} optional hint="Si los toros siguen con las hembras, dejalo vacío.">
+            <Input id="fin" name="fin" type="date" max={p.hoy} {...fieldAria("fin", f.fin, true)} />
+          </Field>
+          <div className="sm:col-span-2 space-y-3 rounded-[10px] border border-border bg-base p-4">
+            <p className="text-[13px] font-semibold text-ink">Toros</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Con caravana" htmlFor="toro_busca" optional>
+                <Input
+                  id="toro_busca"
+                  placeholder="Caravana del toro y Enter"
+                  disabled={buscando}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const v = e.currentTarget.value;
+                      e.currentTarget.value = "";
+                      void sumar(v, "toros");
+                    }
+                  }}
+                />
+              </Field>
+              <Field label="Lote de toros" htmlFor="lote_toros_id" optional>
+                <Select id="lote_toros_id" name="lote_toros_id" defaultValue="">
+                  <option value="">Ninguno</option>
+                  {p.lotes
+                    .filter((l) => !especie || l.especie === especie)
+                    .map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.nombre}
+                      </option>
+                    ))}
+                </Select>
+              </Field>
+            </div>
+            {toros.length > 0 && (
+              <ul className="flex flex-wrap gap-2">
+                {toros.map((t) => (
+                  <li key={t.id} className="inline-flex items-center gap-2 rounded-[8px] border border-border bg-surface py-1 pl-3 pr-1 text-[13.5px]">
+                    <span className="font-semibold tabular-nums">{t.ident}</span>
+                    <span className="text-muted">{t.categoria}</span>
+                    <button type="button" aria-label={`Quitar ${t.ident}`} onClick={() => setToros((xs) => xs.filter((x) => x.id !== t.id))} className="grid h-7 w-7 place-items-center rounded-[6px] text-muted hover:bg-base">
+                      <IconClose size={14} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <Field label="De afuera (prestados o sin caravana)" htmlFor="toros_externos" optional hint="Separados por coma. Ej.: «Toro Braford del vecino, Brangus colorado».">
+              <Input id="toros_externos" name="toros_externos" maxLength={600} />
+            </Field>
+            {(f.toros || buscaErr) && <p className="text-[12.5px] font-medium text-danger">{f.toros || buscaErr}</p>}
+          </div>
+        </>
+      );
+    case "reproduccion.inseminacion":
+      return (
+        <>
+          {sel("tipo_ia", "Tipo", TIPOS_IA)}
+          {txt("toro_nombre", "Toro (semen)", { placeholder: "Nombre o código de la pajuela" })}
+          <Field label="Raza del semen" htmlFor="semen_raza" optional>
+            <Select id="semen_raza" name="semen_raza" defaultValue="">
+              <option value="">Sin indicar</option>
+              {p.razas
+                .filter((z) => !especie || z.especie === especie)
+                .map((z) => (
+                  <option key={z.codigo} value={z.codigo}>
+                    {z.nombre}
+                  </option>
+                ))}
+            </Select>
+          </Field>
+          {txt("centro", "Centro genético", { optional: true, placeholder: "Ej. CIAVT, Select Sires" })}
+          {txt("partida", "Partida", { optional: true, max: 60 })}
+          {txt("inseminador", "Inseminador", { optional: true })}
         </>
       );
     case "hacienda.faena":

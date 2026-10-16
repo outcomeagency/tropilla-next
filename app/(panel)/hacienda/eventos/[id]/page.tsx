@@ -47,12 +47,15 @@ async function Contenido({ params, searchParams }: { params: Promise<Params>; se
     api<One<S<"IntegridadRegistro">>>(`/establecimientos/${est}/eventos/${ev.id ?? id}/integridad`).then((r) => r.data).catch(() => null),
     Promise.all(ids.slice(0, 24).map((a) => getAnimal(est, a).catch(() => null))),
   ]);
+  const toroIds = (ev.payload?.toro_ids as string[] | undefined) ?? [];
+  const toros = await Promise.all(toroIds.slice(0, 12).map((t) => getAnimal(est, t).catch(() => null)));
 
   const nombres = new Map<string, string>([
     ...potreros.map((p) => [p.id ?? "", p.nombre ?? ""] as [string, string]),
     ...lotes.map((l) => [l.id ?? "", l.nombre ?? ""] as [string, string]),
     ...cat.categorias.map((c) => [c.codigo, c.nombre ?? c.codigo] as [string, string]),
     ...cat.categoriasFaena.map((c) => [c.codigo, c.nombre ?? c.codigo] as [string, string]),
+    ...cat.razas.map((r) => [r.codigo, r.nombre ?? r.codigo] as [string, string]),
     ...Object.values(cat.items).flat().map((i) => [i.codigo, i.nombre] as [string, string]),
   ]);
   const tipoNombre = cat.tiposEvento.find((t) => t.codigo === ev.tipo)?.nombre ?? ev.tipo ?? "Evento";
@@ -69,6 +72,7 @@ async function Contenido({ params, searchParams }: { params: Promise<Params>; se
     if (typeof v === "number") return <span className="tabular-nums">{v}</span>;
     if (typeof v === "string") {
       if (KG.has(k)) return <span className="tabular-nums">{v.replace(".", ",")} kg</span>;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return fecha(v);
       if (/^\d+\.\d+$/.test(v)) return <span className="tabular-nums">{v.replace(".", ",")}</span>;
       if (k === "escala") return v.replace("-", " a ");
       return nombres.get(v) ?? VALORES[v] ?? v;
@@ -80,6 +84,11 @@ async function Contenido({ params, searchParams }: { params: Promise<Params>; se
   const fuente = Object.keys(ev.payload ?? {}).length ? ev : (versiones.filter((v) => v.accion !== "anulacion").at(-1) ?? ev);
   for (const [k, v] of Object.entries(fuente.payload ?? {})) {
     if (OCULTAR.has(k)) continue;
+    if (Array.isArray(v)) {
+      if (k === "toro_ids") datos.push({ label: "Toros", value: toros.map((t) => t?.identificacion_principal ?? "Sin caravana").join(", ") || `${v.length}` });
+      else if (v.every((x) => typeof x === "string" && !/^[0-9a-f-]{36}$/.test(x))) datos.push({ label: ETIQUETAS[k] ?? k.replace(/_/g, " "), value: (v as string[]).join(", ") });
+      continue;
+    }
     if (v && typeof v === "object" && !Array.isArray(v)) {
       for (const [k2, v2] of Object.entries(v as Record<string, unknown>)) {
         const val = valor(k2, v2);
