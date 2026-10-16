@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { startTransition, useState, type FormEvent, type ReactNode } from "react";
 import { buscarAnimalAction, registrarEventoAction, type AnimalElegido } from "@/lib/evento-actions";
 import {
@@ -48,8 +49,9 @@ const ESPECIE_LABEL: Record<string, string> = { BOV: "Bovino", BUB: "Bubalino" }
  * limpie lo cargado si la API devuelve un error.
  */
 export function RegistrarEvento(p: RegistrarEventoProps) {
+  const router = useRouter();
   const { state, formAction, pending, f, idem } = useActionForm(registrarEventoAction);
-  const [tipo, setTipo] = useState(p.tipoInicial && tipoHacienda(p.tipoInicial) ? p.tipoInicial : "");
+  const [tipo, setTipo] = useState(p.tipoInicial && tipoHacienda(p.tipoInicial) && !tipoHacienda(p.tipoInicial)?.redirige ? p.tipoInicial : "");
   const meta = tipoHacienda(tipo);
   const [sujeto, setSujeto] = useState<"animales" | "lote">(p.loteInicial && !p.animalesIniciales.length ? "lote" : "animales");
   const [animales, setAnimales] = useState<AnimalElegido[]>(p.animalesIniciales);
@@ -102,7 +104,7 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
       <div className="min-w-0 space-y-4">
         {/* 1. Qué pasó */}
         <Card className="overflow-hidden">
-          <CardHeader title={<Paso n={1}>¿Qué pasó?</Paso>} description={meta ? meta.ayuda : "Elegí el evento. Identificaciones y pesajes tienen su propia pantalla en la ficha y en el lote."} action={meta ? <button type="button" onClick={() => setTipo("")} className="text-[13px] font-medium text-campo hover:underline">Cambiar</button> : undefined} />
+          <CardHeader title={<Paso n={1}>¿Qué pasó?</Paso>} description={meta ? meta.ayuda : "Elegí el evento. Las identificaciones se cargan en la ficha del animal."} action={meta ? <button type="button" onClick={() => setTipo("")} className="text-[13px] font-medium text-campo hover:underline">Cambiar</button> : undefined} />
           {meta ? (
             <div className="flex items-center gap-3 px-5 py-3.5">
               <Badge tone="info">{GRUPOS[meta.grupo]}</Badge>
@@ -116,7 +118,7 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
                   <ul className="divide-y divide-border rounded-[10px] border border-border">
                     {tipos.map((t) => (
                       <li key={t.codigo}>
-                        <button type="button" onClick={() => setTipo(t.codigo)} className="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left hover:bg-base">
+                        <button type="button" onClick={() => (t.redirige ? router.push(animales.length ? `${t.redirige}?animal=${animales[0].id}` : t.redirige) : setTipo(t.codigo))} className="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left hover:bg-base">
                           <span className="min-w-0">
                             <span className="block text-[14.5px] font-semibold text-ink">{t.titulo}</span>
                             <span className="block truncate text-[12.5px] text-muted">{t.corto}</span>

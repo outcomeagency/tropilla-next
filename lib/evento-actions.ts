@@ -16,6 +16,8 @@ export interface AnimalElegido {
   categoria: string;
   lote?: string | null;
   estado?: string | null;
+  peso?: string | null;
+  pesoFecha?: string | null;
 }
 
 /**
@@ -39,6 +41,8 @@ export async function buscarAnimalAction(valor: string): Promise<{ animal?: Anim
         categoria: a.categoria_nombre ?? a.categoria ?? "",
         lote: a.lote?.nombre ?? null,
         estado: a.estado ?? null,
+        peso: a.peso_kg ?? null,
+        pesoFecha: a.peso_fecha ?? null,
       },
     };
   } catch {

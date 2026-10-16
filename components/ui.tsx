@@ -354,7 +354,7 @@ export function Th({ children, numeric, className }: { children?: ReactNode; num
     <th
       scope="col"
       className={cx(
-        "border-b border-border px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.04em] text-muted",
+        "whitespace-nowrap border-b border-border px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.04em] text-muted",
         numeric && "text-right",
         className,
       )}
