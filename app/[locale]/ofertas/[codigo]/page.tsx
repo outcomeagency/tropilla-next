@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/public/site-header";
 import { SiteFooter } from "@/components/public/site-footer";
 import { Photo } from "@/components/public/photo";
 import { Qr } from "@/components/qr";
+import { ContactSection } from "@/components/public/contact-section";
 import { Badge, MockNotice, SpeciesChip, TrustBadge, TrustInline, buttonClass, cx } from "@/components/ui";
 import {
   IconArrowRight,
@@ -16,6 +17,7 @@ import {
   IconDownload,
   IconFile,
   IconMap,
+  IconMessage,
   IconPin,
   IconShieldCheck,
   IconTruck,
@@ -170,7 +172,7 @@ async function Oferta({ params }: { params: Params }) {
             </div>
             <div className="mt-7 flex flex-col gap-2.5 sm:flex-row">
               <a href="#consultar" className={buttonClass("primary", "md", "px-5")}>
-                <IconWhatsapp size={18} /> {t.offer.consult}
+                <IconMessage size={18} /> {t.offer.consult}
               </a>
               {o.pdf_url && (
                 <a href={o.pdf_url} className={buttonClass("outline", "md", "px-5")}>
@@ -455,18 +457,24 @@ async function Oferta({ params }: { params: Params }) {
           </aside>
         </div>
 
-        {/* Consulta (flujo 19: formulario sin cuenta en TPA-55) */}
-        <section id="consultar" className="scroll-mt-20 border-t border-border bg-base">
-          <div className="mx-auto max-w-[1240px] px-[clamp(16px,4vw,40px)] py-[clamp(32px,5vw,56px)]">
-            <h2 className="font-display text-[clamp(24px,3vw,32px)] font-bold tracking-[-0.02em] text-ink">{t.offer.consult}</h2>
-            {whatsapp && (
-              <a href={`https://wa.me/${whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(`${titulo} — ${SITE_URL}/${locale}/ofertas/${o.codigo}`)}`} className={buttonClass("outline", "md", "mt-5")}>
+        {/* Consulta sin cuenta (flujo 19, TPA-55) */}
+        <ContactSection
+          locale={locale}
+          t={t}
+          about={t.contact.about(titulo)}
+          establecimiento={o.establecimiento?.slug}
+          oferta={o.codigo}
+          extra={
+            whatsapp && (
+              <a
+                href={`https://wa.me/${whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(`${titulo} — ${SITE_URL}/${locale}/ofertas/${o.codigo}`)}`}
+                className={buttonClass("outline", "md")}
+              >
                 <IconWhatsapp size={18} /> WhatsApp
               </a>
-            )}
-          </div>
-        </section>
-
+            )
+          }
+        />
       </main>
       <SiteFooter locale={locale} dict={dict} legend={o.leyenda} />
     </>
