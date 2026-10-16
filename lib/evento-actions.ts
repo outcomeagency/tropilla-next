@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { api, query } from "./api";
 import { requireContexto } from "./establecimiento";
+import { getCatalogos } from "./data/catalogos";
 import { decimal, estadoDeError, fdStr, isFecha, postEvento, uuidv7, type EventoActionState } from "./eventos-api";
 import { DENTICION, METODOS_CASTRACION, MOTIVOS_EGRESO, MOTIVOS_INGRESO, TIPOS_PERDIDA, FACILIDAD_PARTO, tipoHacienda } from "./eventos-hacienda";
 import type { Many, S } from "./schemas";
@@ -285,6 +286,66 @@ export async function registrarEventoAction(_prev: EventoActionState, fd: FormDa
       });
       break;
     }
+    case "reproduccion.parto": {
+      const t = fdStr(fd, "tipo_parto");
+      if (!["normal", "asistido", "distocico", "cesarea"].includes(t)) fields.tipo_parto = "Elegí cómo fue el parto.";
+      if (animalIds.length !== 1) fields.animales = "Un parto es de una sola madre.";
+      const madre = animalIds.length === 1 ? await api<{ data: S<"AnimalResumen"> }>(`/establecimientos/${est}/animales/${animalIds[0]}`).then((r) => r.data).catch(() => null) : null;
+      const n = Math.min(Number(fdStr(fd, "crias") || "0"), 4);
+      const cat = await getCatalogos();
+      const crias: Array<Record<string, unknown>> = [];
+      for (let i = 0; i < n; i++) {
+        const viva = fd.get(`cr_viva_${i}`) === "1";
+        const sexo = fdStr(fd, `cr_sexo_${i}`);
+        if (sexo !== "M" && sexo !== "H") {
+          fields[`cr_sexo_${i}`] = "Sexo";
+          continue;
+        }
+        const peso = decimal(fdStr(fd, `cr_peso_${i}`));
+        if (peso === null) fields[`cr_peso_${i}`] = "Peso";
+        if (!viva) {
+          crias.push(limpio({ viva: false, sexo, peso_kg: peso || undefined }));
+          continue;
+        }
+        const categoria = cat.categorias.find((c) => c.especie === madre?.especie && c.sexo === sexo && c.es_cria)?.codigo;
+        const car = fdStr(fd, `cr_caravana_${i}`).slice(0, 64);
+        crias.push(
+          limpio({
+            viva: true,
+            peso_kg: peso || undefined,
+            animal: limpio({
+              animal_id: fdStr(fd, `cr_id_${i}`) || uuidv7(),
+              especie: madre?.especie,
+              sexo,
+              categoria,
+              raza: fdStr(fd, `cr_raza_${i}`) || madre?.raza || undefined,
+              fecha_nacimiento: fecha,
+              madre_id: animalIds[0],
+              lote_id: madre?.lote?.id || undefined,
+              potrero_id: madre?.potrero?.id || undefined,
+              identificaciones: car ? [{ tipo: "caravana_visual", valor: car }] : undefined,
+            }),
+          }),
+        );
+      }
+      if (!n) fields.crias = "Cargá al menos una cría (viva o muerta).";
+      payload = { tipo: t, crias };
+      break;
+    }
+    case "reproduccion.aborto": {
+      const dias = fdStr(fd, "dias_gestacion");
+      if (dias && (!/^\d{1,3}$/.test(dias) || Number(dias) < 1)) fields.dias_gestacion = "Días de gestación estimados (número).";
+      payload = limpio({ dias_gestacion: dias ? Number(dias) : undefined, causa_presunta: corto(fd, "causa_presunta") });
+      break;
+    }
+    case "reproduccion.destete": {
+      const t = fdStr(fd, "tipo_destete");
+      if (!["tradicional", "precoz", "hiperprecoz"].includes(t)) fields.tipo_destete = "Elegí el tipo de destete.";
+      const peso = decimal(fdStr(fd, "peso_kg"));
+      if (peso === null) fields.peso_kg = "Peso en kg (ej. 165,5).";
+      payload = limpio({ tipo: t, peso_kg: peso || undefined, categoria_nueva: fdStr(fd, "categoria_nueva") || undefined });
+      break;
+    }
     case "hacienda.faena": {
       const frig = corto(fd, "frigorifico");
       if (!frig) fields.frigorifico = "Indicá el frigorífico.";
@@ -330,7 +391,15 @@ export async function registrarEventoAction(_prev: EventoActionState, fd: FormDa
   } catch (e) {
     return estadoDeError(
       e,
-      { "sujetos.animal_ids": "animales", "sujetos.lote_id": "lote_id", "sujetos.conteo": "conteo", "payload.tipo": tipo === "reproduccion.inseminacion" ? "tipo_ia" : "tipo_perdida", "payload.toro_ids": "toros", "payload.animales": "animales", "payload.crias": "animales" },
+      {
+        "sujetos.animal_ids": "animales",
+        "sujetos.lote_id": "lote_id",
+        "sujetos.conteo": "conteo",
+        "payload.tipo": { "reproduccion.parto": "tipo_parto", "reproduccion.destete": "tipo_destete", "reproduccion.inseminacion": "tipo_ia" }[tipo] ?? "tipo_perdida",
+        "payload.toro_ids": "toros",
+        "payload.animales": "animales",
+        "payload.crias": tipo === "reproduccion.parto" ? "crias" : "animales",
+      },
       "No pudimos registrar el evento. Probá de nuevo.",
     );
   }
