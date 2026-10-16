@@ -197,9 +197,14 @@ async function Directorio({ locale, searchParams }: { locale: Locale; searchPara
                     <Link href={`/${locale}/directorio`} className={buttonClass("primary", "md")}>
                       {t.directory.emptyWiden}
                     </Link>
-                    <Link href="/registro" className={buttonClass("outline", "md")}>
+                    <Link href="/registro?para=busco" className={buttonClass("outline", "md")}>
                       {t.directory.emptyBusco}
                     </Link>
+                    {f.provincia && (
+                      <Link href={`/registro?para=seguir&provincia=${f.provincia}`} className={buttonClass("ghost", "md", "text-campo")}>
+                        {t.directory.followZone}
+                      </Link>
+                    )}
                   </>
                 }
               />
