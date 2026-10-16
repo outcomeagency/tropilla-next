@@ -16,7 +16,10 @@ async function Preview({ searchParams }: { searchParams: Promise<{ idioma?: stri
   const ctx = await requireContexto();
   const { idioma = "es" } = await searchParams;
   const locale = hasLocale(idioma) ? idioma : "es";
-  const [cfg, p] = await Promise.all([getPerfilConfig(ctx.activa.establecimiento_id), getPerfilPreview(ctx.activa.establecimiento_id, locale)]);
+  // Both endpoints lazily initialize the profile row; load it before requesting the preview
+  // so a new establishment cannot race two inserts against the same primary key.
+  const cfg = await getPerfilConfig(ctx.activa.establecimiento_id);
+  const p = await getPerfilPreview(ctx.activa.establecimiento_id, locale);
   const t = getPortalDict(locale);
   return (
     <>
