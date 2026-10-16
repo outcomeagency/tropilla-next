@@ -292,6 +292,33 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
             )}
           </Seccion>
         )}
+        {!!sec.contratos?.length && (
+          <Seccion id="contratos" title={t.profile.contracts}>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {sec.contratos.map((c) => (
+                <Link
+                  key={c.codigo}
+                  href={`/${locale}/contratos/${c.codigo}`}
+                  className="group rounded-[var(--radius-card)] border border-border bg-surface p-5 transition-shadow hover:shadow-[var(--shadow-hover)]"
+                >
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-muted">{t.contract.eyebrow}</p>
+                  <p className="mt-1 text-[17px] font-semibold text-ink">
+                    {t.contract.title(nf.format(c.kg_ofrecidos ?? 0), c.categoria ? categoriaNombre(c.categoria, locale).toLowerCase() : "")}
+                  </p>
+                  <p className="mt-1 text-[13px] tabular-nums text-muted">
+                    {t.contract.tokensOf(c.tokens_libres ?? 0, c.tokens_totales ?? 0)} · {t.contract.delivery} {c.fecha_entrega?.split("-").reverse().join("/")}
+                  </p>
+                  <div className="mt-3">
+                    <Progress value={c.tokens_totales ? Math.round((1 - (c.tokens_libres ?? 0) / c.tokens_totales) * 100) : 0} label={t.contract.tokens} />
+                  </div>
+                  <p className="mt-3 inline-flex items-center gap-1 text-[13.5px] font-medium text-campo group-hover:underline">
+                    {t.contract.lockedTitle} <IconArrowRight size={14} />
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </Seccion>
+        )}
       </div>
       {contacto}
     </>

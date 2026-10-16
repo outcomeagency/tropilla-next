@@ -81,7 +81,9 @@ export function mockPerfilPublico(slug: string, locale: Locale): S<"PerfilPublic
           ]
         : [],
       ofertas: mockOfertasDe(slug, locale),
-      contratos: [],
+      contratos: completo
+        ? [{ codigo: "CF0007", especie: "BUB", categoria: "BUB_BUBILLO", cabezas: 30, kg_ofrecidos: 8200, kg_libres: 3700, tokens_totales: 82, tokens_libres: 37, kg_por_token: 100, fecha_entrega: "2027-03-15", estado: "parcialmente_tomado" }]
+        : [],
       contacto: { formulario: true, telefono: null, email: null, whatsapp: completo ? "+5493794000000" : null },
     },
     insignias: p.insignias,
