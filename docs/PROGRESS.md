@@ -101,3 +101,18 @@ publicados (nada inventado). Desde el panel, la oferta nace de un lote con lo re
 lectura; el productor elige qué mostrar (privado por defecto) y el precio sólo aparece para quien tiene
 `comercial.precios`. Los avisos advierten sin bloquear («Publicar igual» queda registrado). Al publicar: enlace,
 QR generado en el servidor, WhatsApp prearmado y cambio de estado (reservada/vendida/retirada).
+
+## TPA-55 · Contacto desde el exterior sin cuenta · ✅ (web)
+
+**Dónde:** sección `#consultar` de la ficha de oferta (y del perfil público, TPA-50), en es/en/pt.
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Enviar consulta (país, tipo de comprador, volumen, mensaje, idioma) | `POST /public/consultas` + `Idempotency-Key` | 🧪 si el endpoint no existe: confirmación marcada «Demostración: no se envió» |
+| Antispam | honeypot `website` + trampa de tiempo (2,5 s) + Turnstile (`NEXT_PUBLIC_TURNSTILE_SITE_KEY`) + 3/h/IP de la API | web lista; Turnstile se activa con la clave |
+
+**Comentario del dev:** Formulario sin cuenta con países localizados por `Intl.DisplayNames` (Mercosur primero),
+tipo de comprador en chips y al menos un medio de respuesta. A un bot que cae en el honeypot o envía en menos
+de 2,5 s se le responde «enviado» sin tocar la API (no le damos señal). Errores 422/429 de la API se muestran en
+el idioma del comprador, y la consulta lleva `idioma` para que el productor sepa en qué responder. La
+confirmación explica qué pasa después; en modo demo lo dice explícitamente en vez de simular un envío.
