@@ -77,7 +77,7 @@ export async function getInicio(est: string, hoy: string): Promise<InicioData> {
 
   const pendientes: Pendiente[] = [];
   if (vencidos.length)
-    pendientes.push({ id: "vencidos", icon: "calendar", titulo: `${vencidos.length} ${vencidos.length === 1 ? "parto vencido" : "partos vencidos"}`, bajada: "Pasaron más de 15 días de la fecha probable", estado: "urgente", href: "/hacienda?estado_reproductivo=prenada&orden=reciente" });
+    pendientes.push({ id: "vencidos", icon: "calendar", titulo: `${vencidos.length} ${vencidos.length === 1 ? "parto vencido" : "partos vencidos"}`, bajada: "Pasaron más de 15 días de la fecha probable", estado: "urgente", href: "/reproduccion/partos?vencidos=1" });
   if (proximos.length)
     pendientes.push({
       id: "partos",
@@ -86,7 +86,7 @@ export async function getInicio(est: string, hoy: string): Promise<InicioData> {
       detalle: semana.length && proximos.length > semana.length ? `${proximos.length} en 30 días` : undefined,
       bajada: "Según servicio y tacto",
       estado: "informativo",
-      href: "/hacienda?estado_reproductivo=prenada",
+      href: "/reproduccion",
     });
   if (retiro.length)
     pendientes.push({ id: "retiro", icon: "syringe", titulo: `${retiro.length} ${retiro.length === 1 ? "animal" : "animales"} con retiro vigente`, bajada: "No faenar ni vender para faena todavía", estado: "pendiente", href: "/hacienda?sanidad=retiro" });

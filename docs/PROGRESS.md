@@ -483,3 +483,20 @@ sesión. Las advertencias de la API se confirman por fila con «Guardar igual»,
 nace en el sistema vinculada a la madre y hereda su lote y potrero, y la muerta queda registrada en el parto sin crear animal. La categoría
 de la cría no se elige: sale del catálogo (cría de la especie y el sexo). Si la gestación es más corta que el mínimo, la API lo advierte y
 se confirma; el detalle muestra la advertencia confirmada en castellano y las crías con enlace a su ficha. El destete recategoriza por regla.
+
+## TPA-30 · Tablero de vientres y calendario de partos · ✅ (web)
+
+**Rutas:** `/reproduccion` (tablero: `?especie=BOV|BUB`), `/reproduccion/partos?mes=YYYY-MM&especie=&vencidos=1` (calendario mensual). Inicio lleva sus KPIs y pendientes de partos a estas pantallas.
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Vientres por estado y especie (vacías, servidas, preñadas, paridas, sin datos), preñadas por mes de parto, próximos y vencidos | `GET …/reproduccion/tablero?especie=` | 🔌 API real |
+| Calendario de partos probables por mes | `GET …/reproduccion/partos?desde=&hasta=&especie=` | 🔌 |
+| Partos vencidos (FPP + 15 d sin parto) | `GET …/reproduccion/partos?vencidos=true` | 🔌 |
+| Próximos 45 días + atrasados dentro de la tolerancia | `GET …/reproduccion/partos?vencidos=false&desde=&hasta=` | 🔌 |
+
+**Comentario del dev:** El tablero arranca por lo urgente: si hay partos vencidos aparece arriba una franja roja con cada madre y
+«Registrar parto». Debajo, KPIs con % de preñez, una barra apilada por especie (cada estado lleva al listado de Hacienda filtrado) y
+un gráfico de partos esperados por mes apilado bovino/bubalino, donde los meses ya pasados se pintan en rojo. El calendario es una
+grilla lunes–domingo con el conteo por día (verde, amarillo si está atrasado, rojo si venció) y al lado la lista del mes con la
+fuente de la fecha (tacto/servicio). Sin mocks: todo sale de los dos endpoints de la API.
