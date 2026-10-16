@@ -3,7 +3,7 @@ import { Suspense, type ReactNode } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Badge, Card, CardBody, CardHeader, DataList, EmptyState, FilterTabs, KpiCard, SpeciesChip, TrustBadge, buttonClass } from "@/components/ui";
-import { IconAlert, IconArrowLeft, IconArrowRight, IconChart, IconFile, IconHeart, IconList, IconScale, IconShieldCheck, IconTag } from "@/components/icons";
+import { IconAlert, IconArrowLeft, IconArrowRight, IconChart, IconFile, IconHeart, IconList, IconPlus, IconScale, IconShieldCheck, IconTag } from "@/components/icons";
 import { Photo } from "@/components/public/photo";
 import { Timeline } from "@/components/panel/hacienda/timeline";
 import { requireContexto } from "@/lib/establecimiento";
@@ -311,6 +311,11 @@ async function Ficha({ params, searchParams }: { params: Params; searchParams: S
                   {sugerida && <Badge tone="success">Recategorización sugerida: {sugerida}</Badge>}
                 </div>
               </div>
+              {ctx.can("hacienda.crear") && (a.estado ?? "activo") === "activo" && (
+                <Link href={`/hacienda/eventos/nuevo?animales=${id}`} className={buttonClass("outline", "sm")}>
+                  <IconPlus size={16} /> Registrar evento
+                </Link>
+              )}
             </div>
             <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-border pt-3">
               {ids.map((i) => (

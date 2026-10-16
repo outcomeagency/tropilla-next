@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { cambioLoteGrupalAction, trasladoGrupalAction, type EventoState } from "@/lib/hacienda-actions";
-import { IconAlert, IconChevronRight, IconClose, IconMap, IconRoute } from "@/components/icons";
+import { IconAlert, IconChevronRight, IconClose, IconMap, IconPlus, IconRoute } from "@/components/icons";
 import { Badge, Button, Field, Input, Notice, Select, SpeciesChip, Spinner, cx } from "@/components/ui";
 import type { Especie } from "@/lib/types";
 
@@ -213,6 +213,11 @@ export function HaciendaTabla({
             <button type="button" onClick={() => setSel(new Set())} className="h-9 rounded-[8px] px-3 text-[13px] font-medium text-sidebar-muted hover:text-blanco">
               Limpiar
             </button>
+            {sel.size <= 100 && (
+              <Link href={`/hacienda/eventos/nuevo?animales=${[...sel].join(",")}`} className="inline-flex h-9 items-center gap-2 rounded-[8px] px-3 text-[13px] font-semibold text-blanco ring-1 ring-sidebar-muted/50 hover:bg-monte-700">
+                <IconPlus size={16} /> Otro evento
+              </Link>
+            )}
             {lotes && (
               <button type="button" onClick={() => setModal("lote")} className="inline-flex h-9 items-center gap-2 rounded-[8px] px-3 text-[13px] font-semibold text-blanco ring-1 ring-sidebar-muted/50 hover:bg-monte-700">
                 <IconRoute size={16} /> Cambiar de lote

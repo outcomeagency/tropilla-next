@@ -1,6 +1,6 @@
-import type { ComponentType } from "react";
+import { createElement, type ComponentType } from "react";
 import { Avatar, Badge, TrustBadge } from "@/components/ui";
-import { IconCow, IconFile, IconHeart, IconMap, IconRoute, IconScale, IconSyringe, IconTag, type IconProps } from "@/components/icons";
+import { IconAlert, IconCow, IconFile, IconTruck, IconHeart, IconMap, IconRoute, IconScale, IconSyringe, IconTag, type IconProps } from "@/components/icons";
 import { ROL_LABEL } from "@/lib/auth";
 import { fecha } from "@/lib/format";
 import { resumenIdentificacion } from "@/lib/identificaciones";
@@ -12,9 +12,15 @@ const ICONO: Record<string, ComponentType<IconProps>> = {
   "hacienda.cambio_lote": IconRoute,
   "hacienda.alta": IconTag,
   "hacienda.identificacion": IconTag,
+  "hacienda.ingreso": IconTruck,
+  "hacienda.egreso": IconTruck,
+  "hacienda.muerte": IconAlert,
+  "hacienda.perdida": IconAlert,
+  "hacienda.faena": IconTruck,
+  "hacienda.individualizacion": IconTag,
 };
 
-function iconoDe(tipo = ""): ComponentType<IconProps> {
+export function iconoDe(tipo = ""): ComponentType<IconProps> {
   if (ICONO[tipo]) return ICONO[tipo];
   if (tipo.startsWith("sanidad.")) return IconSyringe;
   if (tipo.startsWith("reproduccion.")) return IconHeart;
@@ -85,4 +91,9 @@ export function Timeline({ eventos }: { eventos: S<"EventoResumen">[] }) {
       })}
     </div>
   );
+}
+
+/** Ícono del tipo de evento (sin crear componentes durante el render). */
+export function EventoIcono({ tipo, size = 20 }: { tipo?: string; size?: number }) {
+  return createElement(iconoDe(tipo), { size });
 }
