@@ -3,7 +3,7 @@ import { FilterTabs } from "@/components/ui";
 import { requireContexto } from "@/lib/establecimiento";
 import { listConsultas } from "@/lib/data/consultas";
 
-type Seccion = "ofertas" | "consultas" | "contratos" | "simulador" | "ventas" | "precios";
+type Seccion = "ofertas" | "consultas" | "contratos" | "demandas" | "simulador" | "ventas" | "precios";
 
 function Tabs({ actual, consultas, precios = false }: { actual: Seccion; consultas: number | null | false; precios?: boolean }) {
   return (
@@ -14,6 +14,7 @@ function Tabs({ actual, consultas, precios = false }: { actual: Seccion; consult
           { href: "/comercializacion", label: "Ofertas", active: actual === "ofertas" },
           ...(consultas !== false ? [{ href: "/comercializacion/consultas", label: "Consultas", count: consultas || undefined, active: actual === "consultas" }] : []),
           { href: "/comercializacion/contratos", label: "Contratos a futuro", active: actual === "contratos" },
+          { href: "/comercializacion/demandas", label: "Demandas que calzan", active: actual === "demandas" },
           ...(precios ? [{ href: "/comercializacion/simulador", label: "Simulador", active: actual === "simulador" }] : []),
           ...(precios ? [{ href: "/comercializacion/ventas", label: "Ventas", active: actual === "ventas" }] : []),
           ...(precios ? [{ href: "/comercializacion/precios", label: "Mis precios", active: actual === "precios" }] : []),
