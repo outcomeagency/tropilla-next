@@ -190,7 +190,16 @@ async function Ficha({ params, searchParams }: { params: Params; searchParams: S
           <div className="space-y-4">
             {tab === "sanidad" && (
               <Card>
-                <CardHeader title="Retiro" />
+                <CardHeader
+                  title="Retiro"
+                  action={
+                    ctx.can("sanidad.crear") && (a.estado ?? "activo") === "activo" ? (
+                      <Link href={`/sanidad/registrar?animales=${id}`} className="inline-flex items-center gap-1 text-[13px] font-medium text-campo hover:underline">
+                        <IconPlus size={15} /> Registrar aplicación
+                      </Link>
+                    ) : undefined
+                  }
+                />
                 <CardBody className="text-[14px]">
                   {a.retiro_vigente && retiroHasta ? (
                     <p className="flex gap-2 text-warning">

@@ -20,7 +20,10 @@ import {
   TIPOS_HACIENDA,
   TIPOS_PERDIDA,
   tipoHacienda,
+  type ModuloRegistrar,
+  type SujetoTipo,
 } from "@/lib/eventos-hacienda";
+import { METODOS_DOSIFICACION, NUMERO_DOSIS, TIPOS_DESPARASITACION, VIAS, retiroTexto } from "@/lib/sanidad";
 import { FormAlerts, useActionForm } from "@/components/panel/form-state";
 import { fpp, gestacion, type Gestaciones } from "@/lib/gestacion";
 import { fecha as fmtFecha } from "@/lib/format";
@@ -31,10 +34,24 @@ import { IconArrowLeft, IconClose, IconPlus, IconSearch } from "@/components/ico
 type Opt = { codigo: string; nombre: string };
 export type CategoriaOpt = Opt & { especie: string; sexo?: string | null };
 export type LoteOpt = { id: string; nombre: string; especie: string; anonimo: boolean; conteo: Record<string, number> };
+export type ProductoOpt = {
+  id: string;
+  nombre: string;
+  tipo: string;
+  via: string | null;
+  dosis: string | null;
+  principio: string | null;
+  carne: number | null;
+  leche: number | null;
+  enfermedades: string[];
+  especies: string[];
+};
+/** Tarea del plan sanitario que se cierra con este registro. */
+export type TareaOpt = { id: string; titulo: string; tipo: string; enfermedad: string | null; productoId: string | null; loteId: string | null; potreroId: string | null; vence: string };
 
 export interface RegistrarEventoProps {
   /** Qué tipos ofrece el selector (Hacienda o Reproducción). */
-  modulo?: "hacienda" | "reproduccion";
+  modulo?: ModuloRegistrar;
   tipoInicial?: string;
   animalesIniciales: AnimalElegido[];
   loteInicial?: string;
@@ -47,6 +64,10 @@ export interface RegistrarEventoProps {
   categoriasFaena: Opt[];
   gestaciones: Gestaciones;
   hoy: string;
+  productos?: ProductoOpt[];
+  enfermedades?: Opt[];
+  tarea?: TareaOpt | null;
+  potreroInicial?: string;
 }
 
 type Fila = { key: number; especie: string; sexo: string; categoria: string };
@@ -62,11 +83,15 @@ const ESPECIE_LABEL: Record<string, string> = { BOV: "Bovino", BUB: "Bubalino" }
 export function RegistrarEvento(p: RegistrarEventoProps) {
   const router = useRouter();
   const { state, formAction, pending, f, idem } = useActionForm(registrarEventoAction);
-  const [tipo, setTipo] = useState(p.tipoInicial && tipoHacienda(p.tipoInicial) && !tipoHacienda(p.tipoInicial)?.redirige ? p.tipoInicial : "");
+  const tipoIni = p.tarea?.tipo ?? p.tipoInicial;
+  const [tipo, setTipo] = useState(tipoIni && tipoHacienda(tipoIni) && !tipoHacienda(tipoIni)?.redirige ? tipoIni : "");
   const meta = tipoHacienda(tipo);
-  const [sujeto, setSujeto] = useState<"animales" | "lote">(p.loteInicial && !p.animalesIniciales.length ? "lote" : "animales");
+  const [sujeto, setSujeto] = useState<SujetoTipo>(
+    p.tarea?.potreroId || (p.potreroInicial && !p.animalesIniciales.length) ? "potrero" : (p.tarea?.loteId || p.loteInicial) && !p.animalesIniciales.length ? "lote" : "animales",
+  );
+  const [potreroId, setPotreroId] = useState(p.tarea?.potreroId ?? p.potreroInicial ?? "");
   const [animales, setAnimales] = useState<AnimalElegido[]>(p.animalesIniciales);
-  const [loteId, setLoteId] = useState(p.loteInicial ?? "");
+  const [loteId, setLoteId] = useState(p.tarea?.loteId ?? p.loteInicial ?? "");
   const [busca, setBusca] = useState("");
   const [buscaErr, setBuscaErr] = useState("");
   const [buscando, setBuscando] = useState(false);
@@ -118,11 +143,12 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
       {sujetoEfectivo === "animales" && !creaAnimales && animales.map((a) => <input key={a.id} type="hidden" name="animal_id" value={a.id} />)}
       {madre && <input type="hidden" name="madre_id" value={madre.id} />}
       {tipo === "reproduccion.servicio_natural" && toros.map((t) => <input key={t.id} type="hidden" name="toro_id" value={t.id} />)}
+      {p.tarea && tipo === p.tarea.tipo && <input type="hidden" name="tarea_id" value={p.tarea.id} />}
 
       <div className="min-w-0 space-y-4">
         {/* 1. Qué pasó */}
         <Card className="overflow-hidden">
-          <CardHeader title={<Paso n={1}>¿Qué pasó?</Paso>} description={meta ? meta.ayuda : p.modulo === "reproduccion" ? "Elegí el evento. Las hembras que cargues actualizan su estado reproductivo y el calendario de partos." : "Elegí el evento. Las identificaciones se cargan en la ficha del animal."} action={meta ? <button type="button" onClick={() => setTipo("")} className="text-[13px] font-medium text-campo hover:underline">Cambiar</button> : undefined} />
+          <CardHeader title={<Paso n={1}>¿Qué pasó?</Paso>} description={meta ? meta.ayuda : p.modulo === "reproduccion" ? "Elegí el evento. Las hembras que cargues actualizan su estado reproductivo y el calendario de partos." : p.modulo === "sanidad" ? "Elegí qué se aplicó. Se puede registrar a un animal, a un lote entero o a todo un potrero en un solo paso." : "Elegí el evento. Las identificaciones se cargan en la ficha del animal."} action={meta ? <button type="button" onClick={() => setTipo("")} className="text-[13px] font-medium text-campo hover:underline">Cambiar</button> : undefined} />
           {meta ? (
             <div className="flex items-center gap-3 px-5 py-3.5">
               <Badge tone="info">{GRUPOS[meta.grupo]}</Badge>
@@ -158,19 +184,38 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
             <Card className="overflow-hidden">
               <CardHeader
                 title={<Paso n={2}>{creaAnimales ? (tipo === "hacienda.nacimiento" ? "Crías" : "Animales que entran") : "¿A quiénes?"}</Paso>}
-                description={creaAnimales ? "Una fila por animal. La caravana es opcional pero conviene: después se busca por ahí." : sujetoEfectivo === "lote" ? "El evento se registra sobre el lote y lo heredan los animales que después se caravaneen." : "Buscá por caravana, RFID o tatuaje. Podés sumar varios."}
+                description={
+                  creaAnimales
+                    ? "Una fila por animal. La caravana es opcional pero conviene: después se busca por ahí."
+                    : sujetoEfectivo === "potrero"
+                      ? "Alcanza a toda la hacienda que está hoy en el potrero: lotes por cantidades y animales identificados."
+                      : sujetoEfectivo === "lote"
+                        ? "El evento se registra sobre el lote y lo heredan los animales que después se caravaneen."
+                        : "Buscá por caravana, RFID o tatuaje. Podés sumar varios."
+                }
                 action={
                   meta.sujetos.length > 1 ? (
                     <div role="radiogroup" aria-label="Sujeto del evento" className="flex gap-2">
                       {meta.sujetos.map((s) => (
-                        <ChoiceChip key={s} type="radio" name="_sujeto" label={s === "lote" ? "Un lote" : tipo === "hacienda.ingreso" || tipo === "hacienda.nacimiento" ? "Con caravana" : "Animales"} checked={sujetoEfectivo === s} onChange={() => setSujeto(s)} className="h-9 px-3.5 text-[13.5px]" />
+                        <ChoiceChip key={s} type="radio" name="_sujeto" label={s === "lote" ? "Un lote" : s === "potrero" ? "Un potrero" : tipo === "hacienda.ingreso" || tipo === "hacienda.nacimiento" ? "Con caravana" : "Animales"} checked={sujetoEfectivo === s} onChange={() => setSujeto(s)} className="h-9 px-3.5 text-[13.5px]" />
                       ))}
                     </div>
                   ) : undefined
                 }
               />
               <div className="px-5 py-4">
-                {sujetoEfectivo === "lote" ? (
+                {sujetoEfectivo === "potrero" ? (
+                  <Field label="Potrero" htmlFor="potrero_id" error={f.potrero_id}>
+                    <Select id="potrero_id" name="potrero_id" value={potreroId} onChange={(e) => setPotreroId(e.target.value)} {...fieldAria("potrero_id", f.potrero_id)}>
+                      <option value="">Elegí un potrero</option>
+                      {p.potreros.map((x) => (
+                        <option key={x.id} value={x.id}>
+                          {x.nombre}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                ) : sujetoEfectivo === "lote" ? (
                   <div className="space-y-4">
                     <Field label="Lote" htmlFor="lote_id" error={f.lote_id}>
                       <Select id="lote_id" name="lote_id" value={loteId} onChange={(e) => setLoteId(e.target.value)} {...fieldAria("lote_id", f.lote_id)}>
@@ -265,6 +310,8 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
             <Linea label="Sobre">
               {!meta ? (
                 <span className="text-subtle">—</span>
+              ) : sujetoEfectivo === "potrero" ? (
+                p.potreros.find((x) => x.id === potreroId)?.nombre ?? <span className="text-subtle">Elegí un potrero</span>
               ) : sujetoEfectivo === "lote" ? (
                 lote?.nombre ?? <span className="text-subtle">Elegí un lote</span>
               ) : creaAnimales ? (
@@ -273,6 +320,7 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
                 `${animales.length} ${animales.length === 1 ? "animal" : "animales"}`
               )}
             </Linea>
+            {p.tarea && tipo === p.tarea.tipo && <Linea label="Cierra la tarea">{p.tarea.titulo}</Linea>}
           </dl>
           <div className="space-y-3 border-t border-border px-5 py-4">
             <FormAlerts state={state} pending={pending} />
@@ -282,8 +330,8 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
             <p className="text-[12.5px] leading-snug text-muted">Queda en la historia con tu nombre, rol y huella. No se borra: si te equivocás, se corrige o se anula con motivo.</p>
           </div>
         </Card>
-        <Link href={p.modulo === "reproduccion" ? "/reproduccion" : "/hacienda/eventos"} className={buttonClass("ghost", "sm")}>
-          <IconArrowLeft size={16} /> {p.modulo === "reproduccion" ? "Volver a Reproducción" : "Volver al registro"}
+        <Link href={p.modulo === "reproduccion" ? "/reproduccion" : p.modulo === "sanidad" ? "/sanidad" : "/hacienda/eventos"} className={buttonClass("ghost", "sm")}>
+          <IconArrowLeft size={16} /> {p.modulo === "reproduccion" ? "Volver a Reproducción" : p.modulo === "sanidad" ? "Volver a Sanidad" : "Volver al registro"}
         </Link>
       </aside>
     </form>
@@ -685,6 +733,10 @@ function CamposTipo({
       );
     case "reproduccion.tacto":
       return <CamposTacto f={f} p={p} animales={animales} />;
+    case "sanidad.vacunacion":
+    case "sanidad.desparasitacion":
+    case "sanidad.tratamiento":
+      return <CamposAplicacion key={tipo} tipo={tipo} f={f} p={p} especie={especie} />;
     case "reproduccion.parto":
       return <CamposParto f={f} p={p} madre={animales[0]} />;
     case "reproduccion.aborto":
@@ -888,6 +940,183 @@ function CamposParto({ f, p, madre }: { f: Record<string, string>; p: RegistrarE
         )}
         <p className="text-[12.5px] text-muted">La categoría de cada cría sale de la especie y el sexo (ternero/a, bucerro/a); queda en el lote y potrero de la madre.</p>
       </div>
+    </>
+  );
+}
+
+const TIPOS_PRODUCTO_EVENTO: Record<string, string[]> = {
+  "sanidad.vacunacion": ["vacuna"],
+  "sanidad.desparasitacion": ["antiparasitario_interno", "antiparasitario_externo"],
+  "sanidad.tratamiento": ["antibiotico", "hormona", "otro", "antiparasitario_interno", "antiparasitario_externo"],
+};
+
+function sumarDias(iso: string, n: number) {
+  const d = new Date(`${iso}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Vacunación, desparasitación y tratamiento (TPA-32): el producto sale del catálogo del
+ * establecimiento y precarga vía, dosis declarada y retiro (editables: lo que vale es lo
+ * que dice el marbete del envase usado). El retiro vigente lo calcula la API.
+ */
+function CamposAplicacion({ tipo, f, p, especie }: { tipo: string; f: Record<string, string>; p: RegistrarEventoProps; especie: string }) {
+  const tipos = TIPOS_PRODUCTO_EVENTO[tipo] ?? [];
+  const productos = (p.productos ?? []).filter((x) => tipos.includes(x.tipo) && (!especie || !x.especies.length || x.especies.includes(especie)));
+  const inicial = p.tarea && p.tarea.tipo === tipo ? productos.find((x) => x.id === p.tarea?.productoId) : undefined;
+  const [prodId, setProdId] = useState(inicial?.id ?? (productos.length === 1 ? productos[0].id : ""));
+  const prod = productos.find((x) => x.id === prodId);
+  const otro = prodId === "_otro";
+  const [carne, setCarne] = useState(prod?.carne != null ? String(prod.carne) : "");
+  const [fechaA, setFechaA] = useState(p.hoy);
+  const enfermedadIni = (p.tarea?.tipo === tipo ? p.tarea.enfermedad : null) ?? prod?.enfermedades[0] ?? "";
+  const nCarne = Number(carne);
+
+  function elegir(id: string) {
+    setProdId(id);
+    const x = productos.find((y) => y.id === id);
+    setCarne(x?.carne != null ? String(x.carne) : "");
+  }
+
+  const kp = prod?.id ?? (otro ? "otro" : "nada");
+  return (
+    <>
+      <div className="sm:col-span-2">
+        <Field
+          label="Producto"
+          htmlFor="producto_id"
+          error={f.producto_id || f.producto_nombre}
+          hint={productos.length ? undefined : <>No hay productos de este tipo en el catálogo. <Link href="/sanidad/productos" className="font-medium text-campo hover:underline">Cargalos acá</Link> o escribí el nombre.</>}
+        >
+          <Select id="producto_id" name="producto_id" value={prodId} onChange={(e) => elegir(e.target.value)} {...fieldAria("producto_id", f.producto_id)}>
+            <option value="">Elegí del catálogo</option>
+            {productos.map((x) => (
+              <option key={x.id} value={x.id}>
+                {x.nombre}
+                {x.principio ? ` · ${x.principio}` : ""}
+              </option>
+            ))}
+            <option value="_otro">Otro (no está en el catálogo)</option>
+          </Select>
+        </Field>
+      </div>
+      {otro || (!productos.length && !prodId) ? (
+        <div className="sm:col-span-2">
+          <Field label="Nombre del producto" htmlFor="producto_nombre" error={f.producto_nombre}>
+            <Input id="producto_nombre" name="producto_nombre" maxLength={200} placeholder="Como figura en el envase" {...fieldAria("producto_nombre", f.producto_nombre)} />
+          </Field>
+        </div>
+      ) : (
+        <input type="hidden" name="producto_nombre" value={prod?.nombre ?? ""} />
+      )}
+
+      {tipo === "sanidad.vacunacion" && (
+        <>
+          <Field label="Enfermedad" htmlFor="enfermedad" error={f.enfermedad}>
+            <Select key={`enf-${kp}`} id="enfermedad" name="enfermedad" defaultValue={enfermedadIni} {...fieldAria("enfermedad", f.enfermedad)}>
+              <Opciones lista={p.enfermedades ?? []} vacio="Elegí" />
+            </Select>
+          </Field>
+          <Field label="Dosis" htmlFor="numero_dosis" optional>
+            <Select id="numero_dosis" name="numero_dosis" defaultValue="">
+              <Opciones lista={NUMERO_DOSIS} vacio="Sin indicar" />
+            </Select>
+          </Field>
+        </>
+      )}
+      {tipo === "sanidad.desparasitacion" && (
+        <>
+          <Field label="Tipo" htmlFor="tipo_desparasitacion" error={f.tipo_desparasitacion}>
+            <Select key={`td-${kp}`} id="tipo_desparasitacion" name="tipo_desparasitacion" defaultValue={prod?.tipo === "antiparasitario_externo" ? "externo" : prod ? "interno" : ""} {...fieldAria("tipo_desparasitacion", f.tipo_desparasitacion)}>
+              <Opciones lista={TIPOS_DESPARASITACION} vacio="Elegí" />
+            </Select>
+          </Field>
+          <Field label="Principio activo" htmlFor="principio_activo" optional>
+            <Input key={`pa-${kp}`} id="principio_activo" name="principio_activo" defaultValue={prod?.principio ?? ""} maxLength={120} />
+          </Field>
+          <Field label="Cómo se dosificó" htmlFor="metodo_dosificacion" optional>
+            <Select id="metodo_dosificacion" name="metodo_dosificacion" defaultValue="">
+              <Opciones lista={METODOS_DOSIFICACION} vacio="Sin indicar" />
+            </Select>
+          </Field>
+          <Field label="Peso para dosificar" htmlFor="peso_dosificacion_kg" optional error={f.peso_dosificacion_kg} hint="El del más pesado, si se dosificó así.">
+            <div className="relative">
+              <Input id="peso_dosificacion_kg" name="peso_dosificacion_kg" inputMode="decimal" className="pr-10 tabular-nums" {...fieldAria("peso_dosificacion_kg", f.peso_dosificacion_kg, true)} />
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[14px] text-muted">kg</span>
+            </div>
+          </Field>
+        </>
+      )}
+      {tipo === "sanidad.tratamiento" && (
+        <>
+          <div className="sm:col-span-2">
+            <Field label="Diagnóstico presuntivo" htmlFor="diagnostico_presuntivo" error={f.diagnostico_presuntivo}>
+              <Input id="diagnostico_presuntivo" name="diagnostico_presuntivo" maxLength={200} placeholder="Ej. queratoconjuntivitis, pietín, neumonía" {...fieldAria("diagnostico_presuntivo", f.diagnostico_presuntivo)} />
+            </Field>
+          </div>
+          <Field label="Días de tratamiento" htmlFor="duracion_dias" optional error={f.duracion_dias}>
+            <Input id="duracion_dias" name="duracion_dias" inputMode="numeric" maxLength={3} className="tabular-nums" {...fieldAria("duracion_dias", f.duracion_dias)} />
+          </Field>
+          <Field label="Veterinario" htmlFor="veterinario" optional>
+            <Input id="veterinario" name="veterinario" maxLength={200} />
+          </Field>
+        </>
+      )}
+
+      <Field label="Dosis aplicada" htmlFor="dosis_aplicada" optional hint={prod?.dosis ? `Declarada en el catálogo: ${prod.dosis}` : "La que indicó el veterinario o el marbete."}>
+        <Input key={`dosis-${kp}`} id="dosis_aplicada" name="dosis_aplicada" defaultValue={prod?.dosis ?? ""} maxLength={200} />
+      </Field>
+      {tipo !== "sanidad.tratamiento" ? (
+        <Field label="Vía" htmlFor="via" optional>
+          <Select key={`via-${kp}`} id="via" name="via" defaultValue={prod?.via ?? ""}>
+            <Opciones lista={VIAS} vacio="Sin indicar" />
+          </Select>
+        </Field>
+      ) : (
+        <span className="hidden sm:block" />
+      )}
+
+      {tipo === "sanidad.vacunacion" && (
+        <>
+          <Field label="Vacunador" htmlFor="vacunador" optional hint="Ej. vacunador de la fundación (FUCOSA).">
+            <Input id="vacunador" name="vacunador" maxLength={200} />
+          </Field>
+          <Field label="Campaña" htmlFor="campana" optional>
+            <Input id="campana" name="campana" maxLength={200} placeholder="Ej. 1.ª campaña 2026" />
+          </Field>
+          <Field label="Lote/serie del envase" htmlFor="envase_lote" optional>
+            <Input id="envase_lote" name="envase_lote" maxLength={200} />
+          </Field>
+          <Field label="Vencimiento del envase" htmlFor="envase_vence" optional error={f.envase_vence}>
+            <Input id="envase_vence" name="envase_vence" type="date" {...fieldAria("envase_vence", f.envase_vence)} />
+          </Field>
+        </>
+      )}
+
+      <fieldset className="sm:col-span-2 rounded-[10px] border border-border bg-base p-4">
+        <legend className="px-1 text-[13px] font-semibold text-ink">Retiro</legend>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Carne" htmlFor="retiro_carne_dias" optional error={f.retiro_carne_dias} hint={prod ? (prod.carne != null ? `Del catálogo: ${retiroTexto(prod.carne)}` : "El producto no tiene retiro cargado: copialo del marbete.") : undefined}>
+            <div className="relative">
+              <Input id="retiro_carne_dias" name="retiro_carne_dias" inputMode="numeric" maxLength={3} value={carne} onChange={(e) => setCarne(e.target.value.replace(/\D/g, ""))} className="pr-14 tabular-nums" {...fieldAria("retiro_carne_dias", f.retiro_carne_dias, !!prod)} />
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[14px] text-muted">días</span>
+            </div>
+          </Field>
+          <Field label="Leche" htmlFor="retiro_leche_dias" optional error={f.retiro_leche_dias}>
+            <div className="relative">
+              <Input key={`leche-${kp}`} id="retiro_leche_dias" name="retiro_leche_dias" inputMode="numeric" maxLength={3} defaultValue={prod?.leche ?? ""} className="pr-14 tabular-nums" {...fieldAria("retiro_leche_dias", f.retiro_leche_dias)} />
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[14px] text-muted">días</span>
+            </div>
+          </Field>
+        </div>
+        <p className={cx("mt-3 flex gap-2 text-[13px]", nCarne > 0 ? "font-medium text-warning" : "text-muted")}>
+          {nCarne > 0
+            ? `No vender para faena hasta el ${fmtFecha(sumarDias(fechaA, nCarne))}: quedan con retiro vigente y TROPILLA avisa al ofertar o vender.`
+            : "Sin retiro de carne: no quedan restricciones para vender."}
+        </p>
+        <FechaSync onChange={setFechaA} />
+      </fieldset>
     </>
   );
 }

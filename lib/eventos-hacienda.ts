@@ -4,7 +4,9 @@
  * nombres y el JSON Schema vienen de GET /catalogos; esto sólo ordena la UI.
  */
 
-export type SujetoTipo = "animales" | "lote";
+import { METODOS_DOSIFICACION, NUMERO_DOSIS, RESULTADOS_PRUEBA, TIPOS_ANALISIS, TIPOS_DESPARASITACION, VIAS } from "./sanidad";
+
+export type SujetoTipo = "animales" | "lote" | "potrero";
 
 export interface TipoHacienda {
   codigo: string;
@@ -12,7 +14,7 @@ export interface TipoHacienda {
   /** Una línea para el selector. */
   corto: string;
   ayuda: string;
-  grupo: "movimientos" | "bajas" | "manejo" | "altas" | "servicio" | "diagnostico" | "partos";
+  grupo: "movimientos" | "bajas" | "manejo" | "altas" | "servicio" | "diagnostico" | "partos" | "aplicaciones" | "pruebas";
   sujetos: SujetoTipo[];
   /** Pantalla propia en vez del formulario genérico. */
   redirige?: string;
@@ -26,12 +28,17 @@ export const GRUPOS: Record<TipoHacienda["grupo"], string> = {
   servicio: "Servicio",
   diagnostico: "Diagnóstico",
   partos: "Partos y destete",
+  aplicaciones: "Aplicaciones",
+  pruebas: "Pruebas y laboratorio",
 };
 
 /** Grupos de cada módulo en el selector de «Registrar». */
-export const GRUPOS_MODULO: Record<"hacienda" | "reproduccion", TipoHacienda["grupo"][]> = {
+export type ModuloRegistrar = "hacienda" | "reproduccion" | "sanidad";
+
+export const GRUPOS_MODULO: Record<ModuloRegistrar, TipoHacienda["grupo"][]> = {
   hacienda: ["altas", "movimientos", "manejo", "bajas"],
   reproduccion: ["servicio", "diagnostico", "partos"],
+  sanidad: ["aplicaciones"],
 };
 
 export const TIPOS_HACIENDA: TipoHacienda[] = [
@@ -54,6 +61,9 @@ export const TIPOS_HACIENDA: TipoHacienda[] = [
   { codigo: "reproduccion.parto", corto: "Crías vinculadas a la madre", titulo: "Parto", ayuda: "Una madre por parto. Cada cría viva nace en el sistema con su madre; las muertas quedan registradas en el parto.", grupo: "partos", sujetos: ["animales"] },
   { codigo: "reproduccion.aborto", corto: "La hembra vuelve a vacía", titulo: "Aborto", ayuda: "Días de gestación estimados y causa presunta. La hembra vuelve a «vacía».", grupo: "partos", sujetos: ["animales"] },
   { codigo: "reproduccion.destete", corto: "Peso al destete, recategoriza", titulo: "Destete", ayuda: "Peso y tipo de destete de las crías (o de un lote). Recategoriza: ternera → vaquillona, bucerro → bubillito según la regla.", grupo: "partos", sujetos: ["animales", "lote"] },
+  { codigo: "sanidad.vacunacion", corto: "Vacuna con su enfermedad y dosis", titulo: "Vacunación", ayuda: "Producto, enfermedad, número de dosis, vacunador y envase. Si el producto tiene retiro, los animales quedan con retiro vigente.", grupo: "aplicaciones", sujetos: ["lote", "animales", "potrero"] },
+  { codigo: "sanidad.desparasitacion", corto: "Interna, externa o ambas", titulo: "Desparasitación", ayuda: "Producto, tipo y cómo se dosificó (por el peso de cada uno o por el más pesado). El retiro sale del producto.", grupo: "aplicaciones", sujetos: ["lote", "animales", "potrero"] },
+  { codigo: "sanidad.tratamiento", corto: "Diagnóstico, producto y duración", titulo: "Tratamiento", ayuda: "Diagnóstico presuntivo, producto, dosis, días de tratamiento y veterinario. El retiro corre desde la última aplicación.", grupo: "aplicaciones", sujetos: ["animales", "lote"] },
 ];
 
 export const tipoHacienda = (codigo: string) => TIPOS_HACIENDA.find((t) => t.codigo === codigo);
@@ -187,9 +197,45 @@ export const ETIQUETAS: Record<string, string> = {
   inseminador: "Inseminador",
   protocolo: "Protocolo",
   dia_protocolo: "Día del protocolo",
+  producto_nombre: "Producto",
+  producto_id: "Producto del catálogo",
+  enfermedad: "Enfermedad",
+  numero_dosis: "Dosis",
+  vacunador: "Vacunador",
+  envase_lote: "Lote/serie del envase",
+  envase_vence: "Vencimiento del envase",
+  dosis_aplicada: "Dosis aplicada",
+  campana: "Campaña",
+  via: "Vía",
+  retiro_carne_dias: "Retiro carne (días)",
+  retiro_leche_dias: "Retiro leche (días)",
+  principio_activo: "Principio activo",
+  metodo_dosificacion: "Dosificación",
+  peso_dosificacion_kg: "Peso para dosificar",
+  diagnostico_presuntivo: "Diagnóstico presuntivo",
+  duracion_dias: "Días de tratamiento",
+  tarea_id: "Tarea del plan",
+  prueba: "Prueba",
+  resultado_origen: "Resultado",
+  lectura_0h_mm: "Lectura 0 h (mm)",
+  lectura_72h_mm: "Lectura 72 h (mm)",
+  laboratorio: "Laboratorio",
+  protocolo_numero: "N.º de protocolo",
+  umbrales_version: "Versión de umbrales",
+  muestra: "Muestra",
+  resultado_texto: "Resultado",
+  documento_ids: "Documentos",
 };
 
 export const VALORES: Record<string, string> = Object.fromEntries([
+  ...VIAS,
+  ...NUMERO_DOSIS,
+  ...TIPOS_DESPARASITACION,
+  ...METODOS_DOSIFICACION,
+  ...TIPOS_ANALISIS,
+  ...RESULTADOS_PRUEBA,
+  ["calculado", "Calculado por TROPILLA"],
+  ["declarado", "Declarado"],
   ...MOTIVOS_INGRESO,
   ...MOTIVOS_EGRESO,
   ...TIPOS_PERDIDA,

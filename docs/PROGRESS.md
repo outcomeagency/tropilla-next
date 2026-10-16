@@ -532,3 +532,22 @@ fuente de la fecha (tacto/servicio). Sin mocks: todo sale de los dos endpoints d
 Por eso el dato más visible de cada fila es el retiro de carne/leche, y si un antiparasitario o antibiótico no lo tiene aparece «Falta
 el retiro» con un aviso arriba que explica por qué importa. La base sugerida trae genéricos a propósito sin dosis ni retiro: el
 diálogo lo dice y pide la marca y el marbete. La dosis es texto declarado («la indicada por el Dr. Pérez»): TROPILLA no prescribe.
+
+## TPA-32 · Registrar aplicación sanitaria · ✅ (web)
+
+**Rutas:** `/sanidad` (resumen: indicadores, últimos registros y atajos), `/sanidad/registrar?tipo=&animales=&lote=&potrero=&tarea=`; la ficha del animal → Sanidad suma «Registrar aplicación».
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Vacunación (producto, enfermedad, n.º de dosis, vía, vacunador, campaña, envase) | `POST …/eventos` `sanidad.vacunacion` | 🔌 |
+| Desparasitación (tipo, principio activo, dosificación por el más pesado, peso) | `POST …/eventos` `sanidad.desparasitacion` | 🔌 probado: lote «Bucerros 2026» con Ivomec 1 % (35 d) |
+| Tratamiento (diagnóstico presuntivo, días, veterinario) | `POST …/eventos` `sanidad.tratamiento` | 🔌 |
+| A animales, un lote o **un potrero** completo | `sujetos.tipo = animales | lote | potrero` | 🔌 |
+| Cierra la tarea del plan | `payload.tarea_id` (precarga tipo, enfermedad, producto y lote/potrero de la tarea) | 🔌 (pantalla de tareas en TPA-33) |
+| Modo manga (offline) | — | es de la app (Flutter) |
+
+**Comentario del dev:** Sanidad usa el mismo «Registrar» de Hacienda y Reproducción (qué pasó → a quiénes → datos), sumando el
+potrero como sujeto: vacunar «todo lo que está en Potrero Norte» es un solo paso. El producto sale del catálogo y precarga vía, dosis
+declarada y retiro, editables porque manda el marbete del envase usado; abajo se lee en claro «No vender para faena hasta el
+20/11/2026». El detalle del evento ya no muestra ids crudos (producto, tarea) y explica el sujeto potrero. Para la API: el `resumen`
+de las vacunaciones del demo dice «— 0 cabezas» en las aplicadas a potrero/lote vacío.

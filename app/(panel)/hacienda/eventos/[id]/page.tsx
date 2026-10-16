@@ -25,7 +25,7 @@ type Cria = { viva?: boolean; sexo?: string; peso_kg?: string; animal?: { animal
 type SP = { ok?: string };
 
 const ORIGEN: Record<string, string> = { web: "Web", app: "App de campo", push: "App de campo", importacion: "Planilla", sistema: "Sistema" };
-const OCULTAR = new Set(["animales", "crias", "operacion_id", "documento_ids", "contrato_id", "regla_id", "movimientos"]);
+const OCULTAR = new Set(["animales", "crias", "producto_id", "tarea_id", "operacion_id", "documento_ids", "contrato_id", "regla_id", "movimientos"]);
 const OBSERVACION: Record<string, string> = {
   gestacion_corta: "Gestación más corta que el mínimo de la especie",
   gestacion_larga: "Gestación más larga que el máximo de la especie",
@@ -216,11 +216,22 @@ async function Contenido({ params, searchParams }: { params: Promise<Params>; se
                   ? `${ids.length} ${ids.length === 1 ? "animal identificado" : "animales identificados"}`
                   : loteSujeto
                     ? "Lote de manejo"
-                    : ev.sujetos?.tipo === "establecimiento"
+                    : ev.sujetos?.potrero_id
+                      ? "Toda la hacienda que estaba en el potrero"
+                      : ev.sujetos?.tipo === "establecimiento"
                       ? "Todo el establecimiento"
                       : undefined
               }
             />
+            {ev.sujetos?.potrero_id && (
+              <Link href={`/establecimiento/potreros/${ev.sujetos.potrero_id}`} className="flex items-center justify-between gap-3 border-b border-border px-5 py-3 hover:bg-surface-2">
+                <span>
+                  <span className="block text-[12px] font-semibold uppercase tracking-[0.05em] text-muted">Potrero</span>
+                  <span className="font-semibold text-ink">{nombres.get(ev.sujetos.potrero_id) ?? "Potrero"}</span>
+                </span>
+                <IconChevronRight size={18} className="text-subtle" />
+              </Link>
+            )}
             {loteSujeto && (
               <Link href={`/hacienda/lotes/${loteSujeto}`} className="flex items-center justify-between gap-3 border-b border-border px-5 py-3 hover:bg-surface-2">
                 <span>
