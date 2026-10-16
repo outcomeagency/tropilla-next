@@ -24,7 +24,8 @@ Web de TROPILLA: panel de gestión del productor (`app/(panel)`), ingreso (`app/
 - Nada de «look IA»: sin gradientes, glass, sombras difusas ni emojis. Tarjetas blancas con borde de 1 px; sombra sólo en hover de lo clickeable.
 - La API se llama **sólo server-side** con `lib/api.ts` (`TROPILLA_API_URL`); el token Sanctum vive en la cookie httpOnly `tropilla_token` (`lib/session.ts`). Verificá la sesión dentro de cada Server Action, no confíes sólo en `proxy.ts`.
 - Rutas nuevas del panel: sumarlas a `lib/nav.ts` **y** al `matcher` de `proxy.ts`.
-- `lib/mock.ts` son datos de ejemplo para maquetar: reemplazarlos por la API, nunca importarlos desde lo público.
+- Datos de ejemplo: `lib/mock/*` + `withMock()` de `lib/mock/fallback.ts` (sólo si el endpoint no existe o la API no responde; siempre con `<MockNotice>`). `lib/mock.ts` es la maqueta vieja del inicio: se borra al conectar TPA-52. Progreso y estado real vs mock en `docs/PROGRESS.md`.
+- Tipos de la API: `lib/api-types.ts` generado con `npm run api:types` (no editar a mano); alias en `lib/schemas.ts`.
 - Lenguaje de confianza: sólo «Declarado» e «Integridad registrada». Nunca «certificado», «verificado oficialmente» ni «apto exportación». La leyenda del pie público es fija.
 - Privado por defecto: CUIT, RENSPA, precios, fiscal, reactores y ubicación exacta nunca se muestran en lo público.
 

@@ -319,3 +319,166 @@ export const IconCloudOff = (p: IconProps) => (
     <path d="M8.5 7.6A5.5 5.5 0 0 1 17 11.5h.5a3.5 3.5 0 0 1 2.3 6.1M15.5 18.5H7a4 4 0 0 1-1.7-7.6" />
   </Icon>
 );
+
+/* ── Cuenta, formularios y acciones ── */
+export const IconEye = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M2.8 12s3.3-6.2 9.2-6.2 9.2 6.2 9.2 6.2-3.3 6.2-9.2 6.2S2.8 12 2.8 12Z" />
+    <circle cx="12" cy="12" r="2.7" />
+  </Icon>
+);
+
+export const IconEyeOff = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 4l16 16" />
+    <path d="M9.9 6.1A9.6 9.6 0 0 1 12 5.8c5.9 0 9.2 6.2 9.2 6.2a15.6 15.6 0 0 1-2.6 3.3M6.4 7.6A15 15 0 0 0 2.8 12s3.3 6.2 9.2 6.2a9.3 9.3 0 0 0 4.3-1" />
+    <path d="M10.1 10.2a2.7 2.7 0 0 0 3.7 3.7" />
+  </Icon>
+);
+
+export const IconMail = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3.2" y="5.5" width="17.6" height="13" rx="1.8" />
+    <path d="m4 7 8 6 8-6" />
+  </Icon>
+);
+
+export const IconKey = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="8" cy="15" r="4" />
+    <path d="m10.9 12.1 8.6-8.6M16.5 6.5l2.3 2.3M14.3 8.7l1.8 1.8" />
+  </Icon>
+);
+
+export const IconArrowLeft = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M19 12H5M11 6l-6 6 6 6" />
+  </Icon>
+);
+
+export const IconCheck = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="m5 12.5 4.5 4.5L19 7.5" />
+  </Icon>
+);
+
+export const IconWhatsapp = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4.2 19.8l1.1-3.9A8.3 8.3 0 1 1 8.4 19l-4.2.8Z" />
+    <path d="M9.2 8.6c.2-.5.5-.5.8-.5h.5c.2 0 .4.1.5.4l.6 1.5c.1.2 0 .5-.1.6l-.5.6c.6 1.1 1.5 2 2.7 2.6l.6-.6c.2-.2.4-.2.6-.1l1.5.7c.2.1.3.3.3.5v.5c0 .4-.2.8-.6 1-.6.3-1.5.4-2.6-.1a8.6 8.6 0 0 1-4.1-4.1c-.4-1-.4-1.9-.2-2.5Z" />
+  </Icon>
+);
+
+export const IconQr = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="4" y="4" width="6" height="6" rx="1" />
+    <rect x="14" y="4" width="6" height="6" rx="1" />
+    <rect x="4" y="14" width="6" height="6" rx="1" />
+    <path d="M14 14h2.5v2.5H14zM18.5 14H20M14 19.5V20M17 18.5h3V20" />
+  </Icon>
+);
+
+export const IconUpload = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 15.5V4M7.5 8.5 12 4l4.5 4.5" />
+    <path d="M4.5 14.5v3.7c0 .7.6 1.3 1.3 1.3h12.4c.7 0 1.3-.6 1.3-1.3v-3.7" />
+  </Icon>
+);
+
+export const IconFilter = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 6h16M7 12h10M10 18h4" />
+  </Icon>
+);
+
+export const IconUsers = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="9" cy="8.5" r="3.2" />
+    <path d="M3.5 19.5c.6-3 2.8-4.8 5.5-4.8s4.9 1.8 5.5 4.8" />
+    <path d="M15.5 5.6a3.2 3.2 0 0 1 0 5.8M17.3 14.9c1.6.6 2.8 2.2 3.2 4.6" />
+  </Icon>
+);
+
+export const IconCopy = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="8.5" y="8.5" width="11" height="11" rx="1.8" />
+    <path d="M15.5 8.5V6.3c0-1-.8-1.8-1.8-1.8H6.3c-1 0-1.8.8-1.8 1.8v7.4c0 1 .8 1.8 1.8 1.8h2.2" />
+  </Icon>
+);
+
+export const IconExternal = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M13.5 4.5h6v6M19.5 4.5l-8 8" />
+    <path d="M17.5 13.5v4.7c0 .7-.6 1.3-1.3 1.3H5.8c-.7 0-1.3-.6-1.3-1.3V7.8c0-.7.6-1.3 1.3-1.3h4.7" />
+  </Icon>
+);
+
+export const IconShare = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="17.5" cy="6" r="2.5" />
+    <circle cx="6.5" cy="12" r="2.5" />
+    <circle cx="17.5" cy="18" r="2.5" />
+    <path d="m8.7 10.8 6.6-3.6M8.7 13.2l6.6 3.6" />
+  </Icon>
+);
+
+export const IconLeaf = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M5 19c0-8 5-13.5 14.5-14-.3 9.3-5.7 14.5-13.5 14.5" />
+    <path d="M5 19c2.5-4 5.5-6.6 9-8.5" />
+  </Icon>
+);
+
+export const IconHash = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M9.5 4 8 20M16 4l-1.5 16M4.5 9h15.5M4 15h15.5" />
+  </Icon>
+);
+
+export const IconCamera = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4.5 8.3c0-.7.6-1.3 1.3-1.3h2.4l1.5-2h4.6l1.5 2h2.4c.7 0 1.3.6 1.3 1.3v9.4c0 .7-.6 1.3-1.3 1.3H5.8c-.7 0-1.3-.6-1.3-1.3Z" />
+    <circle cx="12" cy="12.8" r="3.3" />
+  </Icon>
+);
+
+export const IconTag = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3.8 12.3V4.8c0-.6.4-1 1-1h7.5l8 8a1.4 1.4 0 0 1 0 2l-5.5 5.5a1.4 1.4 0 0 1-2 0Z" />
+    <circle cx="8.3" cy="8.3" r="1.4" />
+  </Icon>
+);
+
+export const IconSend = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M20.5 3.5 10 14M20.5 3.5 14 20.5l-4-6.5-6.5-4Z" />
+  </Icon>
+);
+
+export const IconTruck = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 6.5h11v9.5H3zM14 9.5h3.8l3.2 3.5v3H14" />
+    <circle cx="7" cy="17.5" r="1.8" />
+    <circle cx="17.5" cy="17.5" r="1.8" />
+  </Icon>
+);
+
+export const IconStar = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="m12 4 2.5 5.1 5.6.8-4 3.9.9 5.6L12 16.8l-5 2.6.9-5.6-4-3.9 5.6-.8Z" />
+  </Icon>
+);
+
+export const IconRuler = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="m3.5 16.5 13-13 4 4-13 13Z" />
+    <path d="m7.5 12.5 2 2M10.5 9.5l1.5 1.5M13.5 6.5l2 2" />
+  </Icon>
+);
+
+export const IconLanguage = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 6h9M8.5 4v2M6 6c.6 3 2.8 5.5 6 7M11 6c-.7 3.2-3 6-6.5 7.8" />
+    <path d="m12.5 20 3.5-8.5 3.5 8.5M13.7 17.2h4.6" />
+  </Icon>
+);

@@ -18,8 +18,6 @@ export const MOCK_ESTABLECIMIENTO = {
   hectareas: 2400,
 };
 
-/** → GET /auth/me cuando la API no responde (sólo para la maqueta). */
-export const MOCK_USUARIO = { nombre: "Ramón Ferreyra", rol: "Dueño" };
 
 /** → GET /establecimientos/{id}/resumen */
 export const MOCK_RESUMEN = {

@@ -1,5 +1,12 @@
 import Link from "next/link";
-import type { ButtonHTMLAttributes, ComponentType, InputHTMLAttributes, ReactNode } from "react";
+import type {
+  ButtonHTMLAttributes,
+  ComponentType,
+  InputHTMLAttributes,
+  ReactNode,
+  SelectHTMLAttributes,
+  TextareaHTMLAttributes,
+} from "react";
 import { ESTADOS, TONE_CLASS, type Estado, type Tone } from "@/lib/status";
 import type { Delta, Especie, EstadoSync, NivelConfianza } from "@/lib/types";
 import {
@@ -9,6 +16,7 @@ import {
   IconArrowUp,
   IconBuffalo,
   IconCheckCircle,
+  IconChevronDown,
   IconClock,
   IconCow,
   IconDeclared,
@@ -449,24 +457,140 @@ export function Field({
   label,
   htmlFor,
   hint,
+  error,
+  optional,
   children,
 }: {
   label: string;
   htmlFor: string;
   hint?: ReactNode;
+  /** Error del campo (validación local o 422 de la API). Reemplaza al hint. */
+  error?: string;
+  optional?: boolean;
   children: ReactNode;
 }) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={htmlFor} className="block text-[13px] font-semibold text-ink">
+      <label htmlFor={htmlFor} className="flex items-baseline justify-between gap-2 text-[13px] font-semibold text-ink">
         {label}
+        {optional && <span className="text-[12px] font-normal text-muted">Opcional</span>}
       </label>
       {children}
-      {hint && <p className="text-[12.5px] text-muted">{hint}</p>}
+      {error ? (
+        <p id={`${htmlFor}-error`} className="flex items-start gap-1.5 text-[12.5px] font-medium text-danger">
+          <IconAlert size={14} className="mt-px shrink-0" />
+          {error}
+        </p>
+      ) : (
+        hint && (
+          <p id={`${htmlFor}-hint`} className="text-[12.5px] text-muted">
+            {hint}
+          </p>
+        )
+      )}
     </div>
   );
 }
 
+/** aria-* de un input según su Field (error o hint). */
+export function fieldAria(id: string, error?: string, hint?: boolean) {
+  return {
+    "aria-invalid": error ? true : undefined,
+    "aria-describedby": error ? `${id}-error` : hint ? `${id}-hint` : undefined,
+  } as const;
+}
+
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...props} className={cx(inputClass, props.className)} />;
+  return <input {...props} className={cx(inputClass, "aria-[invalid=true]:border-danger", props.className)} />;
+}
+
+export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <div className="relative">
+      <select {...props} className={cx(inputClass, "appearance-none pr-9 aria-[invalid=true]:border-danger", props.className)} />
+      <IconChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted" />
+    </div>
+  );
+}
+
+export function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <textarea
+      {...props}
+      className={cx(
+        "min-h-[112px] w-full rounded-[var(--radius-control)] border border-border-strong bg-surface px-3 py-2.5 text-[15px] leading-relaxed text-ink",
+        "placeholder:text-subtle transition-colors focus:border-campo focus:outline-none aria-[invalid=true]:border-danger",
+        props.className,
+      )}
+    />
+  );
+}
+
+/** Spinner chico para botones en curso. */
+export function Spinner({ size = 16 }: { size?: number }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-block animate-spin rounded-full border-2 border-current border-r-transparent"
+      style={{ width: size, height: size }}
+    />
+  );
+}
+
+/** Aviso de datos de ejemplo (adaptador lib/mock/*): siempre visible, nunca escondido. */
+export function MockNotice({ what = "Estos datos" }: { what?: string }) {
+  return (
+    <p className="inline-flex items-center gap-1.5 rounded-[var(--radius-chip)] border border-dashed border-warning-border bg-warning-bg px-2 py-0.5 text-[12px] font-medium text-warning">
+      <IconInfo size={14} className="shrink-0" />
+      {what} son de ejemplo: la API todavía no publica este dato.
+    </p>
+  );
+}
+
+/** Pares etiqueta/valor densos (fichas). */
+export function DataList({
+  items,
+  className,
+}: {
+  items: Array<{ label: string; value: ReactNode }>;
+  className?: string;
+}) {
+  return (
+    <dl className={cx("grid grid-cols-1 gap-x-6 gap-y-3.5 sm:grid-cols-2", className)}>
+      {items.map((it) => (
+        <div key={it.label} className="min-w-0">
+          <dt className="text-[12px] font-medium text-muted">{it.label}</dt>
+          <dd className="mt-0.5 text-[14.5px] text-ink">{it.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+/** Tabs de filtro como links: el estado vive en la URL (persistente y compartible). */
+export function FilterTabs({
+  items,
+  label,
+}: {
+  label: string;
+  items: Array<{ href: string; label: string; count?: number; active: boolean }>;
+}) {
+  return (
+    <nav aria-label={label} className="inline-flex flex-wrap gap-1 rounded-[10px] bg-surface-2 p-1">
+      {items.map((it) => (
+        <Link
+          key={it.href}
+          href={it.href}
+          aria-current={it.active ? "page" : undefined}
+          className={cx(
+            "inline-flex h-8 items-center gap-1.5 rounded-[7px] px-3 text-[13px] font-medium transition-colors",
+            it.active ? "bg-surface text-ink ring-1 ring-border" : "text-muted hover:text-ink",
+          )}
+        >
+          {it.label}
+          {it.count != null && <span className="tabular-nums text-subtle">{it.count}</span>}
+        </Link>
+      ))}
+    </nav>
+  );
 }

@@ -11,13 +11,13 @@ export function Logo({ onDark = false, height = 32 }: { onDark?: boolean; height
   if (onDark) {
     return (
       <span className="inline-flex items-center gap-2.5" aria-label="TROPILLA">
-        <Image src="/brand/isotipo-negativo.png" alt="" width={Math.round(height * 0.9)} height={height} priority />
+        <Image src="/brand/isotipo-negativo.png" alt="" width={Math.round(height * 0.9)} height={height} preload />
         <Image
           src="/brand/wordmark-blanco.png"
           alt="TROPILLA"
           width={Math.round(height * 0.62 * (600 / 82))}
           height={Math.round(height * 0.62)}
-          priority
+          preload
         />
       </span>
     );
@@ -28,7 +28,7 @@ export function Logo({ onDark = false, height = 32 }: { onDark?: boolean; height
       alt="TROPILLA"
       width={Math.round(height * (720 / 173))}
       height={height}
-      priority
+      preload
     />
   );
 }

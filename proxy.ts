@@ -32,7 +32,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(`/${preferredLocale(request)}`, request.url));
   }
 
-  if (pathname === "/ingresar") {
+  if (pathname === "/ingresar" || pathname === "/registro") {
     return hasSession ? NextResponse.redirect(new URL("/inicio", request.url)) : NextResponse.next();
   }
 
@@ -50,6 +50,7 @@ export const config = {
   matcher: [
     "/",
     "/ingresar",
+    "/registro",
     "/inicio/:path*",
     "/hacienda/:path*",
     "/reproduccion/:path*",
