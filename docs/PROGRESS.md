@@ -153,15 +153,19 @@ nombre en vez de una caja vacía; sanidad vacía y rodeo sin hacienda se explica
 
 | Pieza | Endpoint | Estado |
 |---|---|---|
-| Registro por huella (qué, cuándo, quién por rol, versiones, nivel, anclaje, eslabón) | `GET /public/verificaciones/{huella}` | 🧪 mock (huellas de ofertas/documentos de ejemplo) |
-| Prueba descargable | `GET /public/verificaciones/{huella}/prueba` | 🧪 mock vía route handler |
-| Verificar un archivo | SHA-256 con WebCrypto en el navegador → `GET /public/verificaciones/archivo/{sha256}` | 🧪 si no existe: «no coincide» marcado como demostración |
+| Registro por huella (qué, cuándo, quién por rol, versiones, nivel, anclaje, eslabón) + «Ver lo que se registró» (sobre canónico) | `GET /public/verificaciones/{huella}` | 🔌 API real (mock retirado) |
+| Prueba descargable | `GET /public/verificaciones/{huella}/prueba` vía route handler | 🔌 |
+| Verificar un archivo | SHA-256 con WebCrypto en el navegador → `GET /public/verificaciones/archivo/{sha256}` | 🔌 («No coincide» real, sin modo demo) |
 
 **Comentario del dev:** La huella del archivo se calcula en el navegador (WebCrypto) y sólo viaja el SHA-256: el
 archivo nunca se sube. La página dice explícitamente qué prueba (que el registro no cambió desde la fecha) y qué
 no (veracidad, habilitaciones); muestra correcciones con transparencia («tuvo N correcciones · esta es / NO es la
 vigente») y el anclaje con su red y fecha. Las verificaciones no se indexan. Huella inválida o inexistente: estado
 claro con buscador y verificación de archivo como salida.
+**Conexión a la API (2026-10-16):** sin mocks. Con datos reales se corrigió que el rol saliera crudo («dueno» → «Dueño/Owner/
+Proprietário») y que la tarjeta explicativa dijera «Integridad registrada» en verde sobre un registro sólo declarado (ahora
+«Qué prueba» / «Qué no prueba», neutras). Se suma «Ver lo que se registró»: el sobre exacto que se hasheó, para quien quiera
+recalcular la huella por su cuenta.
 
 ## TPA-18 · Listado de hacienda con búsqueda y filtros · ✅ (web)
 

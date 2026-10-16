@@ -2,7 +2,6 @@
 
 import { api, ApiError } from "./api";
 import { hasLocale } from "./i18n";
-import { isMockable } from "./mock/fallback";
 import type { One, S } from "./schemas";
 
 export type FileVerifyResult = { ok: true; data: S<"VerificacionArchivo">; demo: boolean } | { ok: false };
@@ -18,7 +17,6 @@ export async function verificarArchivoAction(sha256: string, locale: string): Pr
     const res = await api<One<S<"VerificacionArchivo">>>(`/public/verificaciones/archivo/${sha256}?locale=${loc}`, { auth: false, locale: loc });
     return { ok: true, data: res.data, demo: false };
   } catch (e) {
-    if (isMockable(e)) return { ok: true, data: { coincide: false, documento: null }, demo: true };
     if (e instanceof ApiError && e.status === 404) return { ok: true, data: { coincide: false, documento: null }, demo: false };
     return { ok: false };
   }

@@ -1,7 +1,7 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { api, ApiError, query } from "@/lib/api";
-import { withMock, withMockIf } from "@/lib/mock/fallback";
+import { withMockIf } from "@/lib/mock/fallback";
 import type { Locale } from "@/lib/i18n";
 import type { Many, One, S } from "@/lib/schemas";
 
@@ -84,14 +84,15 @@ export async function getPerfilPublico(slug: string, locale: Locale): Promise<{ 
   }
 }
 
-/** Verificación pública de un registro por huella (TPA-41). */
-export async function getVerificacion(huella: string, locale: Locale) {
+/** Verificación pública de un registro por huella (TPA-41), API real. null = no existe o no es verificable. */
+export async function getVerificacion(huella: string, locale: Locale): Promise<{ data: S<"Verificacion"> } | null> {
   "use cache";
   cacheLife("minutes");
   cacheTag(`verificacion:${huella}`);
-  const { mockVerificacion } = await import("@/lib/mock/verificaciones");
-  return withMockIf(
-    async () => (await api<One<S<"Verificacion">>>(`/public/verificaciones/${encodeURIComponent(huella)}${query({ locale })}`, { auth: false, locale })).data,
-    () => mockVerificacion(huella, locale),
-  );
+  try {
+    return { data: (await api<One<S<"Verificacion">>>(`/public/verificaciones/${encodeURIComponent(huella)}${query({ locale })}`, { auth: false, locale })).data };
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 404) return null;
+    throw e;
+  }
 }

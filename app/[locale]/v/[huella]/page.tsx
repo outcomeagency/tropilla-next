@@ -5,8 +5,8 @@ import type { Metadata } from "next";
 import { SiteHeader } from "@/components/public/site-header";
 import { SiteFooter } from "@/components/public/site-footer";
 import { FileVerify } from "@/components/public/file-verify";
-import { MockNotice, TrustBadge, buttonClass } from "@/components/ui";
-import { IconAlert, IconAnchor, IconArrowRight, IconCheckCircle, IconDownload, IconInfo, IconShieldCheck } from "@/components/icons";
+import { TrustBadge, buttonClass } from "@/components/ui";
+import { IconAlert, IconAnchor, IconArrowRight, IconDownload, IconInfo, IconShieldCheck } from "@/components/icons";
 import { getDictionary, hasLocale, type Locale } from "@/lib/i18n";
 import { fileVerifyDict, getPortalDict } from "@/lib/i18n/portal";
 import { getVerificacion } from "@/lib/data/portal";
@@ -14,12 +14,26 @@ import { HashSearch } from "../verify-header";
 
 type Params = Promise<{ locale: string; huella: string }>;
 const LANG: Record<Locale, string> = { es: "es-AR", en: "en-US", pt: "pt-BR" };
+/** Rol de quien registró (la verificación muestra el rol, el nombre sólo si el productor lo permite). */
+const ROLES: Record<Locale, Record<string, string>> = {
+  es: { dueno: "Dueño", administrador: "Administrador", encargado: "Encargado", veterinario: "Veterinario", asesor: "Asesor", lectura: "Lectura", sistema: "TROPILLA" },
+  en: { dueno: "Owner", administrador: "Manager", encargado: "Foreman", veterinario: "Veterinarian", asesor: "Advisor", lectura: "Read-only", sistema: "TROPILLA" },
+  pt: { dueno: "Proprietário", administrador: "Administrador", encargado: "Capataz", veterinario: "Veterinário", asesor: "Consultor", lectura: "Leitura", sistema: "TROPILLA" },
+};
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { locale } = await params;
   if (!hasLocale(locale)) return {};
   // Las verificaciones no se indexan: son páginas de consulta, no de presentación.
   return { title: getPortalDict(locale).verify.metaTitle, robots: { index: false, follow: false } };
+}
+
+function bonito(sobre: string): string {
+  try {
+    return JSON.stringify(JSON.parse(sobre), null, 2);
+  } catch {
+    return sobre;
+  }
 }
 
 async function Resultado({ params }: { params: Params }) {
@@ -59,7 +73,7 @@ async function Resultado({ params }: { params: Params }) {
     { k: v.what, v: <><span className="font-semibold">{v.types[r.tipo ?? ""] ?? r.tipo}</span>{r.descripcion && <span className="block text-muted">{r.descripcion}</span>}</> },
     { k: v.when, v: fecha(r.registrado_en) },
   ];
-  if (r.autor) filas.push({ k: v.who, v: [r.autor.rol, r.autor.nombre].filter(Boolean).join(" · ") });
+  if (r.autor) filas.push({ k: v.who, v: [r.autor.rol ? (ROLES[locale][r.autor.rol] ?? r.autor.rol) : null, r.autor.nombre].filter(Boolean).join(" · ") });
   if (r.establecimiento?.nombre)
     filas.push({
       k: v.farm,
@@ -100,7 +114,6 @@ async function Resultado({ params }: { params: Params }) {
 
   return (
     <div className="space-y-6">
-      {res.source === "mock" && <MockNotice text={t.common.sampleData} />}
       <div className="overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface">
         <div className={integridad ? "flex gap-4 border-b border-success-border bg-success-bg p-5 sm:p-6" : "flex gap-4 border-b border-border bg-neutral-bg p-5 sm:p-6"}>
           <span className={integridad ? "grid h-12 w-12 shrink-0 place-items-center rounded-[12px] bg-surface text-success" : "grid h-12 w-12 shrink-0 place-items-center rounded-[12px] bg-surface text-neutral"}>
@@ -143,19 +156,32 @@ async function Resultado({ params }: { params: Params }) {
         </div>
       </div>
 
+      {r.sobre && (
+        <details className="group rounded-[var(--radius-card)] border border-border bg-surface">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 text-[14px] font-semibold text-ink">
+            {v.content}
+            <span className="text-[12.5px] font-medium text-campo group-open:hidden">{v.contentShow}</span>
+          </summary>
+          <div className="border-t border-border px-5 py-4">
+            <p className="mb-3 text-[13px] text-muted">{v.contentLead}</p>
+            <pre className="max-h-[420px] overflow-auto rounded-[10px] border border-border bg-base p-4 font-mono text-[12px] leading-relaxed text-ink">{bonito(r.sobre)}</pre>
+          </div>
+        </details>
+      )}
+
       <section aria-labelledby="significa" className="grid gap-3 sm:grid-cols-2">
         <h2 id="significa" className="sr-only">
           {v.meaningTitle}
         </h2>
         <div className="rounded-[var(--radius-card)] border border-border bg-surface p-5">
-          <p className="flex items-center gap-2 text-[14px] font-semibold text-success">
-            <IconCheckCircle size={18} /> {t.common.trust.integridad_registrada}
+          <p className="flex items-center gap-2 text-[14px] font-semibold text-ink">
+            <IconShieldCheck size={18} className="text-campo" /> {v.provesTitle}
           </p>
           <p className="mt-2 text-[14px] leading-relaxed text-ink">{v.meaningYes}</p>
         </div>
         <div className="rounded-[var(--radius-card)] border border-border bg-surface p-5">
           <p className="flex items-center gap-2 text-[14px] font-semibold text-ink">
-            <IconInfo size={18} /> {v.meaningTitle}
+            <IconInfo size={18} /> {v.notProvesTitle}
           </p>
           <p className="mt-2 text-[14px] leading-relaxed text-ink">{v.meaningNo}</p>
         </div>
