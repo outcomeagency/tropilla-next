@@ -1224,6 +1224,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/establecimientos/{establecimiento}/reproductores-externos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar catálogo de reproductores externos del establecimiento */
+        get: operations["get_establecimientos_establecimiento_reproductores_externos"];
+        put?: never;
+        /** Registrar reproductor externo */
+        post: operations["post_establecimientos_establecimiento_reproductores_externos"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/reproductores-externos/{reproductor}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Corregir reproductor externo con versionado append-only */
+        patch: operations["patch_establecimientos_establecimiento_reproductores_externos_reproductor"];
+        trace?: never;
+    };
     "/establecimientos/{establecimiento}/reproduccion/tablero": {
         parameters: {
             query?: never;
@@ -4191,6 +4226,8 @@ export interface components {
             } | null;
             madre_externa?: string | null;
             padre_externo?: string | null;
+            madre_externa_id?: components["schemas"]["Uuid"] | null;
+            padre_externo_id?: components["schemas"]["Uuid"] | null;
             senas?: string | null;
             origen?: string;
             gdp_kg_dia?: components["schemas"]["Decimal"] | null;
@@ -4258,6 +4295,12 @@ export interface components {
             fecha_nacimiento?: components["schemas"]["Fecha"] | null;
             nacimiento_estimado?: boolean;
             castrado?: boolean | null;
+            madre_id?: components["schemas"]["Uuid"] | null;
+            padre_id?: components["schemas"]["Uuid"] | null;
+            madre_externa?: string | null;
+            padre_externo?: string | null;
+            madre_externa_id?: components["schemas"]["Uuid"] | null;
+            padre_externo_id?: components["schemas"]["Uuid"] | null;
             identificaciones?: {
                 [key: string]: unknown;
             }[];
@@ -4289,12 +4332,33 @@ export interface components {
             heredado_de_lote: boolean;
             lote_id: components["schemas"]["Uuid"] | null;
         };
+        ReproductorExternoInput: {
+            nombre: string;
+            rp?: string | null;
+            registro_genealogico?: string | null;
+            raza?: string | null;
+            especie_codigo: string;
+            centro?: string | null;
+            madre_id?: components["schemas"]["Uuid"] | null;
+            padre_id?: components["schemas"]["Uuid"] | null;
+            madre_externa_id?: components["schemas"]["Uuid"] | null;
+            padre_externa_id?: components["schemas"]["Uuid"] | null;
+            row_version?: number;
+        };
+        ReproductorExterno: components["schemas"]["ReproductorExternoInput"] & {
+            id: components["schemas"]["Uuid"];
+            establecimiento_id: components["schemas"]["Uuid"];
+        };
         Genealogia: {
             animal?: components["schemas"]["AnimalResumen"];
             madre?: {
                 [key: string]: unknown;
             } | null;
             padre?: {
+                [key: string]: unknown;
+            } | null;
+            /** @description Árbol recursivo hasta cinco generaciones; nodos tipados interno */
+            pedigri?: {
                 [key: string]: unknown;
             } | null;
             crias?: components["schemas"]["AnimalResumen"][];
@@ -8120,6 +8184,88 @@ export interface operations {
             401: components["responses"]["NoAutenticado"];
             403: components["responses"]["Prohibido"];
             404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_establecimientos_establecimiento_reproductores_externos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Catálogo disponible para sync offline */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReproductorExterno"][];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+        };
+    };
+    post_establecimientos_establecimiento_reproductores_externos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReproductorExternoInput"];
+            };
+        };
+        responses: {
+            /** @description Creado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    patch_establecimientos_establecimiento_reproductores_externos_reproductor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                reproductor: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReproductorExternoInput"];
+            };
+        };
+        responses: {
+            /** @description Versión agregada */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            409: components["responses"]["Conflicto"];
             422: components["responses"]["Validacion"];
         };
     };

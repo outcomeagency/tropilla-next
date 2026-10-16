@@ -321,6 +321,7 @@ async function Ficha({ params, searchParams }: { params: Params; searchParams: S
             <AnimalLink a={madre} rol="Madre" />
             <AnimalLink a={padre} rol="Padre" />
           </div>
+          {g.pedigri ? <PedigriNode node={g.pedigri as Record<string, unknown>} depth={0} /> : null}
           <div>
             <h3 className="mb-2 text-[14px] font-semibold text-ink">Crías {g.crias?.length ? <span className="tabular-nums text-muted">· {g.crias.length}</span> : null}</h3>
             {g.crias?.length ? (
@@ -410,6 +411,21 @@ async function Ficha({ params, searchParams }: { params: Params; searchParams: S
       </div>
       {contenido}
     </>
+  );
+}
+
+function PedigriNode({ node, depth }: { node: Record<string, unknown>; depth: number }) {
+  if (depth > 5) return null;
+  const data = (node.animal ?? node.reproductor ?? node) as Record<string, unknown>;
+  const label = (data.identificacion_principal ?? data.nombre ?? node.nombre ?? node.tipo ?? "Sin dato") as string;
+  return (
+    <div className={depth ? "ml-4 border-l border-border pl-4" : "border-t border-border pt-4"}>
+      <p className="text-[13px] font-medium text-ink">{depth === 0 ? "Árbol genealógico · 5 generaciones" : label}</p>
+      {depth === 0 ? <p className="text-[12px] text-muted">{label}</p> : null}
+      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+        {(["madre", "padre"] as const).map((side) => node[side] && typeof node[side] === "object" ? <PedigriNode key={side} node={node[side] as Record<string, unknown>} depth={depth + 1} /> : null)}
+      </div>
+    </div>
   );
 }
 
