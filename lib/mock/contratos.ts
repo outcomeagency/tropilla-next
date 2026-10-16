@@ -126,3 +126,87 @@ export function mockContratoPorCodigo(codigo: string): Contrato | null {
   const seedC = seed()[0];
   return seedC.codigo_publico?.toLowerCase() === codigo.toLowerCase() ? seedC : null;
 }
+
+/* ── Comprador (TPA-57) ── */
+
+const compradores = new Map<string, S<"Comprador">>();
+const tomasDe = new Map<string, Array<{ codigo: string; tomaId: string }>>();
+
+export function mockComprador(userId: string): S<"Comprador"> | null {
+  return compradores.get(userId) ?? null;
+}
+
+export function mockGuardarComprador(userId: string, c: S<"Comprador">): S<"Comprador"> {
+  compradores.set(userId, c);
+  return c;
+}
+
+function buscar(codigo: string): { est: string; c: Contrato } | null {
+  for (const [est, list] of store.entries()) {
+    const c = list.find((x) => x.codigo_publico?.toLowerCase() === codigo.toLowerCase());
+    if (c) return { est, c };
+  }
+  return null;
+}
+
+/** Tomar N tokens: falla si supera los libres (409 tokens_insuficientes en la API). */
+export function mockTomar(codigo: string, userId: string, comprador: { nombre: string; empresa?: string | null }, tokens: number): S<"Toma"> | "insuficientes" | null {
+  let hit = buscar(codigo);
+  if (!hit) {
+    const seedC = seed()[0];
+    if (seedC.codigo_publico?.toLowerCase() !== codigo.toLowerCase()) return null;
+    store.set("demo-publico", [seedC]);
+    hit = { est: "demo-publico", c: seedC };
+  }
+  const { est, c } = hit;
+  if (tokens > (c.tokens_libres ?? 0)) return "insuficientes";
+  const t = c.terminos ?? {};
+  const toma: S<"Toma"> = {
+    id: crypto.randomUUID(),
+    contrato_id: c.id,
+    comprador: { id: userId, nombre: comprador.nombre, empresa: comprador.empresa ?? null },
+    tokens,
+    tokens_vigentes: tokens,
+    kg: tokens * (t.kg_por_token ?? 100),
+    precio_especial_kg: t.precio_especial_kg,
+    anticipo_monto: String(Math.round(Number(t.anticipo_por_token ?? 0) * tokens)),
+    anticipo_a_devolver: "0",
+    estado: "reservada",
+    vence_en: new Date(Date.now() + (t.toma_vencimiento_horas ?? 48) * 3_600_000).toISOString(),
+    created_at: new Date().toISOString(),
+    movimientos: [],
+  };
+  const comprometidos = (c.tokens_comprometidos ?? 0) + tokens;
+  mockGuardarContrato(est, {
+    ...c,
+    tomas: [...(c.tomas ?? []), toma],
+    tokens_comprometidos: comprometidos,
+    tokens_libres: (t.tokens_totales ?? 0) - comprometidos,
+    estado: comprometidos >= (t.tokens_totales ?? 0) ? "completo" : "parcialmente_tomado",
+  });
+  tomasDe.set(userId, [...(tomasDe.get(userId) ?? []), { codigo: c.codigo_publico ?? codigo, tomaId: toma.id! }]);
+  return toma;
+}
+
+export function mockMisTomas(userId: string): Array<{ toma: S<"Toma">; contrato: Contrato }> {
+  return (tomasDe.get(userId) ?? [])
+    .map(({ codigo, tomaId }) => {
+      const hit = buscar(codigo);
+      const toma = hit?.c.tomas?.find((x) => x.id === tomaId);
+      return hit && toma ? { toma, contrato: hit.c } : null;
+    })
+    .filter((x): x is { toma: S<"Toma">; contrato: Contrato } => !!x);
+}
+
+export function mockInformarPago(userId: string, tomaId: string): boolean {
+  for (const [est, list] of store.entries()) {
+    for (const c of list) {
+      const t = c.tomas?.find((x) => x.id === tomaId && x.comprador?.id === userId);
+      if (t) {
+        mockGuardarContrato(est, { ...c, tomas: c.tomas!.map((x) => (x.id === tomaId ? { ...x, estado: "pago_informado" } : x)) });
+        return true;
+      }
+    }
+  }
+  return false;
+}

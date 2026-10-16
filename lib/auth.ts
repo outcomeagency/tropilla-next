@@ -55,3 +55,14 @@ export const ROL_LABEL: Record<S<"MembresiaResumen">["rol"], string> = {
   asesor: "Asesor / veterinario",
   lectura: "Solo lectura",
 };
+
+/** Sesión opcional (páginas públicas): no redirige si no hay cookie. Leer siempre detrás de Suspense. */
+export const getSesionOpcional = cache(async (): Promise<Me | null> => {
+  const token = await getToken();
+  if (!token) return null;
+  try {
+    return (await api<One<Me>>("/auth/me", { timeoutMs: 4_000 })).data;
+  } catch {
+    return null;
+  }
+});

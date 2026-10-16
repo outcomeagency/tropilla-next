@@ -52,6 +52,7 @@ export const config = {
     "/ingresar",
     "/registro",
     "/bienvenida",
+    "/comprador/:path*",
     "/inicio/:path*",
     "/hacienda/:path*",
     "/reproduccion/:path*",

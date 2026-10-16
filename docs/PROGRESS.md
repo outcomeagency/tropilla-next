@@ -246,3 +246,21 @@ desde la tabla. Las pruebas contra el demo se revirtieron (membresía e invitaci
 anticipos sólo con `comercial.precios`; el resto del equipo ve tokens y fechas. Cada versión de términos queda con
 su huella y enlace a verificación; nada se borra (la toma liberada sigue visible). Al ofertar o tokenizar un lote real
 mientras la API no tenga esos módulos, el borrador se arma con los datos del lote real.
+
+## TPA-57 · Cuenta de comprador y toma de tokens · 🟦 parcial (web)
+
+**Rutas:** `/[locale]/contratos/[codigo]` (público es/en/pt), `/comprador/cuenta` (cuenta liviana), `/comprador` (Mis contratos); el perfil público lista sus contratos abiertos.
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Contrato público; precio especial y anticipo sólo con cuenta de comprador | `GET /public/contratos/{codigo}` (sesión opcional) | 🧪 mock (CF0007) |
+| Cuenta liviana (empresa, país, tipo, volumen) | `PUT /me/comprador` | 🧪 mock en memoria por usuario |
+| Tomar N tokens ≤ libres, con anticipo calculado e `Idempotency-Key`; exige email verificado | `POST /contratos/{codigo}/tomas` (409 `tokens_insuficientes`) | 🧪 |
+| Mis contratos, datos de cobro tras reservar, «Pagué» | `GET /comprador/tomas`, `POST /comprador/tomas/{t}/pago-informado` | 🧪 |
+| Seguir productores con aviso | `POST /seguimientos` | ⬜ pendiente (sin pantalla todavía) |
+
+**Comentario del dev:** El precio especial es la única excepción a «precios privados» y la web la respeta: sin cuenta
+de comprador se ve un bloque bloqueado que explica por qué y ofrece crear la cuenta (con `next` para volver al
+contrato). Con cuenta, el selector de tokens calcula kg y anticipo en vivo; los datos de cobro del productor se
+muestran recién después de reservar (Claude Design, duda 8) y el pago es fuera de TROPILLA. Falta «Seguir
+productores» y el vencimiento de 2 días hábiles propuesto por Claude Design (duda 7) depende de la API.
