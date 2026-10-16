@@ -300,3 +300,21 @@ sugerida por departamento sale del catálogo de la API y se ofrece con un clic, 
 se calculan en vivo y se pueden pisar a mano; los otros potreros quedan punteados como referencia para no superponer. En el listado el mapa
 muestra nombre y cabezas (las etiquetas se ocultan al alejarse para que no se pisen) y un clic abre la ficha. La ficha arranca por lo que el
 encargado necesita: quién está ahora, por lote y categoría, con carga cab/ha. Archivar pide motivo y avisa si todavía hay hacienda; nada se borra.
+
+## TPA-19 · Identificaciones múltiples por animal · ✅ (web)
+
+**Rutas:** `/hacienda/[id]?tab=identificaciones` (vigentes, historial, agregar/reponer/retirar); el encabezado de la ficha enlaza ahí
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Vigentes y retiradas (tipo, valor, entidad/tipo de registro, colocada/retirada, en conflicto) | `GET …/animales/{id}` → `identificaciones[]` | 🔌 API real |
+| Agregar, reponer y retirar (motivo en `observaciones`) | `POST …/eventos` `hacienda.identificacion` (`colocacion`/`reposicion`/`retiro` + `reemplaza`) | 🔌 probado en el establecimiento de prueba |
+| Historial con motivo, autor y «reemplazada por» | `GET …/animales/{id}/eventos?tipo=hacienda.identificacion` + `GET …/eventos/{id}` | 🔌 |
+| Duplicado vigente → aviso con «Abrir ficha» | 409 `identificacion_duplicada` + `GET …/animales/identificador?valor=&tipo=` | 🔌 probado |
+| Tatuaje sin prefijo de raza (E/U/A) | 422 `requiere_confirmacion` → «Guardar igual» | 🔌 probado |
+
+**Comentario del dev:** Los seis tipos salen del enum del contrato (`/catalogos` no los trae) y el prefijo de tatuaje de `razas.prefijo_tatuaje`.
+Agregar un tipo único que ya tiene vigente se manda como reposición (con aviso y motivo) para que la anterior quede en el historial; marca y
+registro admiten varias. El RFID valida 15 dígitos con contador en vivo y bloquea el Enter del bastón (modo teclado) hasta completarlos.
+El payload no tiene motivo: viaja en `observaciones` («Motivo: …») y el historial lo cruza con los eventos. `useActionForm`/`useDialogForm`
+ahora son genéricos para estados extendidos. El timeline muestra «Reposición: Caravana visual 0501B» en vez del resumen crudo de la API.

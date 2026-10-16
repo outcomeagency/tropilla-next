@@ -7,10 +7,12 @@ import { IconAlert, IconArrowLeft, IconArrowRight, IconChart, IconFile, IconHear
 import { Photo } from "@/components/public/photo";
 import { Timeline } from "@/components/panel/hacienda/timeline";
 import { requireContexto } from "@/lib/establecimiento";
-import { getAnimal, getDocumentosAnimal, getGenealogia, getTimeline, type AnimalDetalle } from "@/lib/data/hacienda";
+import { getAnimal, getDocumentosAnimal, getGenealogia, getMovimientosIdentificacion, getTimeline, type AnimalDetalle } from "@/lib/data/hacienda";
+import { IdentificacionesPanel } from "@/components/panel/hacienda/identificaciones";
+import { tipoIdentLabel } from "@/lib/identificaciones";
 import { getCatalogos } from "@/lib/data/catalogos";
 import { ApiError } from "@/lib/api";
-import { edad, fecha, fechaLarga, nf } from "@/lib/format";
+import { edad, fecha, fechaLarga, hoyAR, nf } from "@/lib/format";
 import { especieDe } from "@/lib/types";
 import type { S } from "@/lib/schemas";
 
@@ -18,6 +20,7 @@ export const metadata: Metadata = { title: "Ficha del animal" };
 
 const TABS = [
   { k: "resumen", l: "Resumen" },
+  { k: "identificaciones", l: "Identificaciones" },
   { k: "timeline", l: "Timeline" },
   { k: "sanidad", l: "Sanidad" },
   { k: "reproduccion", l: "Reproducción" },
@@ -25,14 +28,6 @@ const TABS = [
   { k: "genealogia", l: "Genealogía" },
 ] as const;
 
-const TIPO_ID: Record<string, string> = {
-  caravana_visual: "Caravana",
-  rfid: "RFID",
-  tatuaje: "Tatuaje",
-  marca: "Marca",
-  registro: "Registro genealógico",
-  caravana_oficial: "Caravana oficial",
-};
 const DENTICION: Record<string, string> = { dl: "Diente de leche", "2": "2 dientes", "4": "4 dientes", "6_mas": "6 dientes o más", boca_llena: "Boca llena" };
 const ORIGEN: Record<string, string> = { inventario: "Stock inicial", nacimiento: "Nacido en el establecimiento", compra: "Comprado", ingreso: "Ingreso" };
 const REPRO: Record<string, string> = { prenada: "Preñada", vacia: "Vacía", servida: "Servida", parida: "Parida" };
@@ -71,7 +66,8 @@ async function Ficha({ params, searchParams }: { params: Params; searchParams: S
     throw e;
   }
   const cat = await getCatalogos();
-  const raza = cat.razas.find((r) => r.codigo === a.raza)?.nombre ?? a.raza;
+  const razaCat = cat.razas.find((r) => r.codigo === a.raza);
+  const raza = razaCat?.nombre ?? a.raza;
   const sugerida = a.categoria_sugerida && a.categoria_sugerida !== a.categoria ? (cat.categorias.find((c) => c.codigo === a.categoria_sugerida)?.nombre ?? a.categoria_sugerida) : null;
   const ids = (a.identificaciones ?? []).filter((i) => i.vigente !== false);
   const cc = a.condicion_corporal;
@@ -204,6 +200,19 @@ async function Ficha({ params, searchParams }: { params: Params; searchParams: S
         </div>
       );
     }
+  } else if (tab === "identificaciones") {
+    const movimientos = await getMovimientosIdentificacion(est, id).catch(() => []);
+    contenido = (
+      <IdentificacionesPanel
+        animalId={id}
+        identificaciones={a.identificaciones ?? []}
+        movimientos={movimientos}
+        puedeEditar={ctx.can("hacienda.crear") && (a.estado ?? "activo") === "activo"}
+        prefijoTatuaje={(razaCat as { prefijo_tatuaje?: string | null } | undefined)?.prefijo_tatuaje ?? null}
+        razaNombre={raza}
+        hoy={hoyAR(new Date())}
+      />
+    );
   } else if (tab === "documentos") {
     const docs = await getDocumentosAnimal(est, id).catch(() => []);
     contenido = (
@@ -297,12 +306,19 @@ async function Ficha({ params, searchParams }: { params: Params; searchParams: S
             <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-border pt-3">
               {ids.map((i) => (
                 <li key={`${i.tipo}${i.valor}`} className="text-[13px]">
-                  <span className="text-muted">{TIPO_ID[i.tipo] ?? i.tipo}</span>{" "}
+                  <span className="text-muted">{tipoIdentLabel(i.tipo)}</span>{" "}
                   <span className="font-semibold tabular-nums text-ink">{i.valor}</span>
                   {i.en_conflicto && <span className="ml-1 text-warning">(en conflicto)</span>}
                 </li>
               ))}
               {!ids.length && <li className="text-[13px] text-muted">Sin identificadores vigentes</li>}
+              {tab !== "identificaciones" && (
+                <li className="text-[13px]">
+                  <Link href={`/hacienda/${id}?tab=identificaciones`} className="font-medium text-campo hover:underline">
+                    {ids.length ? "Ver historial y reponer" : "Agregar identificación"}
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
         </div>

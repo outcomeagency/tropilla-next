@@ -3,6 +3,7 @@ import { Avatar, Badge, TrustBadge } from "@/components/ui";
 import { IconCow, IconFile, IconHeart, IconMap, IconRoute, IconScale, IconSyringe, IconTag, type IconProps } from "@/components/icons";
 import { ROL_LABEL } from "@/lib/auth";
 import { fecha } from "@/lib/format";
+import { resumenIdentificacion } from "@/lib/identificaciones";
 import type { S } from "@/lib/schemas";
 
 const ICONO: Record<string, ComponentType<IconProps>> = {
@@ -56,7 +57,7 @@ export function Timeline({ eventos }: { eventos: S<"EventoResumen">[] }) {
                       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                         <p className="text-[14.5px] text-ink">
                           <span className={e.anulado ? "font-semibold line-through" : "font-semibold"}>{e.tipo_nombre ?? e.tipo}</span>
-                          {e.resumen && <span className="text-muted"> · {e.resumen}</span>}
+                          {e.resumen && <span className="text-muted"> · {e.tipo === "hacienda.identificacion" ? resumenIdentificacion(e.resumen) : e.resumen}</span>}
                         </p>
                         <span className="text-[12.5px] tabular-nums text-muted">{fecha(e.ocurrido_en)}</span>
                       </div>
