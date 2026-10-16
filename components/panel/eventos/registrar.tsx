@@ -10,6 +10,8 @@ import {
   GRUPOS,
   GRUPOS_MODULO,
   TIPOS_IA,
+  METODOS_TACTO,
+  TAMANOS,
   METODOS_CASTRACION,
   MOTIVOS_EGRESO,
   MOTIVOS_INGRESO,
@@ -18,6 +20,8 @@ import {
   tipoHacienda,
 } from "@/lib/eventos-hacienda";
 import { FormAlerts, useActionForm } from "@/components/panel/form-state";
+import { fpp, gestacion, type Gestaciones } from "@/lib/gestacion";
+import { fecha as fmtFecha } from "@/lib/format";
 import { ChoiceChip } from "@/components/choice";
 import { Badge, Button, Card, CardHeader, Field, Input, Select, Spinner, Textarea, buttonClass, cx, fieldAria } from "@/components/ui";
 import { IconArrowLeft, IconClose, IconPlus, IconSearch } from "@/components/icons";
@@ -39,6 +43,7 @@ export interface RegistrarEventoProps {
   causasMuerte: Opt[];
   destinos: Opt[];
   categoriasFaena: Opt[];
+  gestaciones: Gestaciones;
   hoy: string;
 }
 
@@ -237,7 +242,7 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
                 <Field label={tipo === "reproduccion.servicio_natural" ? "Inicio del servicio" : "Fecha"} htmlFor="ocurrido_en" error={f.ocurrido_en}>
                   <Input id="ocurrido_en" name="ocurrido_en" type="date" defaultValue={p.hoy} max={p.hoy} {...fieldAria("ocurrido_en", f.ocurrido_en)} />
                 </Field>
-                <CamposTipo tipo={tipo} f={f} p={p} causa={causa} setCausa={setCausa} especie={especieSel} madre={madre} setMadre={setMadre} sumar={sumar} buscando={buscando} creaAnimales={creaAnimales} toros={toros} setToros={setToros} buscaErr={buscaErr} />
+                <CamposTipo tipo={tipo} f={f} p={p} causa={causa} setCausa={setCausa} especie={especieSel} madre={madre} setMadre={setMadre} sumar={sumar} buscando={buscando} creaAnimales={creaAnimales} toros={toros} setToros={setToros} buscaErr={buscaErr} animales={animales} />
                 <div className="sm:col-span-2">
                   <Field label="Observaciones" htmlFor="observaciones" optional>
                     <Textarea id="observaciones" name="observaciones" maxLength={2000} rows={3} className="min-h-[84px]" placeholder="Lo que sirva para entender el evento después." />
@@ -450,6 +455,7 @@ function CamposTipo({
   toros,
   setToros,
   buscaErr,
+  animales,
 }: {
   tipo: string;
   f: Record<string, string>;
@@ -465,6 +471,7 @@ function CamposTipo({
   toros: AnimalElegido[];
   setToros: (fn: (xs: AnimalElegido[]) => AnimalElegido[]) => void;
   buscaErr: string;
+  animales: AnimalElegido[];
 }) {
   const sel = (name: string, label: string, lista: readonly (readonly [string, string])[] | Opt[], vacio = "Elegí", optional = false) => (
     <Field label={label} htmlFor={name} error={f[name]} optional={optional}>
@@ -674,6 +681,8 @@ function CamposTipo({
           </div>
         </>
       );
+    case "reproduccion.tacto":
+      return <CamposTacto f={f} p={p} animales={animales} />;
     case "reproduccion.inseminacion":
       return (
         <>
@@ -712,4 +721,81 @@ function CamposTipo({
     default:
       return null;
   }
+}
+
+/** Tacto: resultado, días y la fecha probable de parto en vivo por animal (gestación por especie y raza). */
+function CamposTacto({ f, p, animales }: { f: Record<string, string>; p: RegistrarEventoProps; animales: AnimalElegido[] }) {
+  const [resultado, setResultado] = useState("");
+  const [dias, setDias] = useState("");
+  const [fechaT, setFechaT] = useState(p.hoy);
+  const d = Number(dias);
+  return (
+    <>
+      <Field label="Método" htmlFor="metodo_tacto" error={f.metodo_tacto}>
+        <Select id="metodo_tacto" name="metodo_tacto" defaultValue="tacto" {...fieldAria("metodo_tacto", f.metodo_tacto)}>
+          <Opciones lista={METODOS_TACTO} />
+        </Select>
+      </Field>
+      <fieldset>
+        <legend className="mb-1.5 text-[13px] font-semibold text-ink">Resultado</legend>
+        <div className="flex gap-2">
+          <ChoiceChip type="radio" name="resultado" value="prenada" label="Preñada" checked={resultado === "prenada"} onChange={() => setResultado("prenada")} />
+          <ChoiceChip type="radio" name="resultado" value="vacia" label="Vacía" checked={resultado === "vacia"} onChange={() => setResultado("vacia")} />
+        </div>
+        {f.resultado && <p className="mt-1.5 text-[12.5px] font-medium text-danger">{f.resultado}</p>}
+      </fieldset>
+      {resultado === "prenada" && (
+        <>
+          <Field label="Días de gestación" htmlFor="dias_gestacion" error={f.dias_gestacion} hint="Lo que estimó el veterinario al tacto.">
+            <Input id="dias_gestacion" name="dias_gestacion" inputMode="numeric" maxLength={3} value={dias} onChange={(e) => setDias(e.target.value.replace(/\D/g, ""))} className="tabular-nums" {...fieldAria("dias_gestacion", f.dias_gestacion, true)} />
+          </Field>
+          <Field label="Tamaño" htmlFor="tamano" optional>
+            <Select id="tamano" name="tamano" defaultValue="">
+              <Opciones lista={TAMANOS} vacio="Sin indicar" />
+            </Select>
+          </Field>
+          <div className="sm:col-span-2 rounded-[10px] border border-campo/40 bg-campo-50 px-4 py-3">
+            <p className="text-[13px] font-semibold text-monte">Fecha probable de parto</p>
+            {d > 0 && animales.length ? (
+              <ul className="mt-1.5 space-y-1 text-[14px]">
+                {animales.map((a) => {
+                  const g = gestacion(p.gestaciones, a.especie, a.raza);
+                  return (
+                    <li key={a.id} className="flex flex-wrap items-baseline justify-between gap-2">
+                      <span>
+                        <span className="font-semibold tabular-nums">{a.ident}</span> <span className="text-muted">· gestación {g} días{a.raza ? "" : " (sin raza)"}</span>
+                      </span>
+                      <span className="font-semibold tabular-nums text-ink">{fmtFecha(fpp(fechaT, d, g))}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="mt-1 text-[13.5px] text-muted">Cargá los días de gestación y aparece la fecha de cada hembra según su especie y raza.</p>
+            )}
+            <FechaSync onChange={setFechaT} />
+          </div>
+        </>
+      )}
+      <Field label="Veterinario" htmlFor="veterinario" optional>
+        <Input id="veterinario" name="veterinario" maxLength={120} />
+      </Field>
+    </>
+  );
+}
+
+/** Sigue el campo «Fecha» del formulario (el tacto puede ser de otro día). */
+function FechaSync({ onChange }: { onChange: (v: string) => void }) {
+  return (
+    <span
+      hidden
+      ref={(el) => {
+        const input = el?.closest("form")?.querySelector<HTMLInputElement>("#ocurrido_en");
+        if (!input) return;
+        const h = () => input.value && onChange(input.value);
+        input.addEventListener("change", h);
+        return () => input.removeEventListener("change", h);
+      }}
+    />
+  );
 }

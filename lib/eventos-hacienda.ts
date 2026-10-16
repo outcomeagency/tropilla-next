@@ -50,6 +50,7 @@ export const TIPOS_HACIENDA: TipoHacienda[] = [
   { codigo: "hacienda.faena", corto: "Frigorífico, tropa y pesos", titulo: "Faena", ayuda: "Frigorífico, tropa, pesos y tipificación.", grupo: "bajas", sujetos: ["animales", "lote"] },
   { codigo: "reproduccion.servicio_natural", corto: "Toros con los vientres", titulo: "Servicio natural", ayuda: "Toros (con caravana, un lote de toros o de afuera) y el período del servicio. Las hembras quedan «servidas».", grupo: "servicio", sujetos: ["animales", "lote"] },
   { codigo: "reproduccion.inseminacion", corto: "IA o IATF con datos del semen", titulo: "Inseminación", ayuda: "IA o IATF: toro y raza del semen, centro, partida e inseminador. La hembra queda «servida».", grupo: "servicio", sujetos: ["animales"] },
+  { codigo: "reproduccion.tacto", corto: "Vacía o preñada, con fecha de parto", titulo: "Tacto o ecografía", ayuda: "Resultado y días de gestación: la fecha probable de parto sale de la gestación de la especie y la raza. Para muchas hembras seguidas usá la sesión de tacto.", grupo: "diagnostico", sujetos: ["animales"] },
 ];
 
 export const tipoHacienda = (codigo: string) => TIPOS_HACIENDA.find((t) => t.codigo === codigo);
@@ -85,6 +86,17 @@ export const METODOS_CASTRACION = [
 export const TIPOS_IA = [
   ["ia", "IA (celo detectado)"],
   ["iatf", "IATF (a tiempo fijo)"],
+] as const;
+
+export const METODOS_TACTO = [
+  ["tacto", "Tacto"],
+  ["ecografia", "Ecografía"],
+] as const;
+
+export const TAMANOS = [
+  ["chica", "Chica"],
+  ["mediana", "Mediana"],
+  ["grande", "Grande"],
 ] as const;
 
 export const DENTICION = [
@@ -143,6 +155,10 @@ export const ETIQUETAS: Record<string, string> = {
   desbaste: "Desbaste",
   sugerida: "Sugerida por reglas",
   inicio: "Inicio del servicio",
+  resultado: "Resultado",
+  dias_gestacion: "Días de gestación",
+  tamano: "Tamaño",
+  veterinario: "Veterinario",
   fin: "Fin del servicio",
   lote_toros_id: "Lote de toros",
   toros_externos: "Toros de afuera",
@@ -176,6 +192,13 @@ export const VALORES: Record<string, string> = Object.fromEntries([
   ["inventario_inicial", "Inventario inicial"],
   ["alta_rapida", "Alta rápida"],
   ["importacion", "Planilla"],
+  ["vacia", "Vacía"],
+  ["prenada", "Preñada"],
+  ["tacto", "Tacto"],
+  ["ecografia", "Ecografía"],
+  ["chica", "Chica"],
+  ["mediana", "Mediana"],
+  ["grande", "Grande"],
   ["ia", "IA"],
   ["iatf", "IATF"],
   ["1-5", "1 a 5"],
