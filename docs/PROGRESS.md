@@ -168,3 +168,20 @@ categoría con recategorización sugerida, peso con fecha, lote y potrero, estad
 parto y retiro vigente, siempre con texto. La selección múltiple abre una barra fija con el evento grupal; las
 advertencias de coherencia de la API se muestran y se confirman, nunca se pisan. Sin mocks: si la API cae, el
 error boundary del panel explica y ofrece reintentar.
+
+## TPA-17 · Ficha del animal con timeline · ✅ (web)
+
+**Ruta:** `/hacienda/[id]?tab=resumen|timeline|sanidad|reproduccion|documentos|genealogia`
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Encabezado (identificadores, especie, raza, categoría, edad, peso con fecha, GDP, estados) | `GET …/animales/{id}` | 🔌 API real |
+| Timeline por módulo, con anulados opcionales y «Eventos anteriores» | `GET …/animales/{id}/eventos?modulo=&incluir_anulados=&cursor=` | 🔌 |
+| Genealogía | `GET …/animales/{id}/genealogia` | 🔌 |
+| Documentos vinculados | `GET …/animales/{id}/documentos` | 🔌 (el demo no tiene documentos: estado vacío con salida) |
+
+**Comentario del dev:** La ficha es la historia del animal: timeline agrupado por mes, cada evento con ícono por
+módulo, autor y rol, fecha y nivel de confianza; las correcciones («Corregido · v2», «Tiene una versión más nueva») y
+anulaciones (tachadas) se muestran, nunca se esconden. Resumen con datos de la proyección (nacimiento estimado,
+origen, dentición, CC, lote/potrero, clase de faena Res. 470/2012, señas). Sanidad muestra el retiro vigente con
+fecha; Reproducción, FPP con su fuente (tacto/servicio). Foto: placeholder sobrio hasta que la app suba fotos.
