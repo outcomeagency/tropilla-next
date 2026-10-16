@@ -15,6 +15,8 @@ function Tabs({ actual, consultas, precios = false }: { actual: Seccion; consult
           ...(consultas !== false ? [{ href: "/comercializacion/consultas", label: "Consultas", count: consultas || undefined, active: actual === "consultas" }] : []),
           { href: "/comercializacion/contratos", label: "Contratos a futuro", active: actual === "contratos" },
           ...(precios ? [{ href: "/comercializacion/simulador", label: "Simulador", active: actual === "simulador" }] : []),
+          ...(precios ? [{ href: "/comercializacion/ventas", label: "Ventas", active: actual === "ventas" }] : []),
+          ...(precios ? [{ href: "/comercializacion/precios", label: "Mis precios", active: actual === "precios" }] : []),
         ]}
       />
     </div>
