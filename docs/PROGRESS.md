@@ -420,3 +420,19 @@ número con coma, texto → área), así sirve para hacienda, reproducción y sa
 ingreso, crías) y los sujetos no se corrigen: se explica que eso se anula y se vuelve a cargar. El motivo es obligatorio y se ve en
 «Ver cambios», donde cada campo cambiado aparece tachado con su valor nuevo al lado. Una versión vieja avisa que no es la vigente y
 lleva a la actual; los anulados quedan tachados en el registro, la timeline y el detalle. Nada se borra.
+
+## TPA-49 · Consultas de compradores · ✅ (web)
+
+**Rutas:** `/comercializacion/consultas?estado=nueva|respondida|cerrada|todas&id=` (pestaña «Consultas» de Comercialización con el número de nuevas; sólo con `consultas.ver`)
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Bandeja con estados, idioma, país, tipo de comprador, volumen y oferta de origen | `GET …/consultas?estado=` | 🔌 API real (las 2 del demo) |
+| Responder por WhatsApp / email (mensaje prearmado en el idioma del comprador) → marca respondida con canal | `whatsapp_url`, `mailto_url` + `POST …/consultas/{id}/estado` | 🔌 |
+| Cerrar, volver a nueva, spam, «ya la respondí por otro medio» | `POST …/consultas/{id}/estado` | 🔌 probado (cerrada → nueva sobre el demo, revertido) |
+| Aviso por email al dueño/admin | lo manda la API (TPA-55) | 🔌 (push queda para la app) |
+
+**Comentario del dev:** Bandeja de dos paneles (lista + detalle) que en el teléfono se vuelve lista → detalle con «Bandeja» para volver.
+Las nuevas llevan punto y negrita; el detalle muestra el mensaje tal cual, en qué idioma escribió («Escribió en inglés») y la oferta
+de origen. Responder abre WhatsApp o el correo del productor con el saludo que arma la API en el idioma del comprador y marca la consulta
+como respondida con el canal: TROPILLA no intermedia ni guarda la conversación. El encargado no ve la pestaña (las consultas pueden traer precios).
