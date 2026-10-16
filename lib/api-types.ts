@@ -4025,6 +4025,21 @@ export interface components {
             partos?: number;
             ultimo_parto_fecha?: components["schemas"]["Fecha"] | null;
             servicio_fecha?: components["schemas"]["Fecha"] | null;
+            /**
+             * @description TPA-27 (aditivo): tipo del último servicio
+             * @enum {string|null}
+             */
+            servicio_tipo?: "natural" | "ia" | "iatf" | null;
+            tacto_fecha?: components["schemas"]["Fecha"] | null;
+            /** @description TPA-28 (aditivo): hoy − concepción (tacto con días o servicio); solo servidas/preñadas */
+            dias_gestacion?: number | null;
+            /** @description TPA-29 (aditivo): hoy − último parto */
+            dias_posparto?: number | null;
+            /** @description TPA-29 (aditivo) */
+            destete?: {
+                fecha?: components["schemas"]["Fecha"];
+                peso_kg?: components["schemas"]["Decimal"] | null;
+            } | null;
             fpp_precision?: string | null;
             retiro_carne_hasta?: components["schemas"]["Fecha"] | null;
             retiro_leche_hasta?: components["schemas"]["Fecha"] | null;
@@ -4259,6 +4274,12 @@ export interface components {
             servidas?: number;
             prenadas?: number;
             paridas?: number;
+            /** @description TPA-30 (aditivo): vientres sin evento reproductivo (no suman en los estados) */
+            sin_estado?: number;
+            /** @description TPA-30 (aditivo): FPP entre hoy y hoy + parto_proximo_aviso_dias */
+            partos_proximos?: number;
+            /** @description TPA-30 (aditivo): FPP + parto_vencido_tolerancia_dias < hoy sin parto registrado */
+            partos_vencidos?: number;
             prenadas_por_mes_parto?: {
                 mes?: string;
                 cabezas?: number;
@@ -7749,6 +7770,7 @@ export interface operations {
             401: components["responses"]["NoAutenticado"];
             403: components["responses"]["Prohibido"];
             404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
         };
     };
     get_establecimientos_establecimiento_reproduccion_partos: {
@@ -7757,7 +7779,8 @@ export interface operations {
                 desde?: string;
                 hasta?: string;
                 especie?: string;
-                vencidos?: string;
+                /** @description `true` solo vencidos (FPP + tolerancia < hoy), `false` sin vencidos, ausente = todos. Fechas `desde`/`hasta` filtran la FPP (YYYY-MM-DD). */
+                vencidos?: "true" | "false" | "1" | "0";
             };
             header?: never;
             path: {
@@ -7781,6 +7804,7 @@ export interface operations {
             401: components["responses"]["NoAutenticado"];
             403: components["responses"]["Prohibido"];
             404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
         };
     };
     get_establecimientos_establecimiento_productos_sanitarios: {
