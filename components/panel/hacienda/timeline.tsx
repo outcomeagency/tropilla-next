@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createElement, type ComponentType } from "react";
 import { Avatar, Badge, TrustBadge } from "@/components/ui";
 import { IconAlert, IconCow, IconFile, IconTruck, IconHeart, IconMap, IconRoute, IconScale, IconSyringe, IconTag, type IconProps } from "@/components/icons";
@@ -62,7 +63,9 @@ export function Timeline({ eventos }: { eventos: S<"EventoResumen">[] }) {
                     <div className={e.anulado ? "min-w-0 flex-1 opacity-60" : "min-w-0 flex-1"}>
                       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                         <p className="text-[14.5px] text-ink">
-                          <span className={e.anulado ? "font-semibold line-through" : "font-semibold"}>{e.tipo_nombre ?? e.tipo}</span>
+                          <Link href={`/hacienda/eventos/${e.id}`} className={e.anulado ? "font-semibold line-through hover:underline" : "font-semibold hover:underline"}>
+                            {e.tipo_nombre ?? e.tipo}
+                          </Link>
                           {e.resumen && <span className="text-muted"> · {e.tipo === "hacienda.identificacion" ? resumenIdentificacion(e.resumen) : e.resumen}</span>}
                         </p>
                         <span className="text-[12.5px] tabular-nums text-muted">{fecha(e.ocurrido_en)}</span>

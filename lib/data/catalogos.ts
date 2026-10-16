@@ -10,7 +10,8 @@ export type CatItem = { codigo: string; nombre: string };
 export type Departamento = { codigo: string; provincia_codigo: string; nombre: string; garrapata_sugerida?: string | null };
 export type Parametro = { clave: string; especie?: string | null; raza?: string | null; valor: unknown; unidad?: string | null; validado_por_vet?: boolean };
 export type ReglaCategoria = { id: number; categoria: string; prioridad: number; motivo: string };
-export type TipoEvento = { codigo: string; nombre: string; modulo: string; requiere_sexo?: string | null };
+export type TipoEvento = { codigo: string; nombre: string; modulo: string; requiere_sexo?: string | null; schema?: JsonSchema | null };
+export type JsonSchema = { type?: string; properties?: Record<string, JsonSchema>; $defs?: Record<string, JsonSchema>; $ref?: string; enum?: unknown[]; items?: JsonSchema; required?: string[]; maxLength?: number };
 
 type Raw = S<"Catalogos"> & Record<string, unknown>;
 
@@ -48,6 +49,7 @@ export async function getCatalogos() {
         nombre: t.nombres?.es ?? t.codigo ?? "",
         modulo: t.modulo ?? "",
         requiere_sexo: ((t as Record<string, unknown>).requiere_sexo as string | null) ?? null,
+        schema: ((t as Record<string, unknown>).json_schema as JsonSchema | null) ?? null,
       })) as TipoEvento[],
       items: Object.fromEntries(Object.entries(items).map(([k, v]) => [k, v.map((i) => ({ codigo: i.codigo, nombre: i.nombre ?? i.codigo }))])) as Record<string, CatItem[]>,
       provincias: geo.provincias ?? PROVINCIAS.map((p) => ({ codigo: p.codigo, nombre: p.nombre })),

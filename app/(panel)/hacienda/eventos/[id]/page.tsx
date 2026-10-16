@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 import type { Metadata } from "next";
 import { api, ApiError } from "@/lib/api";
-import { Avatar, Badge, Card, CardBody, CardHeader, DataList, Notice, TrustBadge } from "@/components/ui";
+import { Avatar, Badge, Card, CardBody, CardHeader, DataList, Notice, TrustBadge, buttonClass } from "@/components/ui";
 import { IconAlert, IconArrowLeft, IconChevronRight, IconExternal, IconHash, IconShieldCheck } from "@/components/icons";
 import { EventoIcono } from "@/components/panel/hacienda/timeline";
 import { requireContexto } from "@/lib/establecimiento";
@@ -14,6 +14,8 @@ import { getCatalogos } from "@/lib/data/catalogos";
 import { ROL_LABEL } from "@/lib/auth";
 import { fecha, fechaHora } from "@/lib/format";
 import { ETIQUETAS, VALORES } from "@/lib/eventos-hacienda";
+import { diff } from "@/lib/correccion";
+import { AnularEvento } from "@/components/panel/eventos/corregir";
 import type { One, S } from "@/lib/schemas";
 
 export const metadata: Metadata = { title: "Evento" };
@@ -54,7 +56,12 @@ async function Contenido({ params, searchParams }: { params: Promise<Params>; se
     ...Object.values(cat.items).flat().map((i) => [i.codigo, i.nombre] as [string, string]),
   ]);
   const tipoNombre = cat.tiposEvento.find((t) => t.codigo === ev.tipo)?.nombre ?? ev.tipo ?? "Evento";
-  const anulado = ev.accion === "anulacion" || ev.vigente === false;
+  const versiones = [...(det.versiones?.length ? det.versiones : [ev])].sort((x, y) => (x.version ?? 1) - (y.version ?? 1));
+  const ultima = versiones.at(-1) ?? ev;
+  const anulado = ultima.accion === "anulacion";
+  const esVigente = !anulado && (ev.id === ultima.id || ev.vigente !== false);
+  const modulo = (ev.tipo ?? "").split(".")[0];
+  const puedeCorregir = ctx.can(modulo === "establecimiento" ? "establecimiento_eventos.crear" : `${modulo}.corregir`) && esVigente && ev.tipo !== "hacienda.individualizacion";
 
   const valor = (k: string, v: unknown): ReactNode => {
     if (v == null || v === "") return null;
@@ -69,7 +76,9 @@ async function Contenido({ params, searchParams }: { params: Promise<Params>; se
     return null;
   };
   const datos: Array<{ label: string; value: ReactNode }> = [];
-  for (const [k, v] of Object.entries(ev.payload ?? {})) {
+  // Una anulación no repite los datos: se muestran los de la última versión con datos.
+  const fuente = Object.keys(ev.payload ?? {}).length ? ev : (versiones.filter((v) => v.accion !== "anulacion").at(-1) ?? ev);
+  for (const [k, v] of Object.entries(fuente.payload ?? {})) {
     if (OCULTAR.has(k)) continue;
     if (v && typeof v === "object" && !Array.isArray(v)) {
       for (const [k2, v2] of Object.entries(v as Record<string, unknown>)) {
@@ -92,6 +101,22 @@ async function Contenido({ params, searchParams }: { params: Promise<Params>; se
       <Link href="/hacienda/eventos" className="mb-3 inline-flex items-center gap-1 text-[13px] font-medium text-muted hover:text-ink">
         <IconArrowLeft size={16} /> Eventos
       </Link>
+      {(sp.ok === "corregido" || sp.ok === "anulado") && (
+        <div className="mb-4">
+          <Notice tone="success" title={sp.ok === "corregido" ? "Corrección guardada." : "Evento anulado."}>
+            {sp.ok === "corregido" ? "Es la versión vigente; la anterior quedó en «Ver cambios»." : "Quedó tachado en la historia y se recalcularon stock y estados."}
+          </Notice>
+        </div>
+      )}
+      {!esVigente && !anulado && ultima.id && (
+        <div className="mb-4">
+          <Notice tone="warning" title={`Estás viendo la versión ${ev.version ?? 1}, que ya fue corregida.`}>
+            <Link href={`/hacienda/eventos/${ultima.id}`} className="font-semibold underline">
+              Abrir la versión vigente (v{ultima.version})
+            </Link>
+          </Notice>
+        </div>
+      )}
       {sp.ok === "registrado" && (
         <div className="mb-4">
           <Notice tone="success" title="Evento registrado.">
@@ -101,7 +126,15 @@ async function Contenido({ params, searchParams }: { params: Promise<Params>; se
       )}
 
       <Card className="mb-4">
-        <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start">
+        <div className="relative flex flex-col gap-4 p-5 sm:flex-row sm:items-start">
+          {puedeCorregir && (
+            <div className="flex gap-2 sm:absolute sm:right-5 sm:top-5 sm:order-last">
+              <Link href={`/hacienda/eventos/${ev.id}/corregir`} className={buttonClass("outline", "sm")}>
+                Corregir
+              </Link>
+              <AnularEvento eventoId={ev.id ?? id} tipo={ev.tipo ?? ""} tipoNombre={tipoNombre} />
+            </div>
+          )}
           <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-border bg-crema text-monte">
             <EventoIcono tipo={ev.tipo} size={24} />
           </span>
@@ -119,7 +152,7 @@ async function Contenido({ params, searchParams }: { params: Promise<Params>; se
                 </span>
               )}
               <TrustBadge nivel={ev.confianza ?? "declarado"} />
-              {(ev.version ?? 1) > 1 && <Badge tone="info">Corregido · v{ev.version}</Badge>}
+              {(ev.version ?? 1) > 1 && !anulado && <Badge tone="info">Corregido · v{ev.version}</Badge>}
               {anulado && <Badge tone="danger">Anulado</Badge>}
               {ev.en_revision && (
                 <Badge tone="warning" icon={<IconAlert size={14} />}>
@@ -209,21 +242,46 @@ async function Contenido({ params, searchParams }: { params: Promise<Params>; se
             {!ids.length && !loteSujeto && <p className="px-5 py-4 text-[14px] text-muted">Sin animales asociados.</p>}
           </Card>
 
-          {(det.versiones?.length ?? 0) > 1 && (
+          {versiones.length > 1 && (
             <Card className="overflow-hidden">
-              <CardHeader title="Versiones" description="Cada corrección es una versión nueva; la anterior queda guardada." />
+              <CardHeader title="Ver cambios" description="Cada corrección es una versión nueva; lo anterior queda tachado, nunca se borra." />
               <ol className="divide-y divide-border">
-                {det.versiones!.map((v) => (
-                  <li key={v.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-[14px]">
-                    <span>
-                      <span className="font-semibold">v{v.version}</span> · {v.accion === "alta" ? "Original" : v.accion === "anulacion" ? "Anulación" : "Corrección"}
-                      {v.motivo && <span className="text-muted"> · «{v.motivo}»</span>}
-                    </span>
-                    <span className="text-[13px] text-muted">
-                      {v.autor?.nombre} · {fechaHora(v.registrado_en)}
-                    </span>
-                  </li>
-                ))}
+                {versiones
+                  .map((v, i) => ({ v, cambios: i ? diff(versiones[i - 1], v) : [] }))
+                  .reverse()
+                  .map(({ v, cambios }) => (
+                    <li key={v.id} className={v.id === ev.id ? "bg-surface-2 px-5 py-3.5" : "px-5 py-3.5"}>
+                      <div className="flex flex-wrap items-baseline justify-between gap-2 text-[14px]">
+                        <span>
+                          <Link href={`/hacienda/eventos/${v.id}`} className="font-semibold text-ink hover:underline">
+                            v{v.version}
+                          </Link>{" "}
+                          · {v.accion === "alta" ? "Original" : v.accion === "anulacion" ? "Anulación" : "Corrección"}
+                          {v.id === ev.id && <span className="text-muted"> (esta)</span>}
+                        </span>
+                        <span className="text-[13px] text-muted">
+                          {v.autor?.nombre} · {fechaHora(v.registrado_en)}
+                        </span>
+                      </div>
+                      {v.motivo && <p className="mt-1 text-[13.5px] text-ink">Motivo: «{v.motivo}»</p>}
+                      {cambios.length > 0 && v.accion !== "anulacion" && (
+                        <ul className="mt-2 space-y-1 text-[13.5px]">
+                          {cambios.map((c) => {
+                            const k = c.campo;
+                            const clave = Object.keys(ETIQUETAS).find((x) => k.endsWith(ETIQUETAS[x])) ?? "";
+                            return (
+                              <li key={k} className="flex flex-wrap items-baseline gap-x-2">
+                                <span className="text-muted">{k}:</span>
+                                <del className="text-muted decoration-danger/70">{c.antes == null || c.antes === "" ? "vacío" : valor(clave, c.antes) ?? String(c.antes)}</del>
+                                <span aria-hidden="true" className="text-subtle">→</span>
+                                <ins className="font-semibold text-ink no-underline">{c.despues == null || c.despues === "" ? "vacío" : valor(clave, c.despues) ?? String(c.despues)}</ins>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </li>
+                  ))}
               </ol>
             </Card>
           )}

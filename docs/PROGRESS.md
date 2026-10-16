@@ -403,3 +403,20 @@ de los pesajes individuales. Pedido a la API: un endpoint de serie de pesos por 
 edad o dentición) tomado del catálogo de reglas, no de un `if especie`. Todo viene marcado y se destilda lo que no corresponde; la
 barra fija dice cuántas se confirman y con qué fecha. Lo que no se confirma sigue sugerido (la API no tiene «descartar sugerencia»:
 anotado como pedido). Al confirmar, Hacienda, Inicio y las existencias se revalidan.
+
+## TPA-26 · Correcciones y anulaciones de eventos · ✅ (web)
+
+**Rutas:** `/hacienda/eventos/[id]` («Corregir», «Anular» y la tarjeta «Ver cambios»), `/hacienda/eventos/[id]/corregir`. Desde la timeline de la ficha cada evento abre su detalle.
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Corregir: versión nueva con motivo obligatorio; campos del payload según el JSON Schema del tipo (los no tocados se conservan) | `POST …/eventos/{id}/correcciones` (409 `version_no_vigente` → mensaje) | 🔌 probado (CC 3,5 → 3) |
+| Anular con motivo | `POST …/eventos/{id}/anulaciones` | 🔌 probado |
+| «Ver cambios»: versiones con autor, fecha, motivo y lo anterior tachado → lo nuevo | `GET …/eventos/{id}` (`versiones`) | 🔌 |
+| Permiso por módulo (`hacienda.corregir`, `reproduccion.corregir`, `sanidad.corregir`) | `/auth/me` abilities | 🔌 |
+
+**Comentario del dev:** El formulario de corrección se arma solo a partir del JSON Schema v1 de cada tipo (enum → lista, decimal →
+número con coma, texto → área), así sirve para hacienda, reproducción y sanidad sin pantallas por tipo; las listas (animales de un
+ingreso, crías) y los sujetos no se corrigen: se explica que eso se anula y se vuelve a cargar. El motivo es obligatorio y se ve en
+«Ver cambios», donde cada campo cambiado aparece tachado con su valor nuevo al lado. Una versión vieja avisa que no es la vigente y
+lleva a la actual; los anulados quedan tachados en el registro, la timeline y el detalle. Nada se borra.
