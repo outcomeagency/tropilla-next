@@ -15,6 +15,8 @@ export class ApiError extends Error {
     public readonly errors?: Record<string, string[]>,
     /** `code` estable del contrato (api-v1 §3): validacion, sin_permiso, no_encontrado… */
     public readonly code?: string,
+    /** Advertencias de coherencia (422 requiere_confirmacion). */
+    public readonly advertencias?: string[],
   ) {
     super(message);
     this.name = "ApiError";
@@ -97,8 +99,9 @@ export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
 
   const data: unknown = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const payload = (data ?? {}) as { message?: string; errors?: Record<string, string[]>; code?: string };
-    throw new ApiError(res.status, payload.message ?? "La API devolvió un error.", payload.errors, payload.code);
+    const payload = (data ?? {}) as { message?: string; errors?: Record<string, string[]>; code?: string; advertencias?: unknown[] };
+    const adv = (payload.advertencias ?? []).map((a) => (typeof a === "string" ? a : String((a as { mensaje?: string }).mensaje ?? JSON.stringify(a))));
+    throw new ApiError(res.status, payload.message ?? "La API devolvió un error.", payload.errors, payload.code, adv);
   }
   return data as T;
 }
