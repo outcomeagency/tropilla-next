@@ -451,3 +451,18 @@ como respondida con el canal: TROPILLA no intermedia ni guarda la conversación.
 el equipo aprende una sola pantalla. Los toros se suman por caravana (la web rechaza hembras antes de mandar) o se describen si son
 prestados; el semen lleva toro, raza (del catálogo por especie), centro y partida. El estado «servida» lo deriva la API y la ficha muestra
 el último servicio con su tipo. El registrar se movió a un componente compartido (`registrar-pagina.tsx`) para Hacienda y Reproducción.
+
+## TPA-28 · Tacto y fecha probable de parto · ✅ (web)
+
+**Rutas:** `/reproduccion/tacto` (sesión de tacto «modo manga» en la web), `/reproduccion/registrar?tipo=reproduccion.tacto` (una o pocas hembras con FPP en vivo)
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Tacto/ecografía: vacía o preñada, días o tamaño, veterinario | `POST …/eventos` (`reproduccion.tacto`, uno por hembra, idempotente por fila) | 🔌 probado: 0501 preñada 45 d → FPP 01/07/2027 (igual a la API) |
+| Gestación por especie y raza (Murrah 303, Mediterránea 313, Jafarabadi 330, búfala 310, bovino 283) | `parametros.gestacion_media_dias` de `GET /catalogos` | 🔌 |
+| FPP vigente y su fuente en la ficha | `GET …/animales/{id}` (`fecha_probable_parto`, `fpp_precision`, `dias_gestacion`) | 🔌 |
+
+**Comentario del dev:** La sesión de tacto copia el ritmo de la manga: caravana ↵, tecla P o V, días ↵ y salta a la siguiente; los
+machos y los animales dados de baja se rechazan en la fila. La fecha probable de parto se calcula en vivo con la gestación de la especie
+y la raza de cada hembra (parámetros del catálogo, no constantes) y coincide con la que deriva la API. El pie lleva el % de preñez de la
+sesión. Las advertencias de la API se confirman por fila con «Guardar igual», igual que en la pesada.

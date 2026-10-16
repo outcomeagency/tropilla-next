@@ -18,6 +18,8 @@ export interface AnimalElegido {
   estado?: string | null;
   peso?: string | null;
   pesoFecha?: string | null;
+  raza?: string | null;
+  estadoReproductivo?: string | null;
 }
 
 /**
@@ -43,6 +45,8 @@ export async function buscarAnimalAction(valor: string): Promise<{ animal?: Anim
         estado: a.estado ?? null,
         peso: a.peso_kg ?? null,
         pesoFecha: a.peso_fecha ?? null,
+        raza: a.raza ?? null,
+        estadoReproductivo: a.estado_reproductivo ?? null,
       },
     };
   } catch {
@@ -261,6 +265,24 @@ export async function registrarEventoAction(_prev: EventoActionState, fd: FormDa
       const semen = limpio({ toro_nombre: corto(fd, "toro_nombre"), raza: fdStr(fd, "semen_raza") || undefined, centro: corto(fd, "centro"), partida: corto(fd, "partida", 60) });
       if (!semen.toro_nombre) fields.toro_nombre = "Indicá el toro (nombre o código de la pajuela).";
       payload = limpio({ tipo: t, semen, inseminador: corto(fd, "inseminador") });
+      break;
+    }
+    case "reproduccion.tacto": {
+      const metodo = fdStr(fd, "metodo_tacto");
+      const resultado = fdStr(fd, "resultado");
+      if (metodo !== "tacto" && metodo !== "ecografia") fields.metodo_tacto = "Elegí tacto o ecografía.";
+      if (resultado !== "vacia" && resultado !== "prenada") fields.resultado = "Elegí vacía o preñada.";
+      const dias = fdStr(fd, "dias_gestacion");
+      if (resultado === "prenada" && dias && (!/^\d{1,3}$/.test(dias) || Number(dias) < 1 || Number(dias) > 340)) fields.dias_gestacion = "Días entre 1 y 340.";
+      const tamano = fdStr(fd, "tamano");
+      if (resultado === "prenada" && !dias && !tamano) fields.dias_gestacion = "Indicá los días de gestación (o al menos el tamaño).";
+      payload = limpio({
+        metodo,
+        resultado,
+        dias_gestacion: resultado === "prenada" && dias ? Number(dias) : undefined,
+        tamano: resultado === "prenada" && tamano ? tamano : undefined,
+        veterinario: corto(fd, "veterinario"),
+      });
       break;
     }
     case "hacienda.faena": {

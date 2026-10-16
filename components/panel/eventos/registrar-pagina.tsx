@@ -7,6 +7,7 @@ import { getAnimal, listPotreros } from "@/lib/data/hacienda";
 import { listLotes } from "@/lib/data/potreros";
 import { getCatalogos } from "@/lib/data/catalogos";
 import { hoyAR } from "@/lib/format";
+import { gestacionesDe } from "@/lib/gestacion";
 import type { AnimalElegido } from "@/lib/evento-actions";
 
 export type SP = { tipo?: string; animales?: string; lote?: string };
@@ -41,6 +42,7 @@ export async function RegistrarPagina({ searchParams, modulo = "hacienda" }: { s
       categoria: a!.categoria_nombre ?? a!.categoria ?? "",
       lote: a!.lote?.nombre ?? null,
       estado: a!.estado ?? null,
+      raza: a!.raza ?? null,
     }));
 
   return (
@@ -56,6 +58,7 @@ export async function RegistrarPagina({ searchParams, modulo = "hacienda" }: { s
       causasMuerte={cat.items.causas_muerte ?? []}
       destinos={cat.items.destinos ?? []}
       categoriasFaena={cat.categoriasFaena.map((c) => ({ codigo: c.codigo, nombre: c.nombre ?? c.codigo }))}
+      gestaciones={gestacionesDe(cat.parametros)}
       hoy={hoyAR(new Date())}
     />
   );
