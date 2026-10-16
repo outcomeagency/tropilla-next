@@ -30,11 +30,13 @@ export class ApiError extends Error {
   }
 
   /**
-   * El endpoint todavía no existe en la API (404/405 de ruteo, sin `code`).
-   * Un 404 de dominio trae `code: "no_encontrado"` y NO entra acá.
+   * El endpoint (todavía) no existe en la API: 404/405. La API responde
+   * `no_encontrado` igual para una ruta inexistente que para un recurso ajeno,
+   * así que los detalles por id/slug sólo caen a mock si el id es de ejemplo
+   * (ver lib/mock/fallback.ts); los listados de un establecimiento propio sí.
    */
   get routeMissing(): boolean {
-    return (this.status === 404 || this.status === 405) && !this.code;
+    return this.status === 404 || this.status === 405;
   }
 
   /** Mensaje del primer error de un campo (422 validacion). */

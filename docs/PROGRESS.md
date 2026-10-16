@@ -28,3 +28,22 @@ httpOnly y `lib/auth.ts` resuelve `/auth/me` una vez por request. Errores 422 de
 (`ApiError.field`) y la validación local evita viajes inútiles. «Olvidé mi contraseña» responde igual exista o
 no la cuenta (no filtra). Tipos generados del OpenAPI en `lib/api-types.ts` (`npm run api:types`). Las pantallas
 de cuenta comparten `AuthShell`: verde monte con foto real de campo, sin degradados.
+
+## TPA-10 · Alta de productor y establecimiento · ✅
+
+**Rutas:** `/bienvenida` (asistente de 3 pasos), `/bienvenida/listo` (cómo cargar la hacienda)
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Alta productor + primer establecimiento (queda Dueño) | `POST /onboarding` | 🔌 probado end-to-end |
+| Panel sin establecimiento → onboarding | `GET /auth/me` (`membresias: []`) | 🔌 |
+| Aviso «Verificá tu email» + reenviar | `POST /auth/email/reenviar` | 🔌 |
+| Provincias/departamentos | `lib/geo.ts` (INDEC: Corrientes = seeder de la API; Chaco/Formosa/Misiones con codificación INDEC) | estático hasta que `/catalogos` publique `geo` |
+| Alta demo | sólo con sesión `mock-*` si `/onboarding` no existe | 🧪 (inactivo) |
+
+**Comentario del dev:** Asistente en tres pasos (productor → establecimiento → producción y sanidad) con
+validación local por paso y errores 422 de la API mapeados al campo y al paso donde corregir. El envío es
+manual (`startTransition`) para que React no resetee el formulario si la API rechaza algo: el productor
+nunca pierde lo que cargó. CUIT y RENSPA se piden como opcionales y con candado «privado siempre».
+Al crear, queda activo el establecimiento nuevo (cookie `tropilla_est`) y se ofrece planilla, carga por
+cantidades o entrar vacío. Zonas sanitarias: defaults razonables para Corrientes, editables.
