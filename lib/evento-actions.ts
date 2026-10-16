@@ -8,6 +8,10 @@ import { getCatalogos } from "./data/catalogos";
 import { decimal, estadoDeError, fdStr, isFecha, postEvento, uuidv7, type EventoActionState } from "./eventos-api";
 import { DENTICION, METODOS_CASTRACION, MOTIVOS_EGRESO, MOTIVOS_INGRESO, TIPOS_PERDIDA, FACILIDAD_PARTO, tipoHacienda } from "./eventos-hacienda";
 import type { Many, S } from "./schemas";
+import { tiposPrueba } from "./data/pruebas";
+import { calcularTuberculina } from "./tuberculina";
+import { crearDocumentoConArchivo, validarArchivo } from "./archivos";
+import { TIPOS_ANALISIS } from "./sanidad";
 
 export interface AnimalElegido {
   id: string;
@@ -409,6 +413,53 @@ export async function registrarEventoAction(_prev: EventoActionState, fd: FormDa
         const dur = fdStr(fd, "duracion_dias");
         if (dur && !/^\d{1,3}$/.test(dur)) fields.duracion_dias = "Días enteros.";
         payload = limpio({ ...comun, diagnostico_presuntivo: dx, duracion_dias: dur ? Number(dur) : undefined, veterinario: corto(fd, "veterinario", 200) });
+      }
+      break;
+    }
+    case "sanidad.prueba_diagnostica": {
+      const cat = await getCatalogos();
+      const t = tiposPrueba(cat).find((x) => x.codigo === fdStr(fd, "prueba"));
+      if (!t) {
+        fields.prueba = "Elegí la prueba.";
+        break;
+      }
+      const comun = { prueba: t.codigo, protocolo_numero: corto(fd, "protocolo_numero", 200) };
+      if (t.metodo === "diferencia_mm") {
+        if (animalIds.length > 1) fields.animales = "Cada animal tiene sus lecturas: cargá uno por vez o usá la lectura de tuberculina.";
+        const mm0 = fdStr(fd, "lectura_0h_mm");
+        const mm72 = fdStr(fd, "lectura_72h_mm");
+        const c = calcularTuberculina(t, mm0, mm72);
+        if (!c) fields.lectura_72h_mm = "Cargá las dos lecturas en mm (ej. 4,5).";
+        payload = limpio({ ...comun, resultado: c?.resultado, resultado_origen: "calculado", lectura_0h_mm: decimal(mm0) ?? undefined, lectura_72h_mm: decimal(mm72) ?? undefined, umbrales_version: t.version });
+      } else {
+        const r = fdStr(fd, "resultado");
+        if (!["negativo", "sospechoso", "positivo", "no_concluyente"].includes(r)) fields.resultado = "Elegí el resultado.";
+        payload = limpio({ ...comun, resultado: r, resultado_origen: "declarado", laboratorio: corto(fd, "laboratorio", 200) });
+      }
+      break;
+    }
+    case "sanidad.analisis_laboratorio": {
+      const t = fdStr(fd, "tipo_analisis");
+      if (!["coprologico", "frotis", "ifd", "mat", "serologia", "otro"].includes(t)) fields.tipo_analisis = "Elegí el tipo de análisis.";
+      const archivo = fd.get("archivo");
+      const file = archivo instanceof File && archivo.size ? archivo : null;
+      const errArchivo = validarArchivo(file);
+      if (errArchivo) fields.archivo = errArchivo;
+      payload = limpio({ tipo: t, muestra: corto(fd, "muestra", 200), laboratorio: corto(fd, "laboratorio", 200), resultado_texto: corto(fd, "resultado_texto", 2000) });
+      if (file && !Object.keys(fields).length) {
+        try {
+          const vinculos = sujetoTipo === "lote" ? [{ tipo: "lote", id: loteId }] : animalIds.map((id) => ({ tipo: "animal", id }));
+          const nombre = TIPOS_ANALISIS.find(([c]) => c === t)?.[1] ?? "Análisis";
+          const doc = await crearDocumentoConArchivo(
+            est,
+            file,
+            { tipo: "analisis_laboratorio", titulo: `${nombre}${payload.laboratorio ? ` · ${payload.laboratorio}` : ""} · ${fecha.split("-").reverse().join("/")}`, emisor: payload.laboratorio ? { nombre: String(payload.laboratorio) } : undefined, emitido_en: fecha, vinculos },
+            { id: fdStr(fd, "doc_id") || uuidv7(), version_id: fdStr(fd, "doc_version_id") || uuidv7() },
+          );
+          if (doc.id) payload.documento_ids = [doc.id];
+        } catch (e) {
+          return estadoDeError(e, {}, "No pudimos subir el informe. Probá de nuevo o registrá el análisis sin archivo.");
+        }
       }
       break;
     }

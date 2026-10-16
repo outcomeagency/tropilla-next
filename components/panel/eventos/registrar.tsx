@@ -23,10 +23,12 @@ import {
   type ModuloRegistrar,
   type SujetoTipo,
 } from "@/lib/eventos-hacienda";
-import { METODOS_DOSIFICACION, NUMERO_DOSIS, TIPOS_DESPARASITACION, VIAS, retiroTexto } from "@/lib/sanidad";
+import { METODOS_DOSIFICACION, NUMERO_DOSIS, RESULTADOS_PRUEBA, TIPOS_ANALISIS, TIPOS_DESPARASITACION, VIAS, retiroTexto } from "@/lib/sanidad";
+import { RESULTADO_TONO, calcularTuberculina, umbralesTexto, type TipoPrueba } from "@/lib/tuberculina";
 import { FormAlerts, useActionForm } from "@/components/panel/form-state";
 import { fpp, gestacion, type Gestaciones } from "@/lib/gestacion";
 import { fecha as fmtFecha } from "@/lib/format";
+import { uuidv7 } from "@/lib/uuid";
 import { ChoiceChip } from "@/components/choice";
 import { Badge, Button, Card, CardHeader, Field, Input, Select, Spinner, Textarea, buttonClass, cx, fieldAria } from "@/components/ui";
 import { IconArrowLeft, IconClose, IconPlus, IconSearch } from "@/components/icons";
@@ -68,6 +70,7 @@ export interface RegistrarEventoProps {
   enfermedades?: Opt[];
   tarea?: TareaOpt | null;
   potreroInicial?: string;
+  pruebas?: TipoPrueba[];
 }
 
 type Fila = { key: number; especie: string; sexo: string; categoria: string };
@@ -83,6 +86,7 @@ const ESPECIE_LABEL: Record<string, string> = { BOV: "Bovino", BUB: "Bubalino" }
 export function RegistrarEvento(p: RegistrarEventoProps) {
   const router = useRouter();
   const { state, formAction, pending, f, idem } = useActionForm(registrarEventoAction);
+  const [docIds] = useState(() => ({ id: uuidv7(), version: uuidv7() }));
   const tipoIni = p.tarea?.tipo ?? p.tipoInicial;
   const [tipo, setTipo] = useState(tipoIni && tipoHacienda(tipoIni) && !tipoHacienda(tipoIni)?.redirige ? tipoIni : "");
   const meta = tipoHacienda(tipo);
@@ -138,6 +142,8 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
   return (
     <form onSubmit={onSubmit} noValidate className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
       <input type="hidden" name="idem" value={idem} />
+      <input type="hidden" name="doc_id" value={docIds.id} />
+      <input type="hidden" name="doc_version_id" value={docIds.version} />
       <input type="hidden" name="tipo" value={tipo} />
       <input type="hidden" name="sujeto" value={sujetoEfectivo} />
       {sujetoEfectivo === "animales" && !creaAnimales && animales.map((a) => <input key={a.id} type="hidden" name="animal_id" value={a.id} />)}
@@ -733,6 +739,27 @@ function CamposTipo({
       );
     case "reproduccion.tacto":
       return <CamposTacto f={f} p={p} animales={animales} />;
+    case "sanidad.prueba_diagnostica":
+      return <CamposPrueba f={f} p={p} n={animales.length} />;
+    case "sanidad.analisis_laboratorio":
+      return (
+        <>
+          {sel("tipo_analisis", "Tipo de análisis", TIPOS_ANALISIS)}
+          {txt("muestra", "Muestra", { optional: true, placeholder: "Ej. materia fecal de 10 bucerros", max: 200 })}
+          {txt("laboratorio", "Laboratorio", { optional: true, placeholder: "Ej. Laboratorio de la FCV-UNNE", max: 200 })}
+          <span className="hidden sm:block" />
+          <div className="sm:col-span-2">
+            <Field label="Resultado" htmlFor="resultado_texto" optional>
+              <Textarea id="resultado_texto" name="resultado_texto" rows={3} maxLength={2000} className="min-h-[84px]" placeholder="Ej. HPG 450, Toxocara positivo." />
+            </Field>
+          </div>
+          <div className="sm:col-span-2">
+            <Field label="Informe del laboratorio" htmlFor="archivo" optional error={f.archivo} hint="PDF o foto, hasta 10 MB. Queda en Documentos con su huella.">
+              <input id="archivo" name="archivo" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" className="block w-full text-[14px] text-muted file:mr-3 file:h-10 file:cursor-pointer file:rounded-[8px] file:border file:border-border-strong file:bg-surface file:px-4 file:text-[14px] file:font-medium file:text-ink hover:file:bg-surface-2" />
+            </Field>
+          </div>
+        </>
+      );
     case "sanidad.vacunacion":
     case "sanidad.desparasitacion":
     case "sanidad.tratamiento":
@@ -1117,6 +1144,74 @@ function CamposAplicacion({ tipo, f, p, especie }: { tipo: string; f: Record<str
         </p>
         <FechaSync onChange={setFechaA} />
       </fieldset>
+    </>
+  );
+}
+
+/** Prueba diagnóstica: tuberculina con resultado calculado por umbrales del catálogo, o resultado declarado del laboratorio. */
+function CamposPrueba({ f, p, n }: { f: Record<string, string>; p: RegistrarEventoProps; n: number }) {
+  const pruebas = p.pruebas ?? [];
+  const [codigo, setCodigo] = useState(pruebas[0]?.codigo ?? "");
+  const [mm0, setMm0] = useState("");
+  const [mm72, setMm72] = useState("");
+  const t = pruebas.find((x) => x.codigo === codigo);
+  const calculada = t?.metodo === "diferencia_mm";
+  const c = calcularTuberculina(t, mm0, mm72);
+  return (
+    <>
+      <Field label="Prueba" htmlFor="prueba" error={f.prueba}>
+        <Select id="prueba" name="prueba" value={codigo} onChange={(e) => setCodigo(e.target.value)} {...fieldAria("prueba", f.prueba)}>
+          {pruebas.map((x) => (
+            <option key={x.codigo} value={x.codigo}>
+              {x.nombre}
+            </option>
+          ))}
+        </Select>
+      </Field>
+      {calculada ? (
+        <div className="sm:col-span-2 grid gap-4 rounded-[10px] border border-border bg-base p-4 sm:grid-cols-3">
+          <Field label="Lectura 0 h" htmlFor="lectura_0h_mm" error={f.lectura_0h_mm}>
+            <div className="relative">
+              <Input id="lectura_0h_mm" name="lectura_0h_mm" inputMode="decimal" value={mm0} onChange={(e) => setMm0(e.target.value)} className="pr-12 tabular-nums" {...fieldAria("lectura_0h_mm", f.lectura_0h_mm)} />
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[14px] text-muted">mm</span>
+            </div>
+          </Field>
+          <Field label="Lectura 72 h" htmlFor="lectura_72h_mm" error={f.lectura_72h_mm}>
+            <div className="relative">
+              <Input id="lectura_72h_mm" name="lectura_72h_mm" inputMode="decimal" value={mm72} onChange={(e) => setMm72(e.target.value)} className="pr-12 tabular-nums" {...fieldAria("lectura_72h_mm", f.lectura_72h_mm)} />
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[14px] text-muted">mm</span>
+            </div>
+          </Field>
+          <div>
+            <p className="mb-1.5 text-[13px] font-semibold text-ink">Resultado</p>
+            {c ? (
+              <Badge tone={RESULTADO_TONO[c.resultado]}>
+                {RESULTADOS_PRUEBA.find(([k]) => k === c.resultado)?.[1]} · {c.diferencia.toLocaleString("es-AR")} mm
+              </Badge>
+            ) : (
+              <p className="text-[13px] text-subtle">Cargá las dos lecturas</p>
+            )}
+          </div>
+          <p className="sm:col-span-3 text-[12.5px] text-muted">
+            Umbrales v{t?.version}: {umbralesTexto(t)}. {c?.resultado === "positivo" && <span className="font-semibold text-danger">Un positivo marca al animal como reactor (privado).</span>}
+            {n > 1 && <span className="block font-medium text-warning">Cada animal tiene sus lecturas: para varios usá la lectura de tuberculina.</span>}
+          </p>
+        </div>
+      ) : (
+        <>
+          <Field label="Resultado" htmlFor="resultado" error={f.resultado}>
+            <Select id="resultado" name="resultado" defaultValue="" {...fieldAria("resultado", f.resultado)}>
+              <Opciones lista={RESULTADOS_PRUEBA} vacio="Elegí" />
+            </Select>
+          </Field>
+          <Field label="Laboratorio" htmlFor="laboratorio" optional>
+            <Input id="laboratorio" name="laboratorio" maxLength={200} />
+          </Field>
+        </>
+      )}
+      <Field label="N.º de protocolo" htmlFor="protocolo_numero" optional>
+        <Input id="protocolo_numero" name="protocolo_numero" maxLength={200} />
+      </Field>
     </>
   );
 }

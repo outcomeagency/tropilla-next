@@ -568,3 +568,20 @@ de las vacunaciones del demo dice «— 0 cabezas» en las aplicadas a potrero/l
 «Sólo si: zona endémica de rabia») y vienen preelegidas según las especies del campo. El «Año sanitario» dibuja ventanas y fechas
 fijas en una grilla de 12 meses con la línea de hoy; lo que no aplica a la zona queda en beige. Las campañas de aftosa no traen
 fechas porque cambian por provincia: el plan lo dice y pide cargarlas. Las tareas se registran con un clic y se cierran solas.
+
+## TPA-34 · Pruebas diagnósticas y laboratorio · ✅ (web)
+
+**Rutas:** `/sanidad/tuberculina` (lectura en la manga), `/sanidad/registrar?tipo=sanidad.prueba_diagnostica|sanidad.analisis_laboratorio`; atajos en `/sanidad`.
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Tuberculina anocaudal / cervical simple: mm a 0 h y 72 h → negativo/sospechoso/positivo con umbrales versionados del catálogo | `GET /catalogos` (`tipos_prueba`) + `POST …/eventos` `sanidad.prueba_diagnostica` (`resultado_origen: calculado`, `umbrales_version`) | 🔌 probado: 0101 negativo (1,5 mm), 0102 positivo (6 mm) |
+| Positivo → reactor (privado), con confirmación explícita antes de guardar | API marca reactor; `GET …/sanidad/reactores` | 🔌 probado |
+| Pruebas con resultado declarado (brucelosis BPA/FPA, cervical comparada) | `sanidad.prueba_diagnostica` (`resultado_origen: declarado`) | 🔌 |
+| Análisis (coprológico, frotis, IFD, MAT, serología) con informe adjunto | `POST /archivos/subidas` → PUT prefirmado → `…/completar` + `POST …/documentos` (`analisis_laboratorio`, vínculo al lote/animal) + `payload.documento_ids` | 🔌 probado: PDF subido, documento con huella y vínculo al lote |
+
+**Comentario del dev:** La lectura de tuberculina copia el ritmo de la manga (caravana ↵, 0 h ↵, 72 h ↵) y muestra la diferencia y
+el resultado en vivo con los umbrales del catálogo (datos versionados, no constantes), avisando que todavía no están validados por un
+veterinario (duda 16 de Claude Design). Un positivo pinta la fila y no deja guardar sin tildar «Confirmo los positivos: pasan a
+reactores»; ese tilde es la confirmación que pide la API. El servidor recalcula el resultado: el navegador sólo muestra. Los informes
+se suben server-side a la URL prefirmada (el navegador nunca ve token ni URL) y quedan en Documentos con su huella (`lib/archivos.ts`).
