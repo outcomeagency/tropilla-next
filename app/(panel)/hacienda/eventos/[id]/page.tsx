@@ -109,6 +109,20 @@ async function Contenido({ params, searchParams }: { params: Promise<Params>; se
     if (val != null) datos.push({ label: ETIQUETAS[k] ?? k.replace(/_/g, " "), value: val });
   }
   if (ev.responsable) datos.push({ label: "Responsable", value: ev.responsable });
+  const docIds = ((fuente.payload?.documento_ids as string[] | undefined) ?? []).filter((x) => /^[0-9a-f-]{36}$/.test(x));
+  if (docIds.length)
+    datos.push({
+      label: docIds.length === 1 ? "Documento adjunto" : "Documentos adjuntos",
+      value: (
+        <span className="flex flex-wrap gap-2">
+          {docIds.map((d, i) => (
+            <Link key={d} href={`/documentos/${d}`} className="font-medium text-campo hover:underline">
+              {docIds.length === 1 ? "Ver el documento" : `Documento ${i + 1}`}
+            </Link>
+          ))}
+        </span>
+      ),
+    });
 
   const conteo = Object.entries(ev.sujetos?.conteo ?? {});
   const loteSujeto = ev.sujetos?.lote_id;

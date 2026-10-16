@@ -282,10 +282,15 @@ async function Ficha({ params, searchParams }: { params: Params; searchParams: S
         {docs.length ? (
           <ul className="divide-y divide-border">
             {docs.map((d, i) => (
-              <li key={String(d.id ?? i)} className="flex items-center gap-3 px-5 py-3.5">
-                <IconFile size={22} className="text-monte" />
-                <span className="flex-1 text-[14.5px] font-medium text-ink">{String(d.titulo ?? d.tipo ?? "Documento")}</span>
-                <TrustBadge nivel={(d.confianza as "declarado" | "integridad_registrada") ?? "declarado"} />
+              <li key={String(d.id ?? i)}>
+                <Link href={`/documentos/${String(d.id)}`} className="flex items-center gap-3 px-5 py-3.5 hover:bg-surface-2">
+                  <IconFile size={22} className="text-monte" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[14.5px] font-medium text-ink">{String(d.titulo ?? d.tipo ?? "Documento")}</span>
+                    {d.tipo_nombre ? <span className="block text-[12.5px] text-muted">{String(d.tipo_nombre)}</span> : null}
+                  </span>
+                  <TrustBadge nivel={(d.confianza as "declarado" | "integridad_registrada") ?? "declarado"} />
+                </Link>
               </li>
             ))}
           </ul>
@@ -295,9 +300,11 @@ async function Ficha({ params, searchParams }: { params: Params; searchParams: S
             title="Sin documentos vinculados"
             description="Certificados, análisis o la DT-e de este animal: sacales una foto desde la app y vinculalos acá. Cada versión queda con su huella."
             action={
-              <Link href="/documentos" className={buttonClass("outline", "md")}>
-                Ir a Documentos
-              </Link>
+              ctx.can("documentos.crear") ? (
+                <Link href={`/documentos/nuevo?animal=${id}`} className={buttonClass("outline", "md")}>
+                  Subir un documento de este animal
+                </Link>
+              ) : undefined
             }
           />
         )}

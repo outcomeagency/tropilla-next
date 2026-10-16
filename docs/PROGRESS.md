@@ -602,3 +602,22 @@ amarilla (retiro, con la fecha hasta la que corre) y una roja con candado (react
 una faena aparece el aviso antes de cargar los datos, sin bloquear (la venta para invernada es válida), y la API vuelve a pedir
 confirmación. El selector de lotes para ofertar dejó de usar una fecha fija y datos de ejemplo: muestra retiro y reactores reales
 por lote. El reactor nunca llega a lo público (lo filtra la API; la web no lo pinta fuera del panel).
+
+## TPA-36 · Carpeta documental con versiones y vencimientos · ✅ (web)
+
+**Rutas:** `/documentos?vista=por_vencer|vencidos|perfil|revocados&privacidad=&q=` (carpeta + franja de vencimientos), `/documentos/nuevo?animal=&lote=` (subir), `/documentos/[id]` (archivo vigente, historia, integridad, visibilidad), `/documentos/archivo/[sha256]` (abre el archivo con URL prefirmada, server-side). La ficha del animal (pestaña Documentos) y el detalle de un evento con informe enlazan acá.
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Carpeta con filtros (vista, categoría de privacidad, búsqueda), cursor | `GET …/documentos?estado=&vence_antes=&visibilidad=&privacidad=&q=` | 🔌 API real |
+| Vencidos y por vencer (alertas 30/7/0 días) | `GET …/documentos/vencimientos?dias=30` | 🔌 |
+| Alta: archivo (PDF/foto ≤ 10 MB) → tipo (privacidad por tipo; fiscal sólo con `documentos.fiscal`) → emisor, emisión, vencimiento propuesto → vínculos animal/lote/potrero | `/archivos/subidas` + PUT prefirmado + `…/completar` + `POST …/documentos` | 🔌 probado (acta aftosa en PNG) |
+| Versión nueva (otro archivo), corrección de datos, revocación — siempre con motivo; la anterior queda | `POST …/documentos/{id}/versiones` | 🔌 probado (v2 con PDF) |
+| Privado / en el perfil (fiscal nunca) | `POST …/documentos/{id}/visibilidad` | 🔌 |
+| Abrir archivo | `GET /archivos/{sha256}` → 302 | 🔌 (la ficha trae `archivos[].url` con host interno `minio:9000`: pedido para la API) |
+
+**Comentario del dev:** La carpeta arranca por lo que vence: una franja amarilla con vencidos y por vencer, con la salida dicha en
+castellano («pedí la nueva constancia y subila como versión nueva»), sin prometer trámites con SENASA. Subir es una sola pantalla:
+archivo, tipo (que fija la categoría de privacidad: un fiscal es fiscal siempre), datos y a qué corresponde, con resumen a la derecha.
+La ficha muestra la foto del documento o un acceso al PDF, y la historia como línea de tiempo: cada versión con motivo, autor, rol y
+huella con enlace a la verificación. Los archivos viajan server-side a la URL prefirmada; el navegador sólo recibe un redirect de 5 min.
