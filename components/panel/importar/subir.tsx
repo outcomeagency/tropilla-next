@@ -2,21 +2,10 @@
 
 import { startTransition, useActionState, useRef, useState, type DragEvent } from "react";
 import { subirPlanillaAction, type SubidaState } from "@/lib/importacion-actions";
-import { COLUMNAS, leerCsv } from "@/lib/planilla";
-import { IconAlert, IconCheckCircle, IconClose, IconFile, IconUpload } from "@/components/icons";
-import { Button, Field, Notice, Select, Spinner, cx } from "@/components/ui";
-
-/** Clave de localStorage con las filas crudas del último CSV subido (ver RevisionImportacion). */
-export const CRUDAS_PENDIENTES = "tropilla_imp_crudas";
+import { IconAlert, IconClose, IconFile, IconUpload } from "@/components/icons";
+import { Button, Field, Select, Spinner, cx } from "@/components/ui";
 
 const MAX_BYTES = 10 * 1024 * 1024;
-const OBLIGATORIAS = ["sexo", "categoria"] as const;
-
-interface Leida {
-  filas: number;
-  faltan: string[];
-  sinEspecie: boolean;
-}
 
 function peso(bytes: number) {
   return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1).replace(".", ",")} MB`;
@@ -24,24 +13,18 @@ function peso(bytes: number) {
 
 /**
  * Subida de la planilla: arrastrar o elegir, chequeo rápido en el navegador
- * (extensión, peso, columnas) y envío por Server Action (el token nunca llega
- * al cliente). Si es CSV, guarda lo que escribió el productor para mostrarlo al
- * corregir: la API sólo devuelve los valores que pudo interpretar.
+ * (extensión y peso) y envío por Server Action (el token nunca llega al cliente).
+ * El archivo se procesa en el servidor; la API devuelve el original de cada fila.
  */
 export function SubirPlanilla({ especies }: { especies: Array<"BOV" | "BUB"> }) {
   const [state, action, pending] = useActionState<SubidaState, FormData>(subirPlanillaAction, {});
   const [archivo, setArchivo] = useState<File | null>(null);
-  const [leida, setLeida] = useState<Leida | null>(null);
   const [local, setLocal] = useState<string | null>(null);
   const [arrastrando, setArrastrando] = useState(false);
   const [especie, setEspecie] = useState(especies.length === 1 ? especies[0] : "");
   const input = useRef<HTMLInputElement>(null);
-  const crudas = useRef<string | null>(null);
-
-  async function elegir(f: File | null | undefined) {
-    setLeida(null);
+  function elegir(f: File | null | undefined) {
     setLocal(null);
-    crudas.current = null;
     if (!f) return setArchivo(null);
     const ext = f.name.toLowerCase().split(".").pop();
     if (ext !== "csv" && ext !== "xlsx") {
@@ -53,16 +36,6 @@ export function SubirPlanilla({ especies }: { especies: Array<"BOV" | "BUB"> }) 
       return setLocal("La planilla pesa más de 10 MB. Dividila en dos archivos.");
     }
     setArchivo(f);
-    if (ext === "csv") {
-      const filas = leerCsv(await f.text());
-      const cols = new Set(filas.flatMap((r) => Object.keys(r)));
-      setLeida({
-        filas: filas.length,
-        faltan: OBLIGATORIAS.filter((c) => !cols.has(c)),
-        sinEspecie: !cols.has("especie"),
-      });
-      crudas.current = JSON.stringify({ nombre: f.name, t: Date.now(), filas });
-    }
   }
 
   function soltar(e: DragEvent<HTMLLabelElement>) {
@@ -80,13 +53,6 @@ export function SubirPlanilla({ especies }: { especies: Array<"BOV" | "BUB"> }) 
   function enviar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!archivo) return setLocal("Elegí la planilla que completaste.");
-    if (leida?.sinEspecie && !especie) return setLocal("La planilla no tiene columna «especie»: elegí de qué especie es la hacienda.");
-    try {
-      if (crudas.current) localStorage.setItem(CRUDAS_PENDIENTES, crudas.current);
-      else localStorage.removeItem(CRUDAS_PENDIENTES);
-    } catch {
-      /* sin localStorage: la corrección igual funciona, sin mostrar lo escrito */
-    }
     const fd = new FormData();
     fd.set("archivo", archivo);
     if (especie) fd.set("especie_default", especie);
@@ -135,16 +101,9 @@ export function SubirPlanilla({ especies }: { especies: Array<"BOV" | "BUB"> }) 
             <p className="truncate text-[14px] font-semibold text-ink">{archivo.name}</p>
             <p className="text-[12.5px] text-muted">
               {peso(archivo.size)}
-              {leida && (
-                <>
-                  {" · "}
-                  <span className="tabular-nums">{leida.filas}</span> {leida.filas === 1 ? "fila" : "filas"} con datos
-                </>
-              )}
-              {!leida && " · Excel: lo revisamos al subirlo"}
+              {" · La API revisa filas y columnas al subirla"}
             </p>
           </div>
-          {leida && leida.faltan.length === 0 && leida.filas > 0 && <IconCheckCircle size={18} className="shrink-0 text-success" aria-label="Columnas reconocidas" />}
           <button
             type="button"
             onClick={() => {
@@ -159,19 +118,12 @@ export function SubirPlanilla({ especies }: { especies: Array<"BOV" | "BUB"> }) 
         </div>
       )}
 
-      {leida && leida.filas === 0 && <Notice tone="warning" title="La planilla no tiene filas con datos">Completá una fila por animal debajo de los encabezados.</Notice>}
-      {leida && leida.faltan.length > 0 && (
-        <Notice tone="warning" title={`No encontramos ${leida.faltan.length === 1 ? "la columna" : "las columnas"} ${leida.faltan.map((c) => `«${c}»`).join(" y ")}`}>
-          Revisá que la primera fila tenga los encabezados de la plantilla ({COLUMNAS.slice(0, 4).join(", ")}…). Igual podés subirla: te vamos a marcar qué falta en cada fila.
-        </Notice>
-      )}
-
-      {especies.length > 1 || leida?.sinEspecie ? (
+      {especies.length > 1 ? (
         <Field
-          label="Especie si la fila no la indica"
+          label="Especie predeterminada"
           htmlFor="especie_default"
-          optional={!leida?.sinEspecie}
-          hint="Se usa sólo en las filas con la columna «especie» vacía."
+          optional
+          hint="Se usa sólo en las filas sin especie indicada."
         >
           <Select id="especie_default" value={especie} onChange={(e) => setEspecie(e.target.value as "BOV" | "BUB" | "")}>
             <option value="">Siempre la indica la planilla</option>

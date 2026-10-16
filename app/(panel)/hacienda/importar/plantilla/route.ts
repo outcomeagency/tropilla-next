@@ -1,6 +1,6 @@
 import { API_URL } from "@/lib/api";
 import { getToken } from "@/lib/session";
-import { parseCsv } from "@/lib/planilla";
+import { parseCsv } from "@/lib/planilla-csv";
 
 const celda = (v: string) => (/[;"\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
 
