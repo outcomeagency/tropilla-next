@@ -2,49 +2,61 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { api, query } from "@/lib/api";
 import { withMock, withMockIf } from "@/lib/mock/fallback";
-import { mockDirectorio, type DirectorioQuery } from "@/lib/mock/portal";
-import { departamentoNombre, provinciaNombre } from "@/lib/geo";
-import { razaNombre } from "@/lib/catalogo";
 import type { Locale } from "@/lib/i18n";
 import type { Many, One, S } from "@/lib/schemas";
 
-export type { DirectorioQuery };
+export interface DirectorioQuery {
+  q?: string;
+  provincia?: string;
+  especie?: string;
+  raza?: string;
+  categoria?: string;
+  con_oferta?: string;
+  con_contrato?: string;
+  cursor?: string;
+}
+
+export type DirectorioFacetas = S<"DirectorioFacetas">;
 
 /**
- * Directorio público (TPA-54). Cacheado por combinación de filtros e idioma;
- * la API manda `Cache-Control` 60 s y revalida por tag al publicar/despublicar.
+ * Directorio público (TPA-54), API real. Cacheado por combinación de filtros e
+ * idioma; se revalida por tag al publicar/despublicar un perfil.
  */
-export async function getDirectorio(filtros: DirectorioQuery, locale: Locale) {
+export async function getDirectorio(filtros: DirectorioQuery, locale: Locale, limit = 24) {
   "use cache";
   cacheLife("minutes");
   cacheTag("directorio");
-
-  return withMock(
-    async () => {
-      const res = await api<Many<S<"DirectorioItem">>>(`/public/directorio${query({ ...filtros, locale, limit: 48 })}`, {
-        auth: false,
-        locale,
-      });
-      return res.data;
-    },
-    () =>
-      mockDirectorio(filtros, (p) =>
-        [p.nombre, p.localidad, provinciaNombre(p.provincia), departamentoNombre(p.departamento), ...(p.razas ?? []).map(razaNombre)].join(" "),
-      ),
-  );
+  const res = await api<Many<S<"DirectorioItem">>>(`/public/directorio${query({ ...filtros, locale, limit })}`, { auth: false, locale });
+  return { data: res.data, next: res.meta?.next_cursor ?? null };
 }
 
-/** Entradas indexables (perfiles en directorio, ofertas y contratos publicados). */
-export async function getSitemapEntradas() {
+/** Conteos por provincia, especie, raza y categoría para los filtros del directorio. */
+export async function getDirectorioFacetas(filtros: Pick<DirectorioQuery, "q" | "provincia" | "especie">, locale: Locale): Promise<DirectorioFacetas | null> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("directorio");
+  try {
+    return (await api<One<DirectorioFacetas>>(`/public/directorio/facetas${query({ ...filtros, locale })}`, { auth: false, locale })).data;
+  } catch {
+    return null;
+  }
+}
+
+/** La API publica las ofertas como `/o/{codigo}`; en la web viven en `/ofertas/{codigo}`. */
+export function rutaPublica(path: string): string {
+  return path.replace(/^\/o\//, "/ofertas/").replace(/^\/c\//, "/contratos/");
+}
+
+/** Entradas indexables (perfiles en directorio, ofertas y contratos publicados). Sin API → sólo las fijas. */
+export async function getSitemapEntradas(): Promise<S<"SitemapEntrada">[]> {
   "use cache";
   cacheLife("hours");
   cacheTag("sitemap");
-  const { MOCK_PRODUCTORES } = await import("@/lib/mock/portal");
-  return withMock(
-    async () => (await api<Many<S<"SitemapEntrada">>>("/public/sitemap", { auth: false })).data,
-    (): S<"SitemapEntrada">[] =>
-      MOCK_PRODUCTORES.map((p) => ({ tipo: "perfil", path: `/p/${p.slug}`, locales: ["es", "en", "pt"], actualizado_en: p.actualizado_en })),
-  );
+  try {
+    return (await api<Many<S<"SitemapEntrada">>>("/public/sitemap", { auth: false })).data.map((e) => ({ ...e, path: e.path ? rutaPublica(e.path) : e.path }));
+  } catch {
+    return [];
+  }
 }
 
 /** Ficha pública de oferta (TPA-48). 404 si no existe o no está publicada. */

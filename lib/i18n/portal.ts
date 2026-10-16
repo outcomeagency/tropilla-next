@@ -260,7 +260,10 @@ const es = {
     emptyBusco: "Publicar un Busco",
     followZone: "Seguir esta zona",
     loadMore: "Ver más productores",
+    backToStart: "Volver al principio",
     producerCta: "¿Sos productor? Sumá tu campo al directorio",
+    producerCtaBody: "Cargás tu hacienda gratis y elegís qué mostrar. Lo privado (CUIT, precios, ubicación exacta) nunca se publica.",
+    producerCtaAction: "Crear la cuenta de mi campo",
   },
 };
 
@@ -522,7 +525,10 @@ const en: PortalDict = {
     emptyBusco: "Post a Wanted request",
     followZone: "Follow this area",
     loadMore: "Show more producers",
+    backToStart: "Back to the start",
     producerCta: "Are you a producer? Add your farm to the directory",
+    producerCtaBody: "Load your herd for free and choose what to show. Private data (tax ID, prices, exact location) is never published.",
+    producerCtaAction: "Create my farm account",
   },
 };
 
@@ -782,7 +788,10 @@ const pt: PortalDict = {
     emptyBusco: "Publicar um Procuro",
     followZone: "Seguir esta região",
     loadMore: "Ver mais produtores",
+    backToStart: "Voltar ao início",
     producerCta: "É produtor? Coloque seu campo no diretório",
+    producerCtaBody: "Cadastre seu rebanho grátis e escolha o que mostrar. O privado (CUIT, preços, localização exata) nunca é publicado.",
+    producerCtaAction: "Criar a conta do meu campo",
   },
 };
 

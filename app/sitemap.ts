@@ -16,12 +16,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     alternates: { languages: Object.fromEntries(LOCALES.map((l) => [l, `${SITE_URL}/${l}${path}`])) },
   }));
 
-  const { data, source } = await getSitemapEntradas();
-  // Con datos de ejemplo no se publican URLs de perfiles que no existen.
-  const dinamicas =
-    source === "mock"
-      ? []
-      : data
+  const data = await getSitemapEntradas();
+  const dinamicas = data
           .filter((e) => e.path)
           .map((e) => {
             const locales = e.locales?.length ? e.locales : ["es"];
