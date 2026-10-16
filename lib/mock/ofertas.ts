@@ -5,7 +5,6 @@
  * en español en los tres idiomas (así los devuelve la API).
  */
 import "server-only";
-import { PHOTOS } from "@/lib/photos";
 import type { Locale } from "@/lib/i18n";
 import type { S } from "@/lib/schemas";
 import { ubicacionCorta } from "@/lib/geo";
@@ -45,7 +44,7 @@ interface Semilla {
   nacidosPct?: number;
   sistema: string;
   condiciones: { modalidad: string; precio: string; lugar_carga: string; disponible_desde: string };
-  fotos: string[];
+  fotos: S<"Foto">[];
   actualizado: string;
   estado?: "publicada" | "reservada";
 }
@@ -71,7 +70,7 @@ const SEMILLAS: Semilla[] = [
     nacidosPct: 100,
     sistema: "Sistema pastoril en humedal",
     condiciones: { modalidad: "en_pie", precio: "a_consultar", lugar_carga: "En el establecimiento, General Paz (Corrientes)", disponible_desde: "2026-11-02" },
-    fotos: [PHOTOS.bufalosPastizal.src, PHOTOS.bufaloCorral.src, PHOTOS.estero.src],
+    fotos: [],
     actualizado: "2026-10-16T10:24:00.000Z",
   },
   {
@@ -92,7 +91,7 @@ const SEMILLAS: Semilla[] = [
     nacidosPct: 100,
     sistema: "Cría a campo natural con suplementación invernal",
     condiciones: { modalidad: "en_pie", precio: "a_consultar", lugar_carga: "En el establecimiento, General Paz (Corrientes)", disponible_desde: "2026-10-25" },
-    fotos: [PHOTOS.angusCaravanas.src],
+    fotos: [],
     actualizado: "2026-10-12T15:10:00.000Z",
   },
   {
@@ -110,7 +109,7 @@ const SEMILLAS: Semilla[] = [
     nacidosPct: 80,
     sistema: "Recría sobre pastura implantada",
     condiciones: { modalidad: "en_pie", precio: "a_consultar", lugar_carga: "Mercedes (Corrientes)", disponible_desde: "2026-11-15" },
-    fotos: [PHOTOS.angusMonte.src],
+    fotos: [],
     actualizado: "2026-10-15T09:00:00.000Z",
   },
   {
@@ -128,7 +127,7 @@ const SEMILLAS: Semilla[] = [
     nacidosPct: 100,
     sistema: "Pastoril en bañado y monte",
     condiciones: { modalidad: "en_pie", precio: "a_consultar", lugar_carga: "San Miguel (Corrientes)", disponible_desde: "2026-11-01" },
-    fotos: [PHOTOS.bufaloLaguna.src],
+    fotos: [],
     actualizado: "2026-10-14T11:00:00.000Z",
   },
 ];
@@ -210,7 +209,7 @@ export async function mockOfertaPublica(codigo: string, locale: Locale): Promise
       sinRetiro: !lote?.extra.retiroHasta,
       sistema: String(o.textos?.sistema ?? ""),
       condiciones: m.condiciones ? c : { modalidad: "", precio: "", lugar_carga: "", disponible_desde: "" },
-      fotos: [o.especie === "BUB" ? PHOTOS.bufalosPastizal.src : PHOTOS.brahmanRodeo.src],
+      fotos: [],
       actualizado: o.publicada_en ?? new Date().toISOString(),
       estado: o.estado === "reservada" ? "reservada" : "publicada",
     },
@@ -227,7 +226,7 @@ export function mockOfertasDe(slug: string, locale: Locale): S<"OfertaPublicaRes
     cantidad: s.cantidad,
     peso_promedio_kg: s.peso?.promedio ?? null,
     estado: s.estado ?? "publicada",
-    foto_url: s.fotos[0],
+    foto_url: null,
     url: `/${locale}/ofertas/${s.codigo}`,
   }));
 }

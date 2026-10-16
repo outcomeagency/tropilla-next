@@ -68,7 +68,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       canonical: `/${locale}/ofertas/${o.codigo}`,
       languages: Object.fromEntries(LOCALES.map((l) => [LOCALE_HTML_LANG[l], `/${l}/ofertas/${o.codigo}`])),
     },
-    openGraph: { title: titulo, description: descripcion, type: "website", images: foto ? [{ url: foto }] : undefined },
+    openGraph: { title: titulo, description: descripcion, type: "website", images: foto ? [{ url: foto.url }] : undefined },
     robots: res.source === "mock" || o.seo?.indexable === false ? { index: false } : undefined,
   };
 }
@@ -203,7 +203,7 @@ async function Oferta({ params }: { params: Params }) {
           <div className="order-1 lg:order-2">
             <Photo
               src={c.fotos?.[0]}
-              alt={titulo}
+              alt={c.fotos?.[0]?.alt ?? titulo}
               sizes="(min-width:1024px) 640px, 100vw"
               className="aspect-[3/2] rounded-[16px] border border-border"
               preload
@@ -211,8 +211,8 @@ async function Oferta({ params }: { params: Params }) {
             {(c.fotos?.length ?? 0) > 1 && (
               <ul className="mt-2.5 grid grid-cols-4 gap-2.5" aria-label={t.offer.gallery}>
                 {c.fotos!.slice(1, 5).map((f) => (
-                  <li key={f}>
-                    <Photo src={f} alt={titulo} sizes="160px" className="aspect-[4/3] rounded-[10px] border border-border" />
+                <li key={f.sha256}>
+                  <Photo src={f} alt={f.alt ?? titulo} sizes="160px" className="aspect-[4/3] rounded-[10px] border border-border" />
                   </li>
                 ))}
               </ul>

@@ -940,6 +940,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/establecimientos/{establecimiento}/animales/sugerencias/descartar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Descartar sugerencias de recategorización en bloque
+         * @description **Ability:** `hacienda.crear` (modelo-datos.md §13). Desvío aditivo (TPA-25 bugfix). Cada ítem descarta la sugerencia **vigente** del animal (`categoria` = la `categoria_sugerida` que vio el usuario): esa categoría no se vuelve a sugerir para ese animal (ni al proyectar ni en el job diario); si las reglas sugieren otra, aparece. No es un evento: queda en auditoría y viaja por pull como cambio del animal (`Animal.categorias_descartadas`). Todo o nada; idempotente. 422 si el animal no es del establecimiento o la sugerencia cambió.
+         */
+        post: operations["post_establecimientos_establecimiento_animales_sugerencias_descartar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/establecimientos/{establecimiento}/animales/{animal}": {
         parameters: {
             query?: never;
@@ -1000,6 +1020,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/establecimientos/{establecimiento}/animales/{animal}/pesajes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Serie de pesos del animal (curva de la ficha)
+         * @description **Ability:** `hacienda.ver` (modelo-datos.md §13). Desvío aditivo (TPA-23 bugfix): puntos ascendentes por fecha, leídos del payload de los eventos vigentes (no del `resumen`). Fuentes: `pesaje` (individual, o promedio que incluye al animal o del lote anónimo de origen previo a la individualización → `heredado_de_lote`), `nacimiento` (peso de la cría en el parto) y `destete`. `gdp_kg_dia` solo en puntos individuales de pesaje/nacimiento, contra el anterior de fecha menor (misma regla que `Animal.gdp_kg_dia`; el destete no cuenta). Sin paginar.
+         */
+        get: operations["get_establecimientos_establecimiento_animales_animal_pesajes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/establecimientos/{establecimiento}/animales/{animal}/documentos": {
         parameters: {
             query?: never;
@@ -1035,7 +1075,7 @@ export interface paths {
         put?: never;
         /**
          * Registrar evento (web/online: el servidor arma el sobre y la huella)
-         * @description **Ability:** `hacienda.crear` (modelo-datos.md §13). Ability según módulo del tipo. 422 requiere_confirmacion con advertencias; 422 regla_bloqueante. Sanidad (TPA-32): un evento a un lote **no anónimo** se expande en el servidor a `animales` con `lote_id` de contexto; con `producto_id` se copian al payload `producto_nombre`, `principio_activo` (desparasitación), `via` (vacunación) y los retiros del producto si no vienen. A un `potrero`, el servidor fija los animales presentes. Advertencias nuevas: `retiro_menor_al_producto`, `envase_vencido`, `producto_otra_especie`. Prueba diagnóstica (TPA-34): con `lectura_0h_mm` y `lectura_72h_mm` y sin `resultado`, el servidor lo calcula (`resultado_origen: calculado`, `umbrales_version`) con los parámetros `<prueba>_negativo_lt_mm` / `<prueba>_positivo_gte_mm`; un `calculado` que no coincide → 422 `regla_bloqueante` (por sync: aceptado + revisión `resultado_prueba_discrepante`); advertencias `marca_reactor`, `resultado_distinto_al_calculado`, `lectura_72h_menor`. Venta (TPA-35): `reactor` en `hacienda.egreso` que no va a faena y `retiro_vigente` también para lotes anónimos.
+         * @description **Ability:** `hacienda.crear` (modelo-datos.md §13). Ability según módulo del tipo. 422 requiere_confirmacion con advertencias; 422 regla_bloqueante. Sanidad (TPA-32): un evento a un lote **no anónimo** se expande en el servidor a `animales` con `lote_id` de contexto; con `producto_id` se copian al payload `producto_nombre`, `principio_activo` (desparasitación), `via` (vacunación) y los retiros del producto si no vienen. A un `potrero`, el servidor fija los animales presentes y (TPA-35 bugfix) los lotes anónimos presentes con cabezas, que toman el retiro y ven el evento en su historia. Advertencias nuevas: `retiro_menor_al_producto`, `envase_vencido`, `producto_otra_especie`. Prueba diagnóstica (TPA-34): con `lectura_0h_mm` y `lectura_72h_mm` y sin `resultado`, el servidor lo calcula (`resultado_origen: calculado`, `umbrales_version`) con los parámetros `<prueba>_negativo_lt_mm` / `<prueba>_positivo_gte_mm`; un `calculado` que no coincide → 422 `regla_bloqueante` (por sync: aceptado + revisión `resultado_prueba_discrepante`); advertencias `marca_reactor`, `resultado_distinto_al_calculado`, `lectura_72h_menor`. Venta (TPA-35): `reactor` en `hacienda.egreso` que no va a faena y `retiro_vigente` también para lotes anónimos.
          */
         post: operations["post_establecimientos_establecimiento_eventos"];
         delete?: never;
@@ -3306,6 +3346,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/public/fotos/{sha256}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Foto pública por hash
+         * @description TPA-54 (bugfix). Sirve los bytes solo si el hash lo referencia un perfil publicado, la publicación vigente de una oferta publicada/reservada/vendida o un profesional público; cualquier otro caso (o una oferta retirada) → 404. `Cache-Control: public, max-age=31536000, immutable`, `ETag` = hash (304 con `If-None-Match`).
+         */
+        get: operations["get_public_fotos_sha256"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fotos/{sha256}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Foto privada con URL firmada
+         * @description TPA-54 (bugfix). La firma (`expires` + `signature`, generada por la API en `foto_url`/`Foto.url`) es la credencial: sirve en `<img>` sin token. Sin firma, adulterada o vencida → 404. `Cache-Control: private` hasta el vencimiento.
+         */
+        get: operations["get_fotos_sha256"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/public/profesionales/{slug}": {
         parameters: {
             query?: never;
@@ -3572,6 +3652,8 @@ export interface components {
             pais?: string | null;
             email_verificado?: boolean;
             foto_url?: string | null;
+            /** @description Aditivo TPA-54 (bugfix): la misma foto como objeto */
+            foto?: components["schemas"]["Foto"] | null;
             es_comprador?: boolean;
             es_profesional?: boolean;
             es_staff?: boolean;
@@ -3651,6 +3733,10 @@ export interface components {
             };
             idiomas?: ("es" | "en" | "pt")[];
             bio?: string | null;
+            /** @description Entrada (TPA-54 bugfix): hash de una foto ya subida; 422 si no existe completa */
+            foto_sha256?: components["schemas"]["Hash"] | null;
+            /** @description Salida (TPA-54 bugfix), URL firmada */
+            readonly foto?: components["schemas"]["Foto"] | null;
             publico?: boolean;
         };
         Notificacion: {
@@ -3986,7 +4072,7 @@ export interface components {
             };
             peso_promedio_kg?: components["schemas"]["Decimal"] | null;
             peso_promedio_fecha?: components["schemas"]["Fecha"] | null;
-            /** @description Aditivo TPA-35: mayor entre individuales y aplicaciones al lote anónimo */
+            /** @description Aditivo TPA-35: mayor entre individuales y aplicaciones al lote anónimo (incluye, desde el bugfix, las aplicaciones a un potrero donde estaba) */
             retiro_carne_hasta?: string | null;
             retiro_leche_hasta?: string | null;
             gdp_promedio_kg_dia?: components["schemas"]["Decimal"] | null;
@@ -4051,6 +4137,10 @@ export interface components {
             foto_url?: string | null;
         };
         Animal: components["schemas"]["AnimalResumen"] & {
+            /** @description Aditivo TPA-54 (bugfix). Privada (URL firmada); `AnimalResumen.foto_url` es la misma URL. */
+            foto?: components["schemas"]["Foto"] | null;
+            /** @description Aditivo (TPA-25 bugfix). Categorías cuya sugerencia se descartó para este animal; la app no las sugiere offline. */
+            categorias_descartadas?: string[];
             identificaciones?: components["schemas"]["Identificacion"][];
             cruza?: {
                 [key: string]: unknown;
@@ -4096,6 +4186,7 @@ export interface components {
                 peso_kg?: components["schemas"]["Decimal"] | null;
             } | null;
             fpp_precision?: string | null;
+            /** @description TPA-35 bugfix: un animal individualizado desde un lote anónimo hereda el retiro del lote por las aplicaciones ocurridas hasta la individualización (al lote o a un potrero donde estaba). */
             retiro_carne_hasta?: components["schemas"]["Fecha"] | null;
             retiro_leche_hasta?: components["schemas"]["Fecha"] | null;
             clase_faena?: {
@@ -4149,6 +4240,22 @@ export interface components {
                 categoria: string;
             }[];
             ocurrido_en?: string;
+        };
+        /** @description Punto de la serie de pesos (TPA-23 bugfix). */
+        PuntoPeso: {
+            evento_id: components["schemas"]["Uuid"];
+            fecha: components["schemas"]["Fecha"];
+            peso_kg: components["schemas"]["Decimal"];
+            /** @enum {string} */
+            fuente: "pesaje" | "nacimiento" | "destete";
+            /** @enum {string} */
+            modo: "individual" | "promedio";
+            /** @enum {string|null} */
+            metodo: "balanza" | "cinta" | "estimado" | null;
+            cantidad: number | null;
+            gdp_kg_dia: components["schemas"]["Decimal"] | null;
+            heredado_de_lote: boolean;
+            lote_id: components["schemas"]["Uuid"] | null;
         };
         Genealogia: {
             animal?: components["schemas"]["AnimalResumen"];
@@ -4498,6 +4605,15 @@ export interface components {
             bytes: number;
             mime: string;
         };
+        /** @description Foto (TPA-54 bugfix). `url` pública (`/public/fotos/{sha256}`, inmutable, sin cuenta) en todo lo publicado (perfil, oferta, profesional, directorio); firmada (`/fotos/{sha256}?expires&signature`, vence al terminar la hora siguiente) en lo privado (animal, usuario, vistas internas de perfil y oferta). `alt` en el idioma pedido (fallback es); dimensiones en px (null si no se midieron). */
+        Foto: {
+            sha256: components["schemas"]["Hash"];
+            /** Format: uri */
+            url: string;
+            alt: string | null;
+            ancho: number | null;
+            alto: number | null;
+        };
         Archivo: {
             sha256?: components["schemas"]["Hash"];
             bytes?: number;
@@ -4756,6 +4872,10 @@ export interface components {
             datos?: {
                 [key: string]: unknown;
             };
+            /** @description Desvío aditivo (TPA-21 bugfix): valores tal como vinieron en la planilla, con las columnas de la plantilla como claves (ya aplicado el `mapeo`; columnas desconocidas se omiten). `datos` es lo normalizado y omite lo que no se entendió; `original` permite mostrar y precargar el valor en error. No cambia al corregir la fila (PATCH). `null` en importaciones validadas antes del cambio. */
+            original?: {
+                [key: string]: string;
+            } | null;
             errores?: {
                 campo?: string;
                 mensaje?: string;
@@ -4984,7 +5104,7 @@ export interface components {
             textos?: {
                 [key: string]: unknown;
             };
-            fotos?: components["schemas"]["Archivo"][];
+            fotos?: components["schemas"]["Foto"][];
             publicacion_vigente?: number | null;
             precarga?: {
                 [key: string]: unknown;
@@ -5312,7 +5432,7 @@ export interface components {
             };
             /** @enum {string} */
             ubicacion_publica?: "provincia" | "departamento" | "localidad";
-            fotos?: components["schemas"]["Archivo"][];
+            fotos?: components["schemas"]["Foto"][];
             asociaciones_visibles?: boolean;
             completitud?: number;
             faltantes?: string[];
@@ -5344,7 +5464,7 @@ export interface components {
             locale?: "es" | "en" | "pt";
             secciones?: {
                 portada?: {
-                    fotos?: string[];
+                    fotos?: components["schemas"]["Foto"][];
                     historia?: string | null;
                     zona?: {
                         provincia?: string;
@@ -5437,6 +5557,8 @@ export interface components {
             peso_promedio_kg?: components["schemas"]["Decimal"] | null;
             estado?: string;
             foto_url?: string | null;
+            /** @description Aditivo TPA-54 (bugfix): la misma foto como objeto */
+            foto?: components["schemas"]["Foto"] | null;
             url?: string;
         };
         OfertaPublica: {
@@ -5485,7 +5607,7 @@ export interface components {
                     [key: string]: unknown;
                 } | null;
                 sistema?: string | null;
-                fotos?: string[];
+                fotos?: components["schemas"]["Foto"][];
                 condiciones?: {
                     [key: string]: unknown;
                 };
@@ -5540,6 +5662,8 @@ export interface components {
             contratos_abiertos?: number;
             insignias?: string[];
             foto_url?: string | null;
+            /** @description Aditivo TPA-54 (bugfix): la misma foto como objeto */
+            foto?: components["schemas"]["Foto"] | null;
             actualizado_en?: components["schemas"]["FechaHora"];
         };
         DirectorioFacetas: {
@@ -5572,6 +5696,8 @@ export interface components {
             idiomas?: string[];
             bio?: string | null;
             foto_url?: string | null;
+            /** @description Aditivo TPA-54 (bugfix): la misma foto como objeto */
+            foto?: components["schemas"]["Foto"] | null;
             establecimientos?: {
                 slug?: string;
                 nombre?: string;
@@ -7464,6 +7590,43 @@ export interface operations {
             422: components["responses"]["Validacion"];
         };
     };
+    post_establecimientos_establecimiento_animales_sugerencias_descartar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    items: {
+                        animal_id: components["schemas"]["Uuid"];
+                        categoria: string;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AnimalResumen"][];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
     get_establecimientos_establecimiento_animales_animal: {
         parameters: {
             query?: never;
@@ -7555,6 +7718,40 @@ export interface operations {
             401: components["responses"]["NoAutenticado"];
             403: components["responses"]["Prohibido"];
             404: components["responses"]["NoEncontrado"];
+        };
+    };
+    get_establecimientos_establecimiento_animales_animal_pesajes: {
+        parameters: {
+            query?: {
+                desde?: components["schemas"]["Fecha"];
+                hasta?: components["schemas"]["Fecha"];
+                /** @description `false` excluye los promedios heredados del lote anónimo (default `true`). */
+                incluir_lote?: boolean;
+            };
+            header?: never;
+            path: {
+                establecimiento: string;
+                animal: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PuntoPeso"][];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
         };
     };
     get_establecimientos_establecimiento_animales_animal_documentos: {
@@ -11577,6 +11774,71 @@ export interface operations {
                 };
             };
             401: components["responses"]["NoAutenticado"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    get_public_fotos_sha256: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sha256: components["schemas"]["Hash"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Imagen */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/webp": string;
+                    "image/jpeg": string;
+                    "image/png": string;
+                };
+            };
+            /** @description Sin cambios */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    get_fotos_sha256: {
+        parameters: {
+            query: {
+                expires: number;
+                signature: string;
+            };
+            header?: never;
+            path: {
+                sha256: components["schemas"]["Hash"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Imagen */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/webp": string;
+                };
+            };
+            /** @description Sin cambios */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             404: components["responses"]["NoEncontrado"];
         };
     };

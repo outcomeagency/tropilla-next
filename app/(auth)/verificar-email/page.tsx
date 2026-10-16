@@ -44,7 +44,7 @@ async function Verificacion({ searchParams }: { searchParams: Promise<{ token?: 
 
 export default function VerificarEmailPage(props: { searchParams: Promise<{ token?: string }> }) {
   return (
-    <AuthShell photo="vacaHumedal" title="Verificación de email">
+    <AuthShell title="Verificación de email">
       <Suspense fallback={<p className="text-[15px] text-muted">Verificando…</p>}>
         <Verificacion searchParams={props.searchParams} />
       </Suspense>

@@ -81,9 +81,57 @@ Datos cacheados con `"use cache"` + `cacheTag("directorio")` para revalidar por 
 sólo zona general (departamento + provincia), especie con chip, razas, ofertas/contratos y frescura; el orden lo
 explica la propia página («nadie paga por aparecer primero»). Metadata, canonical y alternates por idioma; la
 leyenda fija va en el pie de todo lo público. Fotos de campo de licencia libre (búfalo de agua, nunca africano).
-**Conexión a la API (2026-10-16):** se retiró el mock: el directorio, los conteos y el sitemap salen de la API real. Un perfil
-sin foto ya no muestra una caja vacía con una cámara sino un monograma sobre verde monte con las especies (nunca una foto de
-stock que haga pasar otro campo por el suyo). Si la API no responde, `app/[locale]/error.tsx` explica en el idioma de la ruta.
+**Conexión a la API (2026-10-16):** se retiró el mock: el directorio, los conteos y el sitemap salen de la API real. El directorio,
+las portadas de perfil/oferta y las tarjetas de oferta consumen `Foto` con URL pública, texto alternativo y dimensiones; el panel
+muestra las fotos privadas firmadas del perfil, la oferta y el animal. La primera foto del perfil interno es la portada; no se copia
+ningún dato privado a la página pública. Si no hay foto se conserva un placeholder sobrio, sin stock ni datos falsos. La portada
+toma una foto real de un productor destacado. Si la API no responde, `app/[locale]/error.tsx` explica el problema en su idioma.
+
+## TPA-45 · Simulador de liquidación en pie vs al gancho · ✅ (web)
+
+**Rutas:** `/comercializacion/simulador` (pestaña privada «Simulador»).
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Cuenta editable para bovinos y búfalos, con defaults del catálogo | `GET /catalogos` | 🔌 API real |
+| Resultado en pie y al gancho, neto total y por kg vivo, conviene y fórmula del servidor | `POST …/simulaciones/calcular` | 🔌 API real |
+| Guardar simulaciones para comparar | `POST …/simulaciones`; listado `GET …/simulaciones` | 🔌 API real |
+
+**Comentario del dev:** Se puede comparar antes de registrar una operación; el guardado es opcional. La pantalla muestra ambas
+liquidaciones lado a lado, incluidos IVA informativo, gastos, neto total y neto por kg vivo. La fórmula visible se toma del campo
+`formula` de la API y la misma API calcula los importes. El desbaste se aplica sólo en pie; el rendimiento al gancho, sobre el peso
+bruto; los kilos se redondean antes de multiplicar por el precio. Precios y simulaciones quedan restringidos al dueño/admin; no hay mock.
+
+## TPA-46 · Registrar venta con condiciones del trato · ✅ (web)
+
+**Rutas:** `/comercializacion/ventas` (listado privado), `/comercializacion/ventas/nueva` (trato y liquidación).
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Comprador, destino, categoría, cantidad, pesada, modalidad, precio, plazo, tolerancias y gastos | `POST …/operaciones` (`tipo=venta`) | 🔌 API real |
+| DT-e, tropa, RENSPA declarados, con privacidad del lado servidor | `trato` de `OperacionInput` | 🔌 API real |
+| Resumen PDF del trato con huella | `generar_pdf: true` → `documento_id` | 🔌 API real |
+| Listado de operaciones con importes | `GET …/operaciones?tipo=venta` | 🔌 API real |
+
+**Comentario del dev:** El formulario conserva por escrito las condiciones que acuerdan comprador y productor, incluida la pesada y
+quién paga el flete. El servidor vuelve a validar compromisos y avisos sanitarios; las advertencias se confirman antes de registrar.
+El resumen PDF se genera en la API y queda enlazado desde Documentos. La lista y el formulario requieren `comercial.precios`.
+Importes, DT-e, tropa y RENSPA no se envían a ninguna vista pública; la integración usa la API real, sin datos de muestra.
+
+## TPA-47 · Historial de precios propio · ✅ (web)
+
+**Rutas:** `/comercializacion/precios` (filtros, operaciones, diferenciales y referencias propias).
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Precio por operación, especie, categoría y modalidad | `GET …/precios/historial` | 🔌 API real |
+| Diferencial por operación y promedio contra referencia declarada | `GET …/precios/historial?referencia=` | 🔌 API real |
+| Cargar referencias propias (descripción, fuente, precio y fecha) | `GET/POST …/precios-referencia` | 🔌 API real |
+
+**Comentario del dev:** El historial junta los importes de las ventas registradas y permite filtrar por especie y categoría. Cada
+operación muestra modalidad, precio obtenido y precio de referencia para distinguir pie de gancho. El diferencial por operación y
+el promedio vienen calculados por la API; la referencia puede llamarse, por ejemplo, «novillo overo». Sólo dueño y administración
+pueden consultar o cargar estos valores. No hay mock ni exposición en rutas públicas.
 
 ## TPA-48 · Ofertas de animales y lotes · ✅ (web)
 

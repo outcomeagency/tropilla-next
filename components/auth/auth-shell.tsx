@@ -1,9 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Logo } from "@/components/brand";
 import { IconCheckCircle } from "@/components/icons";
-import { PHOTOS, type PhotoKey } from "@/lib/photos";
 
 const PUNTOS = [
   "Hacienda, sanidad, reproducción y documentos en un solo lugar",
@@ -13,25 +11,22 @@ const PUNTOS = [
 
 /**
  * Marco de las pantallas de cuenta: momento de marca en verde monte con una
- * foto real de campo (sin degradados ni ilustraciones) y el formulario sobre
- * blanco. En móvil queda sólo el formulario con el logo arriba.
+ * bloque de marca en verde monte y el formulario sobre blanco. En móvil queda
+ * sólo el formulario con el logo arriba.
  */
 export function AuthShell({
   title,
   subtitle,
   children,
   footer,
-  photo = "bufalosPastizal",
   headline = "Todo tu campo, en un solo lugar.",
 }: {
   title: string;
   subtitle?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
-  photo?: PhotoKey;
   headline?: string;
 }) {
-  const p = PHOTOS[photo];
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
       <aside className="sticky top-0 hidden h-dvh flex-col gap-8 bg-sidebar px-10 pb-10 pt-9 text-sidebar-ink lg:flex xl:px-12">
@@ -39,11 +34,8 @@ export function AuthShell({
           <Logo onDark height={38} />
         </Link>
 
-        <figure className="relative min-h-[220px] flex-1 overflow-hidden rounded-[16px] border border-sidebar-border">
-          <Image src={p.src} alt={p.alt} fill sizes="(min-width:1024px) 40vw, 0px" className="object-cover" quality={75} />
-          <figcaption className="absolute bottom-3 left-3 rounded-[var(--radius-chip)] bg-sidebar px-2.5 py-1 text-[12px] font-medium text-sidebar-ink">
-            {p.alt}
-          </figcaption>
+        <figure className="flex min-h-[220px] flex-1 items-end rounded-[16px] border border-sidebar-border bg-monte p-6">
+          <figcaption className="max-w-[18ch] font-display text-3xl font-bold leading-tight text-sidebar-ink">Hecho en Corrientes, para el NEA</figcaption>
         </figure>
 
         <div>

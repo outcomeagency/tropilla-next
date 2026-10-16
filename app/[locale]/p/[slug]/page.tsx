@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       canonical: `/${locale}/p/${p.slug ?? slug}`,
       languages: Object.fromEntries(LOCALES.map((l) => [LOCALE_HTML_LANG[l], `/${l}/p/${p.slug ?? slug}`])),
     },
-    openGraph: { title, description, type: "profile", images: p.secciones?.portada?.fotos?.[0] ? [{ url: p.secciones.portada.fotos[0] }] : undefined },
+    openGraph: { title, description, type: "profile", images: p.secciones?.portada?.fotos?.[0] ? [{ url: p.secciones.portada.fotos[0].url }] : undefined },
     robots: p.seo?.indexable === false ? { index: false } : undefined,
   };
 }

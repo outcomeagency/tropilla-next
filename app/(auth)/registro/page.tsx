@@ -9,7 +9,6 @@ export const metadata: Metadata = { title: "Crear cuenta" };
 export default function RegistroPage() {
   return (
     <AuthShell
-      photo="brahmanRodeo"
       headline="Ordená tu campo y mostralo como se merece."
       title="Creá la cuenta de tu campo"
       subtitle="Es gratis para empezar. Después cargás tu establecimiento y tu hacienda en pocos pasos."

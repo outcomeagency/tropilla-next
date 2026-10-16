@@ -1,13 +1,15 @@
 import type { NextConfig } from "next";
 
+const apiUrl = new URL(process.env.TROPILLA_API_URL ?? "http://localhost:8090/api/v1");
+
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   images: {
-    // Fotos de campo de licencia libre (lib/photos.ts) mientras no haya fotos propias.
+    // La API de desarrollo corre en loopback; la allowlist de arriba limita el destino.
+    dangerouslyAllowLocalIP: apiUrl.hostname === "localhost" || apiUrl.hostname === "127.0.0.1",
     remotePatterns: [
-      // Debe coincidir con PHOTO_QUERY de lib/photos.ts.
-      { protocol: "https", hostname: "images.unsplash.com", pathname: "/photo-*", search: "?w=1600&q=80&fm=jpg&fit=crop" },
+      { protocol: apiUrl.protocol.slice(0, -1) as "http" | "https", hostname: apiUrl.hostname, ...(apiUrl.port ? { port: apiUrl.port } : {}), pathname: `${apiUrl.pathname}/**` },
     ],
     qualities: [70, 75],
   },

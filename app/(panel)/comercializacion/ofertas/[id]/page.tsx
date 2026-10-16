@@ -17,6 +17,7 @@ import { categoriaNombre, razaNombre } from "@/lib/catalogo";
 import { especieDe } from "@/lib/types";
 import { SITE_URL } from "@/lib/site";
 import type { S } from "@/lib/schemas";
+import { Photo } from "@/components/public/photo";
 
 export const metadata: Metadata = { title: "Oferta" };
 
@@ -43,6 +44,7 @@ function Registrado({ o }: { o: S<"Oferta"> }) {
         description="Sale de los eventos del lote. Para cambiarlo, cargá un pesaje o evento nuevo."
       />
       <CardBody className="space-y-4 text-[14px]">
+        {!!o.fotos?.length && <div className="grid grid-cols-2 gap-2">{o.fotos.slice(0, 4).map((foto, i) => <Photo key={foto.sha256} src={foto} alt={foto.alt ?? `Foto ${i + 1} de la oferta`} sizes="(min-width:768px) 360px, 50vw" className={`aspect-[16/10] rounded-lg border border-border ${i === 0 ? "col-span-2" : ""}`} preload={i === 0} />)}</div>}
         <div className="flex flex-wrap items-center gap-2">
           <SpeciesChip especie={especieDe(o.especie)} withIcon />
           {o.categorias?.map((c) => (

@@ -10,6 +10,7 @@ import { getPerfilConfig } from "@/lib/data/perfil";
 import { congelarSeccionAction, publicarPerfilAction } from "@/lib/perfil-actions";
 import { DERIVADAS, FALTANTES, type TextosPerfil } from "@/lib/perfil";
 import { SITE_URL } from "@/lib/site";
+import { Photo } from "@/components/public/photo";
 
 export const metadata: Metadata = { title: "Perfil público" };
 
@@ -54,6 +55,8 @@ async function Contenido({ searchParams }: { searchParams: Promise<Record<string
       {sp.preview && <div className="mb-4"><Notice tone="success" title="Vista previa aceptada">Ya podés publicar tu perfil.</Notice></div>}
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="space-y-4">
+        {!!p.fotos?.length && <Card><CardHeader title="Fotos del establecimiento" description="La primera foto se usa como portada." /><div className="grid gap-2 p-4 sm:grid-cols-2">{p.fotos.slice(0, 4).map((foto, i) => <Photo key={foto.sha256} src={foto} alt={foto.alt ?? `Foto ${i + 1} del establecimiento`} sizes="(min-width:768px) 420px, 100vw" className={`aspect-[16/10] rounded-lg border border-border ${i > 0 ? "hidden sm:block" : "sm:col-span-2"}`} preload={i === 0} />)}</div></Card>}
         <PerfilEditor
           slugBase="tropilla.ar/p/"
           perfil={{
@@ -67,6 +70,7 @@ async function Contenido({ searchParams }: { searchParams: Promise<Record<string
             ubicacion: p.ubicacion_publica ?? "departamento",
           }}
         />
+        </div>
 
         <div className="space-y-4 xl:sticky xl:top-8 xl:self-start">
           <Card>

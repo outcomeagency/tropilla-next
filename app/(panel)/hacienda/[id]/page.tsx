@@ -347,7 +347,7 @@ async function Ficha({ params, searchParams }: { params: Params; searchParams: S
       {/* Encabezado: foto, identificadores, chips, estados */}
       <Card className="mb-4 overflow-hidden">
         <div className="flex flex-col gap-5 p-5 sm:flex-row">
-          <Photo src={a.foto_url} alt={`Foto de ${a.identificacion_principal ?? "el animal"}`} sizes="160px" className="aspect-square w-full shrink-0 rounded-[12px] border border-border sm:w-[148px]" />
+          <Photo src={a.foto ?? a.foto_url} alt={a.foto?.alt ?? `Foto de ${a.identificacion_principal ?? "el animal"}`} sizes="160px" className="aspect-square w-full shrink-0 rounded-[12px] border border-border sm:w-[148px]" />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
