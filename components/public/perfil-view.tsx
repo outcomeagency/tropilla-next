@@ -54,6 +54,11 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
   const sec = p.secciones ?? {};
   const portada = sec.portada;
   const act = sec.actividad;
+  const ficha = sec.ficha_establecimiento ?? {};
+  const fichaTitulos: Record<string, string> = {
+    potreros_aguadas: "Potreros y aguadas", suelo_pasturas: "Suelos y pasturas", capacidad_carga: "Capacidad de carga",
+    infraestructura: "Infraestructura", clima: "Clima", logistica: "Logística", certificaciones: "Programas declarados",
+  };
   const zona = [portada?.zona?.localidad || departamentoNombre(portada?.zona?.departamento), provinciaNombre(portada?.zona?.provincia)]
     .filter(Boolean)
     .join(", ");
@@ -163,6 +168,15 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
             </dl>
           </Seccion>
         )}
+
+        {Object.keys(ficha).length > 0 && <Seccion id="ficha-establecimiento" title="Ficha del establecimiento" lead="Datos declarados por el establecimiento.">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{Object.entries(ficha).map(([bloque, valores]) => <div key={bloque} className="rounded-[var(--radius-card)] border border-border bg-surface p-4">
+            <h3 className="font-semibold text-ink">{fichaTitulos[bloque] ?? bloque}</h3>
+            <dl className="mt-3 space-y-2">{Object.entries(valores).map(([clave, valor]) => <div key={clave} className="flex justify-between gap-3 text-sm">
+              <dt className="text-muted">{clave.replaceAll("_", " ")}</dt><dd className="text-right font-medium text-ink">{String(valor)}</dd>
+            </div>)}</dl>
+          </div>)}</div>
+        </Seccion>}
 
         {sec.rodeo && codigos(sec.rodeo.por_especie).length > 0 && (
           <Seccion id="rodeo" title={t.profile.herd} lead={t.profile.herdLead}>

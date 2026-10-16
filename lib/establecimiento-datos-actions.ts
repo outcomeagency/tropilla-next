@@ -20,15 +20,32 @@ export async function guardarEstablecimientoAction(_prev: EventoActionState, fd:
   const est = ctx.activa.establecimiento_id;
 
   const fields: Record<string, string> = {};
-  let fichaAmpliada: Record<string, unknown> = {};
-  let visibilidadFicha: Record<string, boolean> = {};
-  try {
-    fichaAmpliada = JSON.parse(fdStr(fd, "ficha_ampliada") || "{}") as Record<string, unknown>;
-    visibilidadFicha = JSON.parse(fdStr(fd, "visibilidad_ficha") || "{}") as Record<string, boolean>;
-    if (!fichaAmpliada || Array.isArray(fichaAmpliada) || typeof fichaAmpliada !== "object") throw new Error();
-    if (!visibilidadFicha || Array.isArray(visibilidadFicha) || typeof visibilidadFicha !== "object" || Object.values(visibilidadFicha).some((v) => typeof v !== "boolean")) throw new Error();
-  } catch {
-    fields.ficha_ampliada = "Usá objetos JSON válidos; la visibilidad acepta valores true/false.";
+  const fichaKeys: Record<string, string[]> = {
+    sanidad_renspa: ["renspa_vencimiento", "senasa_vencimiento", "plan_sanitario", "observaciones"],
+    sanidad: ["manejo", "vacunaciones_actualizadas", "fecha"],
+    potreros_aguadas: ["potreros", "aguadas", "rotacion", "fuentes_agua"],
+    suelo_pasturas: ["suelos", "pasturas", "ambientes", "manejo"],
+    capacidad_carga: ["carga_ug_ha", "periodo", "criterio"],
+    infraestructura: ["manga", "balanza", "alambrados", "energia"],
+    personal: ["equipo"],
+    marcas_senales: ["marca", "senal", "registro"],
+    clima: ["precipitacion_media_mm", "temperatura_media_c", "fuente", "fecha"],
+    logistica: ["distancia_ruta_km", "distancia_puerto_km", "accesos", "carga"],
+    certificaciones: ["nombre", "emisor", "vence", "alcance"],
+  };
+  const fichaAmpliada = Object.fromEntries(Object.entries(fichaKeys).map(([block, keys]) => [block, Object.fromEntries(keys.map((key) => [key, fdStr(fd, `ficha_${block}_${key}`)]).filter(([, value]) => value !== ""))]));
+  const visibilidadFicha = Object.fromEntries(Object.keys(fichaKeys).map((block) => [block, fd.get(`publico_${block}`) === "on"]));
+  visibilidadFicha.sanidad_renspa = false;
+  let linderoGeojson: NonNullable<S<"EstablecimientoInput">["lindero_geojson"]> | null = null;
+  const linderoRaw = fdStr(fd, "lindero_geojson").trim();
+  if (linderoRaw) {
+    try {
+      const parsed = JSON.parse(linderoRaw) as Record<string, unknown>;
+      if (!["Polygon", "MultiPolygon"].includes(String(parsed.type)) || !Array.isArray(parsed.coordinates)) throw new Error();
+      linderoGeojson = parsed as NonNullable<S<"EstablecimientoInput">["lindero_geojson"]>;
+    } catch {
+      fields.lindero_geojson = "Cargá un GeoJSON Polygon o MultiPolygon válido.";
+    }
   }
   const nombre = fdStr(fd, "nombre");
   if (!nombre) fields.nombre = "Poné el nombre del establecimiento.";
@@ -66,6 +83,7 @@ export async function guardarEstablecimientoAction(_prev: EventoActionState, fd:
     historia: fdStr(fd, "historia") || null,
     ficha_ampliada: fichaAmpliada,
     visibilidad_ficha: visibilidadFicha,
+    lindero_geojson: linderoGeojson,
     zonas_sanitarias: {
       aftosa_zona: fdStr(fd, "aftosa_zona") || null,
       garrapata: (garrapata || null) as S<"ZonasSanitarias">["garrapata"],

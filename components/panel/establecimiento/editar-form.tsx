@@ -8,6 +8,7 @@ import { CampoMap, type LatLon } from "@/components/map/campo-map";
 import { ChoiceCard, ChoiceChip, SwitchRow } from "@/components/choice";
 import { Button, Card, CardHeader, Field, Input, Select, Spinner, Textarea, buttonClass, fieldAria } from "@/components/ui";
 import { IconBuffalo, IconCow, IconLock, IconPin } from "@/components/icons";
+import { FichaCompleta } from "@/components/panel/establecimiento/ficha-completa";
 
 type Opt = { codigo: string; nombre: string };
 type Dep = Opt & { provincia_codigo: string; garrapata_sugerida?: string | null };
@@ -26,6 +27,7 @@ export interface EditarEstablecimientoProps {
     historia: string;
     ficha_ampliada: Record<string, unknown>;
     visibilidad_ficha: Record<string, boolean>;
+    lindero_geojson: Record<string, unknown> | null;
     aftosa_zona: string;
     garrapata: string;
     rabia_endemica: boolean;
@@ -79,6 +81,29 @@ export function EditarEstablecimientoForm({ e, productor, privados, provincias, 
   };
   const [geoMsg, setGeoMsg] = useState<string | null>(null);
   const [historia, setHistoria] = useState(e.historia);
+  const [lindero, setLindero] = useState(e.lindero_geojson ? JSON.stringify(e.lindero_geojson, null, 2) : "");
+  const [linderoError, setLinderoError] = useState<string | null>(null);
+
+  function importarLindero(file: File) {
+    void file.text().then((content) => {
+      try {
+        if (file.name.toLowerCase().endsWith(".kml")) {
+          const xml = new DOMParser().parseFromString(content, "application/xml");
+          const rings = [...xml.querySelectorAll("Polygon outerBoundaryIs coordinates")].map((node) => node.textContent?.trim().split(/\s+/).map((pair) => pair.split(",").slice(0, 2).map(Number)) ?? []);
+          if (!rings.length || rings.some((ring) => ring.length < 4)) throw new Error("El KML no contiene polígonos cerrados.");
+          setLindero(JSON.stringify({ type: "MultiPolygon", coordinates: rings.map((ring) => [ring]) }, null, 2));
+        } else {
+          const parsed = JSON.parse(content) as { type?: string; geometry?: unknown };
+          const geometry = parsed.type === "Feature" ? parsed.geometry : parsed;
+          if (!geometry || !["Polygon", "MultiPolygon"].includes((geometry as { type?: string }).type ?? "")) throw new Error("Elegí un GeoJSON Polygon o MultiPolygon.");
+          setLindero(JSON.stringify(geometry, null, 2));
+        }
+        setLinderoError(null);
+      } catch (error) {
+        setLinderoError(error instanceof Error ? error.message : "No pudimos leer el archivo.");
+      }
+    });
+  }
 
   const deps = departamentos.filter((d) => d.provincia_codigo === prov);
   const sugerida = deps.find((d) => d.codigo === dep)?.garrapata_sugerida ?? null;
@@ -280,21 +305,24 @@ export function EditarEstablecimientoForm({ e, productor, privados, provincias, 
         </Seccion>
       )}
 
+      {privados && <Seccion id="lindero" title="Lindero del establecimiento" description={<span className="inline-flex items-center gap-1"><IconLock size={13} /> Geometría privada; no se publica ni se usa como ubicación pública.</span>}>
+        <Field label="Importar GeoJSON o KML" htmlFor="lindero_archivo" hint="Se acepta Polygon o MultiPolygon en coordenadas WGS84. El lindero se guarda en PostGIS.">
+          <Input id="lindero_archivo" type="file" accept=".geojson,.json,.kml,application/geo+json,application/vnd.google-earth.kml+xml" onChange={(ev) => { const file = ev.target.files?.[0]; if (file) importarLindero(file); }} />
+        </Field>
+        <Field label="GeoJSON del lindero" htmlFor="lindero_geojson" error={f.lindero_geojson}>
+          <Textarea id="lindero_geojson" name="lindero_geojson" value={lindero} onChange={(ev) => setLindero(ev.target.value)} rows={5} spellCheck={false} placeholder='{"type":"Polygon","coordinates":[...]}' />
+        </Field>
+        {linderoError && <p role="alert" className="text-sm text-danger">{linderoError}</p>}
+      </Seccion>}
+
       <Seccion id="historia" title="Historia" description="Texto libre para tu perfil público (si activás la sección).">
         <Field label="Contá la historia del campo" htmlFor="historia_txt" optional hint={`${historia.length}/2000`}>
           <Textarea id="historia_txt" name="historia" value={historia} onChange={(ev) => setHistoria(ev.target.value.slice(0, 2000))} rows={6} placeholder="Campo familiar desde 1968. Cría bovina y búfalos Murrah desde 2009…" />
         </Field>
       </Seccion>
 
-      <Seccion id="ficha-completa" title="Ficha productiva y logística" description="Datos estructurados para completar con el equipo. Se guardan privados; la publicación por bloque se habilita desde el perfil.">
-        <p className="text-sm text-muted">La ficha ya admite bloques de sanidad, clima (fuente y fecha), suelo/pasturas, carga, infraestructura, personal, rodeo, certificaciones y logística. RENSPA, ubicación, superficie y potreros se administran en sus secciones actuales.</p>
-        <Field label="Datos por bloque (JSON)" htmlFor="ficha_ampliada" hint="Claves sugeridas: sanidad, clima, suelo_pasturas, capacidad_carga, infraestructura, personal, rodeo, certificaciones, logistica.">
-          <Textarea id="ficha_ampliada" name="ficha_ampliada" defaultValue={JSON.stringify(e.ficha_ampliada, null, 2)} rows={10} spellCheck={false} />
-        </Field>
-        <Field label="Bloques visibles en el perfil público (JSON)" htmlFor="visibilidad_ficha" hint="Ejemplo: { &quot;clima&quot;: true }. Los no incluidos quedan privados.">
-          <Textarea id="visibilidad_ficha" name="visibilidad_ficha" defaultValue={JSON.stringify(e.visibilidad_ficha, null, 2)} rows={4} spellCheck={false} />
-        </Field>
-        <p className="text-xs text-muted"><IconLock size={14} className="mr-1 inline" /> Privado por defecto. No incluyas identificadores personales en bloques públicos.</p>
+      <Seccion id="ficha-completa" title="Ficha completa del establecimiento" description="Información organizada por tema. Cada bloque se publica solo cuando lo activás.">
+        <FichaCompleta ficha={e.ficha_ampliada} visibilidad={e.visibilidad_ficha} />
       </Seccion>
 
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface lg:left-[264px]">
