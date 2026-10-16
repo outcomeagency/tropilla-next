@@ -70,6 +70,8 @@ export const en: Dictionary = {
   footer: {
     legend:
       "Information declared by the producer. TROPILLA records integrity evidence; it does not certify its content or replace official approvals.",
+    androidDownload: "Download the Android app",
+    androidDownloadNote: "Android · test version",
     rights: "TROPILLA · The all-in-one platform for livestock producers in Northeast Argentina.",
   },
 };

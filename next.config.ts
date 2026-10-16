@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const apiUrl = new URL(process.env.TROPILLA_API_URL ?? "http://localhost:8090/api/v1");
+const publicSiteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://tropilla.ar");
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
@@ -10,6 +11,7 @@ const nextConfig: NextConfig = {
     dangerouslyAllowLocalIP: apiUrl.hostname === "localhost" || apiUrl.hostname === "127.0.0.1",
     remotePatterns: [
       { protocol: apiUrl.protocol.slice(0, -1) as "http" | "https", hostname: apiUrl.hostname, ...(apiUrl.port ? { port: apiUrl.port } : {}), pathname: `${apiUrl.pathname}/**` },
+      { protocol: publicSiteUrl.protocol.slice(0, -1) as "http" | "https", hostname: publicSiteUrl.hostname, ...(publicSiteUrl.port ? { port: publicSiteUrl.port } : {}), pathname: "/**" },
     ],
     qualities: [70, 75],
   },

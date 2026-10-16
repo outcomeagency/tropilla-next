@@ -5,6 +5,8 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 
 /** Pie público con la leyenda fija de no certificación (invariante de producto). */
 export function SiteFooter({ locale, dict, legend }: { locale: Locale; dict: Dictionary; /** Leyenda que trae el Resource público (mismo sentido, texto de la API). */ legend?: string }) {
+  const androidUrl = process.env.NEXT_PUBLIC_APP_ANDROID_URL || "/descargas/tropilla.apk";
+
   return (
     <footer className="border-t border-border bg-surface">
       <div className="mx-auto max-w-[1320px] px-[clamp(16px,4vw,40px)] py-8">
@@ -26,6 +28,14 @@ export function SiteFooter({ locale, dict, legend }: { locale: Locale; dict: Dic
             <span>{dict.footer.rights}</span>
           </nav>
         </div>
+        <a
+          href={androidUrl}
+          className="mt-5 inline-flex flex-col text-[13px] text-ink hover:underline"
+          download
+        >
+          <span>{dict.footer.androidDownload}</span>
+          <span className="text-[12px] text-muted">{dict.footer.androidDownloadNote}</span>
+        </a>
       </div>
     </footer>
   );
