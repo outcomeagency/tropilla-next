@@ -36,5 +36,5 @@ Antes de tocar código leé `AGENTS.md`.
 ## Verificación
 
 ```bash
-npx tsc --noEmit && npm run lint && npm run build
+npm run typecheck && npm run lint && npm run build
 ```

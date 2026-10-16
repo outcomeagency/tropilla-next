@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "typecheck": "next typegen && tsc --noEmit",
     "start": "next start",
     "lint": "eslint",
     "api:types": "openapi-typescript ../tropilla-api/docs/openapi-v1.yaml -o lib/api-types.ts"
