@@ -1,10 +1,6 @@
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, ROL_LABEL } from "@/lib/auth";
 import { logoutAction } from "@/lib/auth-actions";
-import { MOCK_USUARIO } from "@/lib/mock";
 import { IconCloudOff, IconLogout } from "@/components/icons";
-import type { Rol } from "@/lib/types";
-
-const ROL_LABEL: Record<Rol, string> = { dueno: "Dueño", encargado: "Encargado", asesor: "Asesor / veterinario" };
 
 function initials(name: string) {
   return name
@@ -23,8 +19,9 @@ function initials(name: string) {
 export async function UserCard() {
   const current = await getCurrentUser();
   const offline = current.status === "unavailable";
-  const nombre = offline ? MOCK_USUARIO.nombre : current.user.nombre;
-  const rol = offline ? MOCK_USUARIO.rol : ROL_LABEL[current.user.rol];
+  const nombre = offline ? "Sin conexión" : current.me.usuario.nombre;
+  const membresia = offline ? undefined : current.me.membresias[0];
+  const rol = membresia ? ROL_LABEL[membresia.rol] : "Sin establecimiento";
 
   return (
     <div className="flex items-center gap-3 px-1">

@@ -13,6 +13,8 @@ export class ApiError extends Error {
     public readonly status: number,
     message: string,
     public readonly errors?: Record<string, string[]>,
+    /** `code` estable del contrato (api-v1 §3): validacion, sin_permiso, no_encontrado… */
+    public readonly code?: string,
   ) {
     super(message);
     this.name = "ApiError";
@@ -26,6 +28,19 @@ export class ApiError extends Error {
   get unauthorized(): boolean {
     return this.status === 401;
   }
+
+  /**
+   * El endpoint todavía no existe en la API (404/405 de ruteo, sin `code`).
+   * Un 404 de dominio trae `code: "no_encontrado"` y NO entra acá.
+   */
+  get routeMissing(): boolean {
+    return (this.status === 404 || this.status === 405) && !this.code;
+  }
+
+  /** Mensaje del primer error de un campo (422 validacion). */
+  field(name: string): string | undefined {
+    return this.errors?.[name]?.[0];
+  }
 }
 
 interface ApiOptions {
@@ -35,6 +50,10 @@ interface ApiOptions {
   auth?: boolean;
   /** Corta la espera para no colgar el render si la API no responde. */
   timeoutMs?: number;
+  /** Idioma de los textos traducidos (catálogos, leyenda, mensajes). */
+  locale?: string;
+  /** Headers extra (Idempotency-Key, etc.). */
+  headers?: Record<string, string>;
 }
 
 /** Query string de un listado; ignora valores vacíos. */
@@ -48,10 +67,11 @@ export function query(params: Record<string, string | number | undefined | null>
 }
 
 export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
-  const { method = "GET", body, auth = true, timeoutMs = 10_000 } = opts;
+  const { method = "GET", body, auth = true, timeoutMs = 10_000, locale, headers: extra } = opts;
   const isForm = body instanceof FormData;
 
-  const headers: Record<string, string> = { Accept: "application/json" };
+  const headers: Record<string, string> = { Accept: "application/json", ...extra };
+  if (locale) headers["Accept-Language"] = locale;
   if (body !== undefined && !isForm) headers["Content-Type"] = "application/json";
   if (auth) {
     const token = await getToken();
@@ -75,8 +95,8 @@ export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
 
   const data: unknown = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const payload = (data ?? {}) as { message?: string; errors?: Record<string, string[]> };
-    throw new ApiError(res.status, payload.message ?? "La API devolvió un error.", payload.errors);
+    const payload = (data ?? {}) as { message?: string; errors?: Record<string, string[]>; code?: string };
+    throw new ApiError(res.status, payload.message ?? "La API devolvió un error.", payload.errors, payload.code);
   }
   return data as T;
 }

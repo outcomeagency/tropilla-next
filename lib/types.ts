@@ -1,22 +1,9 @@
 /**
  * Tipos compartidos con la API (tropilla-api, /api/v1).
- * Contrato provisorio hasta que exista el OpenAPI del MVP.
+ * Tipos de UI. Los de la API salen de lib/schemas.ts (OpenAPI).
  */
 
-export type Rol = "dueno" | "encargado" | "asesor";
-
-export interface Usuario {
-  id: string;
-  nombre: string;
-  email: string;
-  rol: Rol;
-}
-
-/** Respuesta de POST /auth/login (Sanctum personal access token). */
-export interface LoginResponse {
-  token: string;
-  user: Usuario;
-}
+/** Usuario y sesión: ver lib/schemas.ts (generado desde el OpenAPI). */
 
 export type Especie = "bovino" | "bubalino";
 
