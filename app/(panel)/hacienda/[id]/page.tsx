@@ -83,7 +83,7 @@ async function Ficha({ params, searchParams }: { params: Params; searchParams: S
     const modulo = tab === "sanidad" ? "sanidad" : tab === "reproduccion" ? "reproduccion" : undefined;
     const [tl, pesajes] = await Promise.all([
       getTimeline(est, id, { modulo, cursor, incluir_anulados: anulados ? "1" : undefined }),
-      tab === "resumen" ? getPesajesAnimal(est, id).catch(() => []) : Promise.resolve([]),
+      tab === "resumen" ? getPesajesAnimal(est, id) : Promise.resolve([]),
     ]);
     const eventos = tab === "resumen" ? tl.data.slice(0, 5) : tl.data;
     const lista = eventos.length ? (
@@ -137,7 +137,7 @@ async function Ficha({ params, searchParams }: { params: Params; searchParams: S
           <Card className="overflow-hidden xl:col-span-2">
             <CardHeader
               title="Peso y ganancia diaria"
-              description={pesajes.length > 1 ? "Ganancia diaria entre cada pesaje. Los promedios del lote cuentan hasta que el animal tuvo pesaje propio." : undefined}
+              description="Incluye pesajes, datos de nacimiento y destete, y pesos heredados del lote cuando están disponibles."
               action={
                 puedeCargar ? (
                   <Link href={`/hacienda/pesajes?animal=${id}`} className="inline-flex items-center gap-1 text-[13px] font-medium text-campo hover:underline">
@@ -158,8 +158,8 @@ async function Ficha({ params, searchParams }: { params: Params; searchParams: S
             ) : (
               <EmptyState
                 icon={<IconScale size={24} />}
-                title="Todavía no tiene pesajes"
-                description="Con dos pesajes se calcula la ganancia diaria. Pesalo en la manga con la app o cargá el peso acá."
+                title="Todavía no hay puntos de peso"
+                description="Los pesos registrados en pesajes, nacimiento, destete y lote aparecen acá cuando la API los devuelve."
               />
             )}
           </Card>

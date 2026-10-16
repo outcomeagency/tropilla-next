@@ -1,7 +1,7 @@
 import { Badge, Table, Td, Th, Tr } from "@/components/ui";
 import { IconAlert } from "@/components/icons";
 import { fecha } from "@/lib/format";
-import { atipico, diasEntre, fmtGdp, fmtKg, gdp, type PuntoPeso } from "@/lib/pesajes";
+import { atipico, diasEntre, fmtGdp, fmtKg, type PuntoPeso } from "@/lib/pesajes";
 
 const W = 640;
 const H = 200;
@@ -39,9 +39,13 @@ export function CurvaPeso({ puntos }: { puntos: PuntoPeso[] }) {
           </g>
         ))}
         <path d={d} fill="none" className="stroke-campo" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
-        {ps.map((p) => (
-          <circle key={`${p.fecha}${p.kg}`} cx={x(p.fecha)} cy={y(p.kg)} r={4.5} className={p.promedio ? "fill-surface stroke-campo" : "fill-campo stroke-surface"} strokeWidth={2} />
-        ))}
+        {ps.map((p) => {
+          const cx = x(p.fecha);
+          const cy = y(p.kg);
+          if (p.fuente === "nacimiento") return <rect key={`${p.fecha}${p.kg}`} x={cx - 4} y={cy - 4} width={8} height={8} className="fill-surface stroke-campo" strokeWidth={2} />;
+          if (p.fuente === "destete") return <path key={`${p.fecha}${p.kg}`} d={`M${cx},${cy - 5} L${cx + 5},${cy} L${cx},${cy + 5} L${cx - 5},${cy} Z`} className="fill-campo stroke-surface" strokeWidth={1.5} />;
+          return <circle key={`${p.fecha}${p.kg}`} cx={cx} cy={cy} r={4.5} className={p.heredado ? "fill-surface stroke-campo" : "fill-campo stroke-surface"} strokeWidth={2} />;
+        })}
         <text x={PAD.l} y={H - 8} className="fill-muted text-[11px]">
           {fecha(ps[0].fecha)}
         </text>
@@ -52,14 +56,14 @@ export function CurvaPeso({ puntos }: { puntos: PuntoPeso[] }) {
         )}
       </svg>
       <figcaption className="mt-1 flex flex-wrap gap-4 text-[12px] text-muted">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-campo" /> Pesaje individual
-        </span>
-        {ps.some((p) => p.promedio) && (
+        {ps.some((p) => p.fuente === "pesaje" && !p.heredado) && <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-campo" /> Pesaje propio</span>}
+        {ps.some((p) => p.heredado) && (
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full border-2 border-campo bg-surface" /> Promedio del lote (heredado)
+            <span className="h-2.5 w-2.5 rounded-full border-2 border-campo bg-surface" /> Heredado del lote
           </span>
         )}
+        {ps.some((p) => p.fuente === "nacimiento") && <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 border-2 border-campo bg-surface" /> Nacimiento</span>}
+        {ps.some((p) => p.fuente === "destete") && <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rotate-45 bg-campo" /> Destete</span>}
       </figcaption>
     </figure>
   );
@@ -81,13 +85,13 @@ export function TablaPesajes({ puntos }: { puntos: PuntoPeso[] }) {
       </thead>
       <tbody>
         {filas.map(({ p, prev }) => {
-          const g = prev ? gdp(prev, p) : null;
-          const raro = prev ? atipico(prev, p) : false;
+          const g = p.gdp_kg_dia ?? null;
+          const raro = prev && p.fuente === "pesaje" && prev.fuente === "pesaje" ? atipico(prev, p) : false;
           return (
             <Tr key={`${p.fecha}${p.kg}${p.id ?? ""}`}>
               <Td className="tabular-nums">
                 {fecha(p.fecha)}
-                {p.promedio && <span className="ml-2 text-[12px] text-muted">promedio de lote</span>}
+                <span className="ml-2 text-[12px] text-muted">{p.fuente === "nacimiento" ? "nacimiento" : p.fuente === "destete" ? "destete" : p.heredado ? "heredado del lote" : p.modo === "promedio" ? "promedio" : "pesaje"}</span>
               </Td>
               <Td numeric className="font-semibold">
                 {fmtKg(p.kg)}

@@ -10,12 +10,11 @@ export interface PuntoPeso {
   kg: number;
   promedio?: boolean;
   heredado?: boolean;
-}
-
-/** «458 kg (balanza)» / «Promedio 468 kg (balanza), 30 cab.» → 458 / 468. */
-export function pesoDeResumen(resumen?: string | null): number | null {
-  const m = (resumen ?? "").match(/(\d+(?:[.,]\d+)?)\s*kg/);
-  return m ? Number(m[1].replace(",", ".")) : null;
+  fuente?: "pesaje" | "nacimiento" | "destete";
+  modo?: "individual" | "promedio";
+  metodo?: "balanza" | "cinta" | "estimado" | null;
+  cantidad?: number | null;
+  gdp_kg_dia?: number | null;
 }
 
 export function diasEntre(a: string, b: string): number {

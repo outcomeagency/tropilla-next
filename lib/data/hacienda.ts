@@ -1,7 +1,7 @@
 import "server-only";
 import { api, query } from "@/lib/api";
 import type { Many, One, S } from "@/lib/schemas";
-import { pesoDeResumen } from "@/lib/pesajes";
+import type { PuntoPeso } from "@/lib/pesajes";
 
 export const FILTROS_HACIENDA = ["q", "especie", "categoria", "lote_id", "potrero_id", "estado_reproductivo", "sanidad", "sugerencia_categoria", "sexo", "orden"] as const;
 export type FiltrosHacienda = Partial<Record<(typeof FILTROS_HACIENDA)[number], string>>;
@@ -115,10 +115,17 @@ export async function getMovimientosIdentificacion(est: string, id: string): Pro
 
 /** Pesajes del animal (propios y heredados del lote) como puntos de la curva (TPA-23). */
 export async function getPesajesAnimal(est: string, id: string) {
-  const r = await api<Many<S<"EventoResumen">>>(`${base(est)}/animales/${id}/eventos${query({ tipo: "hacienda.pesaje", limit: 100 })}`);
-  return r.data
-    .filter((e) => !e.anulado && !e.corregido)
-    .map((e) => ({ id: e.id, fecha: e.ocurrido_en ?? "", kg: pesoDeResumen(e.resumen) ?? NaN, promedio: /promedio/i.test(e.resumen ?? ""), heredado: !!e.heredado_de_lote }))
-    .filter((p) => p.fecha && Number.isFinite(p.kg))
-    .filter((p, _, todos) => !p.promedio || !todos.some((o) => !o.promedio && o.fecha === p.fecha));
+  const r = await api<One<S<"PuntoPeso">[]>>(`${base(est)}/animales/${id}/pesajes${query({ incluir_lote: "true" })}`);
+  return r.data.map((p): PuntoPeso => ({
+    id: p.evento_id,
+    fecha: p.fecha,
+    kg: Number(p.peso_kg),
+    promedio: p.modo === "promedio",
+    heredado: p.heredado_de_lote,
+    fuente: p.fuente,
+    modo: p.modo,
+    metodo: p.metodo,
+    cantidad: p.cantidad,
+    gdp_kg_dia: p.gdp_kg_dia == null ? null : Number(p.gdp_kg_dia),
+  }));
 }
