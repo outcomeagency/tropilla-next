@@ -3076,7 +3076,11 @@ export interface paths {
          */
         get: operations["get_organizaciones"];
         put?: never;
-        post?: never;
+        /**
+         * Crear organización (solo staff)
+         * @description Alta controlada por el equipo TROPILLA (`es_staff`).
+         */
+        post: operations["post_organizaciones"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3090,7 +3094,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Listar integrantes activos
+         * @description Solo staff o un admin activo de la organización.
+         */
+        get: operations["get_organizaciones_organizacion_miembros"];
         put?: never;
         /**
          * Designar admin/operador de la organización (aditivo TPA-51)
@@ -3101,6 +3109,30 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/organizaciones/{organizacion}/miembros/{usuario}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Dar de baja a un integrante
+         * @description Solo staff o un admin activo de la organización. Revoca la membresía sin borrar historial.
+         */
+        delete: operations["delete_organizaciones_organizacion_miembros_usuario"];
+        options?: never;
+        head?: never;
+        /**
+         * Cambiar rol de integrante
+         * @description Solo staff o un admin activo de la organización. Conserva las versiones anteriores de membresía.
+         */
+        patch: operations["patch_organizaciones_organizacion_miembros_usuario"];
         trace?: never;
     };
     "/organizaciones/{organizacion}": {
@@ -5794,6 +5826,22 @@ export interface components {
             especies?: ("BOV" | "BUB")[];
             logo_url?: string | null;
             descripcion?: string | null;
+        };
+        OrganizacionMiembro: {
+            usuario: {
+                id: components["schemas"]["Uuid"];
+                nombre: string;
+                /** Format: email */
+                email: string;
+            };
+            /** @enum {string} */
+            rol: "admin" | "operador";
+        };
+        OrganizacionMiembroInput: {
+            /** Format: email */
+            email: string;
+            /** @enum {string} */
+            rol: "admin" | "operador";
         };
         Adhesion: {
             id?: components["schemas"]["Uuid"];
@@ -11324,7 +11372,45 @@ export interface operations {
             401: components["responses"]["NoAutenticado"];
         };
     };
-    post_organizaciones_organizacion_miembros: {
+    post_organizaciones: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    nombre: string;
+                    slug: string;
+                    /** @enum {string} */
+                    tipo: "asociacion" | "programa_provincial" | "cooperativa" | "consejo_regulador" | "otra";
+                    ambito?: {
+                        [key: string]: unknown;
+                    };
+                    especies?: ("BOV" | "BUB")[];
+                    descripcion?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Organización creada */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Organizacion"];
+                    };
+                };
+            };
+            403: components["responses"]["Prohibido"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_organizaciones_organizacion_miembros: {
         parameters: {
             query?: never;
             header?: never;
@@ -11335,7 +11421,88 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Integrantes activos */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["OrganizacionMiembro"][];
+                    };
+                };
+            };
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    post_organizaciones_organizacion_miembros: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizacion: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganizacionMiembroInput"];
+            };
+        };
+        responses: {
             /** @description OK */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    delete_organizaciones_organizacion_miembros_usuario: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizacion: components["schemas"]["Uuid"];
+                usuario: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Integrante dado de baja */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    patch_organizaciones_organizacion_miembros_usuario: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizacion: components["schemas"]["Uuid"];
+                usuario: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    rol: "admin" | "operador";
+                };
+            };
+        };
+        responses: {
+            /** @description Rol actualizado */
             204: {
                 headers: {
                     [name: string]: unknown;

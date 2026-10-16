@@ -48,3 +48,29 @@ export async function revocarAction(fd: FormData) {
   });
   revalidatePath("/organizaciones");
 }
+
+export async function miembroAction(fd: FormData) {
+  const ctx = await getContexto();
+  const org = String(fd.get("organizacion_id"));
+  if (!ctx?.me.organizaciones?.some((item) => item.id === org && item.rol === "admin") && !ctx?.me.usuario.es_staff) throw new Error("No tenés permiso para administrar integrantes.");
+  await api(`/organizaciones/${org}/miembros`, { method: "POST", body: { email: String(fd.get("email")), rol: String(fd.get("rol")) } });
+  revalidatePath("/organizaciones");
+}
+
+export async function cambiarRolMiembroAction(fd: FormData) {
+  const ctx = await getContexto();
+  const org = String(fd.get("organizacion_id"));
+  const usuario = String(fd.get("usuario_id"));
+  if (!ctx?.me.organizaciones?.some((item) => item.id === org && item.rol === "admin") && !ctx?.me.usuario.es_staff) throw new Error("No tenés permiso para administrar integrantes.");
+  await api(`/organizaciones/${org}/miembros/${usuario}`, { method: "PATCH", body: { rol: String(fd.get("rol")) } });
+  revalidatePath("/organizaciones");
+}
+
+export async function quitarMiembroAction(fd: FormData) {
+  const ctx = await getContexto();
+  const org = String(fd.get("organizacion_id"));
+  const usuario = String(fd.get("usuario_id"));
+  if (!ctx?.me.organizaciones?.some((item) => item.id === org && item.rol === "admin") && !ctx?.me.usuario.es_staff) throw new Error("No tenés permiso para administrar integrantes.");
+  await api(`/organizaciones/${org}/miembros/${usuario}`, { method: "DELETE" });
+  revalidatePath("/organizaciones");
+}
