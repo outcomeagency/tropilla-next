@@ -9,7 +9,8 @@ import { AccionesDocumento } from "@/components/panel/documentos/acciones";
 import { PRIVACIDAD, VenceBadge, VisibilidadBadge } from "@/components/panel/documentos/badges";
 import { requireContexto } from "@/lib/establecimiento";
 import { ApiError } from "@/lib/api";
-import { diasHasta, getDocumento, type DocumentoVersion } from "@/lib/data/documentos";
+import { diasHasta, getDocumento, listEnlaces, type DocumentoVersion } from "@/lib/data/documentos";
+import { CompartirDocumento } from "@/components/panel/documentos/compartir";
 import { visibilidadDocumentoAction } from "@/lib/documento-actions";
 import { ROL_LABEL } from "@/lib/auth";
 import { fecha, fechaHora, hoyAR } from "@/lib/format";
@@ -86,6 +87,9 @@ async function Contenido({ params, searchParams }: { params: Promise<Params>; se
     throw e;
   }
   const hoy = hoyAR(new Date());
+  const ahora = new Date().getTime();
+  const puedeCompartir = ctx.can("documentos.compartir") && d.estado !== "revocado";
+  const enlaces = puedeCompartir ? await listEnlaces(ctx.activa.establecimiento_id, id).catch(() => []) : [];
   const versiones = [...(d.versiones ?? [])].sort((a, b) => (b.version ?? 0) - (a.version ?? 0));
   const vigente = versiones[0];
   const archivo = vigente?.archivos?.[0];
@@ -105,6 +109,11 @@ async function Contenido({ params, searchParams }: { params: Promise<Params>; se
           <Notice tone="success" title="Documento guardado.">
             Quedó como versión 1 con su huella. Si cambia, subí una versión nueva: la anterior queda en la historia.
           </Notice>
+        </div>
+      )}
+      {sp.ok === "revocado" && (
+        <div className="mb-4">
+          <Notice tone="success" title="Enlace revocado: ya no abre." />
         </div>
       )}
       {revocado && (
@@ -235,6 +244,24 @@ async function Contenido({ params, searchParams }: { params: Promise<Params>; se
               )}
             </CardBody>
           </Card>
+
+          {puedeCompartir && (
+            <Card>
+              <CardHeader title="Compartir por enlace" />
+              <CardBody>
+                <CompartirDocumento
+                  id={d.id ?? ""}
+                  titulo={d.titulo ?? ""}
+                  version={d.version_vigente ?? 1}
+                  fiscal={fiscal}
+                  ahora={ahora}
+                  enlaces={enlaces
+                    .map((e) => ({ id: e.id ?? "", expira: e.expira_en ?? "", revocado: e.revocado_en ?? null, version: e.version ?? null, accesos: e.accesos ?? 0, creado: e.created_at ?? "" }))
+                    .sort((a, b) => b.creado.localeCompare(a.creado))}
+                />
+              </CardBody>
+            </Card>
+          )}
 
           <Card>
             <CardHeader title="Visibilidad" />

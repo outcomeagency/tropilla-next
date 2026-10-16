@@ -96,3 +96,16 @@ export async function getVerificacion(huella: string, locale: Locale): Promise<{
     throw e;
   }
 }
+
+export type EnlacePublico = S<"EnlacePublico">;
+
+/** Documento compartido por enlace (TPA-38). Sin caché: cada visita cuenta. `gone` = vencido o revocado (410). */
+export async function getEnlacePublico(token: string, locale: Locale): Promise<{ data: EnlacePublico } | "gone" | null> {
+  try {
+    return { data: (await api<One<EnlacePublico>>(`/public/enlaces/${encodeURIComponent(token)}${query({ locale })}`, { auth: false, locale })).data };
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 410) return "gone";
+    if (e instanceof ApiError && (e.status === 404 || e.status === 422)) return null;
+    throw e;
+  }
+}
