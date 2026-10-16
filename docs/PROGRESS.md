@@ -47,3 +47,19 @@ manual (`startTransition`) para que React no resetee el formulario si la API rec
 nunca pierde lo que cargó. CUIT y RENSPA se piden como opcionales y con candado «privado siempre».
 Al crear, queda activo el establecimiento nuevo (cookie `tropilla_est`) y se ofrece planilla, carga por
 cantidades o entrar vacío. Zonas sanitarias: defaults razonables para Corrientes, editables.
+
+## TPA-12 · Selector de establecimiento · ✅
+
+**Rutas:** selector en la sidebar (todas las pantallas del panel), `/establecimientos` (mis establecimientos)
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Lista de campos con rol | `GET /auth/me` (membresías = la verdad) + `GET /establecimientos` (ubicación, ha, especies) | 🔌 |
+| Cambiar de campo | Server Action → cookie httpOnly `tropilla_est` (sólo ids con membresía) | 🔌 |
+| Abilities del campo activo | `getContexto().can("ability")` desde `/auth/me` | 🔌 |
+
+**Comentario del dev:** El establecimiento activo vive en una cookie httpOnly y se valida contra las membresías de
+`/auth/me` en cada request: no se puede «elegir» un campo ajeno tocando la cookie. Al cambiar, se vuelve a la raíz del
+módulo (una ficha de un campo no existe en otro). Con más de 5 campos aparece un buscador (asesores con muchos
+clientes). `getContexto()` es la puerta única del panel: sesión, campo activo y abilities para mostrar u ocultar
+acciones sin re-implementar la matriz de permisos.

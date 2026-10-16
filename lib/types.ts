@@ -15,3 +15,8 @@ export type EstadoSync = "local" | "sincronizado" | "anclado";
 
 /** Variación de un indicador respecto de un período de referencia. */
 export type Delta = { value: string; direction: "up" | "down"; tone: "success" | "danger" | "neutral" };
+
+/** Código de especie del contrato (BOV/BUB) → especie de la UI. */
+export function especieDe(codigo: string | null | undefined): Especie {
+  return codigo === "BUB" ? "bubalino" : "bovino";
+}

@@ -57,6 +57,7 @@ export const config = {
     "/reproduccion/:path*",
     "/sanidad/:path*",
     "/establecimiento/:path*",
+    "/establecimientos/:path*",
     "/documentos/:path*",
     "/trazabilidad/:path*",
     "/comercializacion/:path*",
