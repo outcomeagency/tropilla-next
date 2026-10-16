@@ -318,3 +318,20 @@ Agregar un tipo único que ya tiene vigente se manda como reposición (con aviso
 registro admiten varias. El RFID valida 15 dígitos con contador en vivo y bloquea el Enter del bastón (modo teclado) hasta completarlos.
 El payload no tiene motivo: viaja en `observaciones` («Motivo: …») y el historial lo cruza con los eventos. `useActionForm`/`useDialogForm`
 ahora son genéricos para estados extendidos. El timeline muestra «Reposición: Caravana visual 0501B» en vez del resumen crudo de la API.
+
+## TPA-20 · Lotes de manejo y lotes anónimos · ✅ (web)
+
+**Rutas:** `/hacienda/lotes` (pestaña «Lotes» de Hacienda: KPIs, filtros por tipo/especie, archivados), `/hacienda/lotes/nuevo`, `/hacienda/lotes/[id]` (composición por categoría, manejo grupal, animales identificados, historia). Hacienda suma la pestaña «Animales | Lotes» y la acción «Cambiar de lote»; el potrero y la ficha del animal enlazan al lote.
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Listado con composición, potrero y peso promedio; archivados | `GET …/lotes?especie=&archivados=` | 🔌 API real |
+| Alta (especie única, propósito, por cantidades o identificado) + conteo inicial + potrero | `POST …/lotes` (id del cliente) + `POST …/eventos` `hacienda.alta` (lote/conteo) y `hacienda.traslado` | 🔌 probado en el establecimiento de prueba |
+| Editar (nombre, propósito, por cantidades, notas) | `PATCH …/lotes/{id}` (`row_version`, 409 → mensaje) | 🔌 probado |
+| Archivar con motivo (sólo vacío) | `POST …/lotes/{id}/archivar` | 🔌 probado |
+| Ficha y timeline del lote (cursor) | `GET …/lotes/{id}`, `GET …/lotes/{id}/eventos` | 🔌 |
+| Eventos grupales: mover de potrero, sumar cabezas, pesaje promedio, baja (muerte/salida) por conteo | `POST …/eventos` (`hacienda.traslado`, `.alta`, `.pesaje` modo promedio, `.muerte`, `.egreso`) | 🔌 probados (GDP del lote calculada por la API) |
+| Individualizar desde lote anónimo (hereda historia) | `POST …/eventos` `hacienda.individualizacion` (`sujetos.conteo` = animales nuevos) | 🔌 probado: 3 bucerras, la ficha muestra «Heredado del lote» |
+| Cambio de lote de animales identificados (selección) | `POST …/eventos` `hacienda.cambio_lote` | 🔌 probado |
+
+**Comentario del dev:** Los lotes viven como pestaña de Hacienda (no en la nav lateral): «Animales» para lo caravaneado, «Lotes» para el manejo por grupo; la composición reutiliza las celdas de la ficha de potrero. Potrero, conteo y pesos son eventos, nunca campos: al crear un lote por cantidades el conteo inicial y el potrero se registran como alta + traslado (si fallan, el lote queda y la ficha avisa qué falta). Las bajas validan que no salgan más cabezas que las del conteo (la API no lo bloquea: abriría una revisión `conteo_negativo`). Individualizar crea hasta 50 animales por vez con caravana visual opcional; el sexo sale de la categoría. Pendientes: la API no tiene un evento para pasar cabezas *anónimas* de un lote a otro (sólo `cambio_lote` de animales) ni recategorización por conteo en la UI; el resumen del traslado de lote dice «Traslado de 0 cabezas» (lo arma la API); «Ofertar este lote» lleva al selector de ofertas sin preseleccionar.

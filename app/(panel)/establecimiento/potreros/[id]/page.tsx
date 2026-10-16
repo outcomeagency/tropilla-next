@@ -68,7 +68,7 @@ async function Contenido({ params }: { params: Promise<{ id: string }> }) {
               return (
                 <li key={l.id} className="border-b border-r border-border px-5 py-4">
                   <div className="flex items-start justify-between gap-2">
-                    <Link href={`/hacienda?lote_id=${l.id}`} className="font-semibold text-ink hover:text-campo hover:underline">
+                    <Link href={`/hacienda/lotes/${l.id}`} className="font-semibold text-ink hover:text-campo hover:underline">
                       {l.nombre}
                     </Link>
                     <SpeciesChip especie={especieDe(l.especie)} />

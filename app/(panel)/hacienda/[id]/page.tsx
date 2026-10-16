@@ -100,7 +100,16 @@ async function Ficha({ params, searchParams }: { params: Params; searchParams: S
                   { label: "Dentición", value: DENTICION[a.denticion ?? ""] ?? a.denticion ?? "—" },
                   ...(a.sexo === "M" ? [{ label: "Castrado", value: a.castrado == null ? "Sin dato" : a.castrado ? "Sí" : "No" }] : []),
                   { label: "Condición corporal", value: cc?.valor ? `${cc.valor} (escala ${cc.escala}) · ${fecha(cc.fecha)}` : "—" },
-                  { label: "Lote", value: a.lote?.nombre ?? "Sin lote" },
+                  {
+                    label: "Lote",
+                    value: a.lote?.id ? (
+                      <Link href={`/hacienda/lotes/${a.lote.id}`} className="text-campo hover:underline">
+                        {a.lote.nombre}
+                      </Link>
+                    ) : (
+                      "Sin lote"
+                    ),
+                  },
                   { label: "Potrero", value: a.potrero?.nombre ?? "—" },
                   ...(claseFaena ? [{ label: "Clase de faena (Res. 470/2012)", value: `${claseFaena.abreviatura} · ${claseFaena.clase}` }] : []),
                   ...(a.senas ? [{ label: "Señas particulares", value: a.senas }] : []),
