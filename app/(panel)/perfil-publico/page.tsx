@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { Badge, Card, CardBody, CardHeader, MockNotice, Notice, PageHeader, Progress, buttonClass } from "@/components/ui";
+import { Badge, Card, CardBody, CardHeader, Notice, PageHeader, Progress, buttonClass } from "@/components/ui";
 import { IconAlert, IconCheckCircle, IconClock, IconExternal, IconEye, IconGlobe, IconLock } from "@/components/icons";
 import { CopyButton } from "@/components/copy-button";
 import { PerfilEditor } from "@/components/panel/perfil-editor";
 import { requireContexto } from "@/lib/establecimiento";
 import { getPerfilConfig } from "@/lib/data/perfil";
 import { congelarSeccionAction, publicarPerfilAction } from "@/lib/perfil-actions";
-import { DERIVADAS } from "@/lib/mock/perfil-panel";
+import { DERIVADAS, FALTANTES, type TextosPerfil } from "@/lib/perfil";
 import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = { title: "Perfil público" };
@@ -20,8 +20,7 @@ const fmt = (iso?: string | null) =>
 async function Contenido({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const ctx = await requireContexto();
   const sp = await searchParams;
-  const nombre = ctx.activa.establecimiento_nombre ?? "Establecimiento";
-  const { data: p, source } = await getPerfilConfig(ctx.activa.establecimiento_id, nombre);
+  const p = await getPerfilConfig(ctx.activa.establecimiento_id);
   const url = `${SITE_URL}/es/p/${p.slug}`;
   const secciones = (p.secciones ?? {}) as Record<string, { activa?: boolean; congelada_en?: string | null }>;
   const contacto = (p.contacto_visible ?? {}) as Record<string, boolean>;
@@ -45,9 +44,9 @@ async function Contenido({ searchParams }: { searchParams: Promise<Record<string
           )
         }
       />
-      {source === "mock" && (
+      {sp.error === "email" && (
         <div className="mb-4">
-          <MockNotice what="la configuración del perfil" />
+          <Notice tone="warning" title="Verificá tu email para publicar">Te mandamos un enlace al registrarte; si no lo encontrás, reenvialo desde el aviso de arriba.</Notice>
         </div>
       )}
       {sp.publicado && <div className="mb-4"><Notice tone="success" title="Tu perfil está publicado">Ya aparece en el directorio y se puede compartir.</Notice></div>}
@@ -62,7 +61,7 @@ async function Contenido({ searchParams }: { searchParams: Promise<Record<string
             rowVersion: p.row_version ?? 0,
             enDirectorio: p.en_directorio !== false,
             secciones,
-            historia: String(p.textos?.historia ?? ""),
+            textos: (p.textos ?? {}) as TextosPerfil,
             idiomas: p.idiomas ?? ["es"],
             contacto,
             ubicacion: p.ubicacion_publica ?? "departamento",
@@ -120,11 +119,21 @@ async function Contenido({ searchParams }: { searchParams: Promise<Record<string
               <Progress value={p.completitud ?? 0} label="Completitud del perfil" />
               {!!p.faltantes?.length && (
                 <ul className="space-y-2 pt-1">
-                  {p.faltantes.map((x) => (
-                    <li key={x} className="flex gap-2 text-[13.5px] text-ink">
-                      <IconAlert size={16} className="mt-0.5 shrink-0 text-warning" /> {x}
-                    </li>
-                  ))}
+                  {p.faltantes.map((x: string) => {
+                    const f = FALTANTES[x] ?? { texto: x };
+                    return (
+                      <li key={x} className="flex gap-2 text-[13.5px] text-ink">
+                        <IconAlert size={16} className="mt-0.5 shrink-0 text-warning" />
+                        {f.href ? (
+                          <Link href={f.href} className="hover:text-campo hover:underline">
+                            {f.texto}
+                          </Link>
+                        ) : (
+                          f.texto
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </CardBody>
@@ -153,6 +162,7 @@ async function Contenido({ searchParams }: { searchParams: Promise<Record<string
                     </div>
                     <form action={congelarSeccionAction}>
                       <input type="hidden" name="seccion" value={s} />
+                      <input type="hidden" name="slug" value={p.slug} />
                       <input type="hidden" name="accion" value={congelada ? "descongelar" : "congelar"} />
                       <button type="submit" className={buttonClass("ghost", "sm")}>
                         {congelada ? "Descongelar" : "Congelar"}

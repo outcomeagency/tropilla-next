@@ -1,11 +1,10 @@
 import { Suspense } from "react";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/public/site-header";
 import { SiteFooter } from "@/components/public/site-footer";
 import { PerfilView } from "@/components/public/perfil-view";
 import { ContactSection } from "@/components/public/contact-section";
-import { MockNotice } from "@/components/ui";
 import { getDictionary, hasLocale, LOCALE_HTML_LANG, LOCALES } from "@/lib/i18n";
 import { getPortalDict } from "@/lib/i18n/portal";
 import { getPerfilPublico } from "@/lib/data/portal";
@@ -26,11 +25,11 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     title,
     description,
     alternates: {
-      canonical: `/${locale}/p/${slug}`,
-      languages: Object.fromEntries(LOCALES.map((l) => [LOCALE_HTML_LANG[l], `/${l}/p/${slug}`])),
+      canonical: `/${locale}/p/${p.slug ?? slug}`,
+      languages: Object.fromEntries(LOCALES.map((l) => [LOCALE_HTML_LANG[l], `/${l}/p/${p.slug ?? slug}`])),
     },
     openGraph: { title, description, type: "profile", images: p.secciones?.portada?.fotos?.[0] ? [{ url: p.secciones.portada.fotos[0] }] : undefined },
-    robots: res.source === "mock" || p.seo?.indexable === false ? { index: false } : undefined,
+    robots: p.seo?.indexable === false ? { index: false } : undefined,
   };
 }
 
@@ -42,6 +41,8 @@ async function Perfil({ params }: { params: Params }) {
   const dict = getDictionary(locale);
   const t = getPortalDict(locale);
   const p = res.data;
+  // Slug viejo: la API sigue la redirección (301) y devuelve el perfil con el slug nuevo.
+  if (p.slug && p.slug !== slug) permanentRedirect(`/${locale}/p/${p.slug}`);
   const formulario = p.secciones?.contacto?.formulario !== false;
   return (
     <>
@@ -53,11 +54,6 @@ async function Perfil({ params }: { params: Params }) {
         cta={formulario ? { href: "#consultar", label: t.common.contact } : undefined}
       />
       <main className="bg-base">
-        {res.source === "mock" && (
-          <div className="mx-auto max-w-[1240px] px-[clamp(16px,4vw,40px)] pt-4">
-            <MockNotice text={t.common.sampleData} />
-          </div>
-        )}
         <PerfilView
           p={p}
           locale={locale}

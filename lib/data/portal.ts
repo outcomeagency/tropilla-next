@@ -1,6 +1,6 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
-import { api, query } from "@/lib/api";
+import { api, ApiError, query } from "@/lib/api";
 import { withMock, withMockIf } from "@/lib/mock/fallback";
 import type { Locale } from "@/lib/i18n";
 import type { Many, One, S } from "@/lib/schemas";
@@ -71,16 +71,17 @@ export async function getOfertaPublica(codigo: string, locale: Locale) {
   );
 }
 
-/** Perfil público del establecimiento (TPA-50). */
-export async function getPerfilPublico(slug: string, locale: Locale) {
+/** Perfil público del establecimiento (TPA-50), API real. null = no existe o no está publicado (la API responde 404). */
+export async function getPerfilPublico(slug: string, locale: Locale): Promise<{ data: S<"PerfilPublico"> } | null> {
   "use cache";
   cacheLife("minutes");
   cacheTag(`perfil:${slug}`);
-  const { mockPerfilPublico } = await import("@/lib/mock/perfiles");
-  return withMockIf(
-    async () => (await api<One<S<"PerfilPublico">>>(`/public/establecimientos/${encodeURIComponent(slug)}${query({ locale })}`, { auth: false, locale })).data,
-    () => mockPerfilPublico(slug, locale),
-  );
+  try {
+    return { data: (await api<One<S<"PerfilPublico">>>(`/public/establecimientos/${encodeURIComponent(slug)}${query({ locale })}`, { auth: false, locale })).data };
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 404) return null;
+    throw e;
+  }
 }
 
 /** Verificación pública de un registro por huella (TPA-41). */

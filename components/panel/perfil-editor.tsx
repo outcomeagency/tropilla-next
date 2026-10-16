@@ -3,18 +3,8 @@
 import { useActionState } from "react";
 import { guardarPerfilAction, type PerfilFormState } from "@/lib/perfil-actions";
 import { ChoiceCard, ChoiceChip, SwitchRow } from "@/components/choice";
-import { Button, Card, CardBody, CardHeader, Field, Notice, Spinner, Textarea, fieldAria } from "@/components/ui";
-
-const SECCIONES: Array<{ k: string; label: string; desc: string }> = [
-  { k: "portada", label: "Portada", desc: "Nombre, fotos, historia, zona general y asociaciones." },
-  { k: "actividad", label: "Actividad", desc: "Especies, razas, actividades, superficie y ambiente." },
-  { k: "rodeo", label: "Rodeo en números", desc: "Existencias por especie en rangos y % con identificación. Se calcula solo." },
-  { k: "sanidad", label: "Sanidad resumida", desc: "Planes de los últimos 12 meses, sin datos individuales. Se calcula solo." },
-  { k: "trazabilidad", label: "Trazabilidad", desc: "Eventos registrados, antigüedad e integridad. Se calcula solo." },
-  { k: "documentos", label: "Documentos publicados", desc: "Sólo los que marcaste como públicos en Documentos." },
-  { k: "ofertas", label: "Ofertas", desc: "Tus ofertas publicadas." },
-  { k: "contacto", label: "Formulario de contacto", desc: "Los compradores te escriben sin cuenta; llega a tu bandeja." },
-];
+import { Button, Card, CardBody, CardHeader, Field, Input, Notice, Spinner, Textarea, fieldAria } from "@/components/ui";
+import { IDIOMAS_PERFIL, SECCIONES, type TextosPerfil } from "@/lib/perfil";
 
 export function PerfilEditor({
   perfil,
@@ -25,7 +15,7 @@ export function PerfilEditor({
     rowVersion: number;
     enDirectorio: boolean;
     secciones: Record<string, { activa?: boolean }>;
-    historia: string;
+    textos: TextosPerfil;
     idiomas: string[];
     contacto: Record<string, boolean>;
     ubicacion: string;
@@ -70,11 +60,12 @@ export function PerfilEditor({
       </Card>
 
       <Card>
-        <CardHeader title="Historia e idiomas" description="Los textos libres se muestran tal cual; los datos (especie, categoría, sanidad) se traducen solos." />
+        <div id="textos" className="scroll-mt-6" />
+        <CardHeader
+          title="Textos e idiomas"
+          description="Los textos libres se muestran tal cual en cada idioma (TROPILLA no los traduce solo); los datos (especie, categoría, sanidad) sí se traducen."
+        />
         <CardBody className="space-y-5">
-          <Field label="Historia del establecimiento" htmlFor="historia" hint="Quiénes son, desde cuándo, cómo trabajan. 3 a 6 líneas.">
-            <Textarea id="historia" name="historia" rows={5} defaultValue={perfil.historia} maxLength={1500} {...fieldAria("historia", undefined, true)} />
-          </Field>
           <fieldset>
             <legend className="mb-2 text-[13px] font-semibold text-ink">Idiomas del perfil</legend>
             <div className="flex flex-wrap gap-2">
@@ -83,6 +74,42 @@ export function PerfilEditor({
               <ChoiceChip name="idiomas" value="pt" label="Portugués" defaultChecked={perfil.idiomas.includes("pt")} />
             </div>
           </fieldset>
+          {IDIOMAS_PERFIL.map(({ k, label }) => {
+            const tx = perfil.textos[k] ?? {};
+            const body = (
+              <div className="grid gap-4">
+                <Field label="Título" htmlFor={`titulo_${k}`} optional={k !== "es"} error={f[`titulo_${k}`]} hint="Ej.: Cría de búfalos Mediterráneos en el Iberá">
+                  <Input id={`titulo_${k}`} name={`titulo_${k}`} defaultValue={tx.titulo ?? ""} maxLength={80} {...fieldAria(`titulo_${k}`, f[`titulo_${k}`], true)} />
+                </Field>
+                <Field label="Descripción corta" htmlFor={`descripcion_${k}`} optional={k !== "es"} error={f[`descripcion_${k}`]} hint="Hasta 160 caracteres: es lo que muestran Google y el directorio.">
+                  <Textarea id={`descripcion_${k}`} name={`descripcion_${k}`} rows={2} defaultValue={tx.descripcion ?? ""} maxLength={160} className="min-h-[72px]" {...fieldAria(`descripcion_${k}`, f[`descripcion_${k}`], true)} />
+                </Field>
+                <Field label="Historia del establecimiento" htmlFor={`historia_${k}`} optional hint="Quiénes son, desde cuándo, cómo trabajan. 3 a 6 líneas.">
+                  <Textarea id={`historia_${k}`} name={`historia_${k}`} rows={5} defaultValue={tx.historia ?? ""} maxLength={1500} {...fieldAria(`historia_${k}`, undefined, true)} />
+                </Field>
+              </div>
+            );
+            return k === "es" ? (
+              <div key={k} className="border-t border-border pt-4">
+                <p className="mb-3 text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">{label}</p>
+                {body}
+              </div>
+            ) : (
+              <details key={k} className="group border-t border-border pt-4" open={!!(tx.titulo || tx.descripcion || tx.historia) || !!f[`descripcion_${k}`] || !!f[`titulo_${k}`]}>
+                <summary className="flex cursor-pointer list-none items-center justify-between text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">
+                  {label}
+                  <span className="text-[12.5px] font-medium normal-case tracking-normal text-campo group-open:hidden">Escribir en {label.toLowerCase()}</span>
+                </summary>
+                <div className="mt-3">{body}</div>
+              </details>
+            );
+          })}
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader title="Ubicación y contacto" />
+        <CardBody className="space-y-5">
           <fieldset>
             <legend className="mb-2 text-[13px] font-semibold text-ink">Ubicación que se muestra</legend>
             <div className="grid gap-2 sm:grid-cols-3">

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { PerfilView } from "@/components/public/perfil-view";
-import { FilterTabs, MockNotice, buttonClass } from "@/components/ui";
+import { FilterTabs, buttonClass } from "@/components/ui";
 import { IconArrowLeft, IconCheckCircle, IconEye } from "@/components/icons";
 import { requireContexto } from "@/lib/establecimiento";
 import { getPerfilConfig, getPerfilPreview } from "@/lib/data/perfil";
@@ -16,11 +16,7 @@ async function Preview({ searchParams }: { searchParams: Promise<{ idioma?: stri
   const ctx = await requireContexto();
   const { idioma = "es" } = await searchParams;
   const locale = hasLocale(idioma) ? idioma : "es";
-  const nombre = ctx.activa.establecimiento_nombre ?? "Establecimiento";
-  const [{ data: cfg }, { data: p, source }] = await Promise.all([
-    getPerfilConfig(ctx.activa.establecimiento_id, nombre),
-    getPerfilPreview(ctx.activa.establecimiento_id, nombre, locale),
-  ]);
+  const [cfg, p] = await Promise.all([getPerfilConfig(ctx.activa.establecimiento_id), getPerfilPreview(ctx.activa.establecimiento_id, locale)]);
   const t = getPortalDict(locale);
   return (
     <>
@@ -47,11 +43,6 @@ async function Preview({ searchParams }: { searchParams: Promise<{ idioma?: stri
           )}
         </div>
       </div>
-      {source === "mock" && (
-        <div className="mb-4">
-          <MockNotice what="los datos del perfil" />
-        </div>
-      )}
       <div className="overflow-hidden rounded-[var(--radius-card)] border border-border bg-base" lang={locale}>
         <PerfilView p={p} locale={locale} t={t} />
         <p className="border-t border-border bg-surface px-5 py-3 text-[12.5px] text-muted">{p.leyenda}</p>
