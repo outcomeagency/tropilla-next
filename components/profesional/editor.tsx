@@ -3,6 +3,7 @@
 import type { S } from "@/lib/schemas";
 import { Button, Card, CardBody, CardHeader, Notice } from "@/components/ui";
 import { guardarProfesionalAction } from "@/app/(auth)/profesional/actions";
+import { Photo } from "@/components/public/photo";
 
 export function ProfesionalEditor({ perfil }: { perfil: S<"Profesional"> | null }) {
   const zonas = perfil?.zonas as { provincias?: string[] } | undefined;
@@ -11,6 +12,8 @@ export function ProfesionalEditor({ perfil }: { perfil: S<"Profesional"> | null 
     <Notice tone="info" title="La matrícula se muestra como declarada">TROPILLA no valida matrículas ni acredita competencias profesionales.</Notice>
     <Card><CardHeader title={perfil ? "Editar perfil" : "Armar mi perfil"} description="Los campos del perfil público se comparten solo si activás la publicación." /><CardBody>
       <form action={guardarProfesionalAction} className="space-y-4">
+        <input type="hidden" name="foto_sha256" value={perfil?.foto_sha256 ?? ""} />
+        {perfil?.foto && <div className="max-w-40"><Photo src={perfil.foto} alt={perfil.foto.alt ?? perfil.nombre_publico} sizes="160px" className="aspect-square rounded-full border border-border" /></div>}
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="text-sm font-medium text-ink">Nombre público<input name="nombre_publico" required defaultValue={perfil?.nombre_publico} className="mt-1 h-10 w-full rounded border border-border px-3" /></label>
           <label className="text-sm font-medium text-ink">Enlace corto<input name="slug" required pattern="[a-z0-9-]+" defaultValue={perfil?.slug} placeholder="ana-perez" className="mt-1 h-10 w-full rounded border border-border px-3" /><span className="text-xs text-muted">tropilla.ar/es/profesionales/tu-enlace</span></label>

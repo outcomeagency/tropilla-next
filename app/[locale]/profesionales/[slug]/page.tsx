@@ -9,6 +9,7 @@ import { SiteFooter } from "@/components/public/site-footer";
 import { getDictionary } from "@/lib/i18n";
 import { Card, CardBody, Notice } from "@/components/ui";
 import { IconMap, IconUser } from "@/components/icons";
+import { Photo } from "@/components/public/photo";
 
 type Params = Promise<{ locale: string; slug: string }>;
 const COPY: Record<Locale, { title: string; declared: string; specialties: string; zones: string; languages: string; contact: string }> = {
@@ -40,7 +41,7 @@ async function ProfesionalPublico({ params }: { params: Params }) {
   const zonas = p.zonas as { provincias?: string[]; departamentos?: string[] } | undefined;
   const dict = getDictionary(raw);
   return <><SiteHeader locale={raw} dict={dict} path={`/profesionales/${slug}`} context={p.nombre ?? t.title} /><main className="min-h-[70vh] bg-base px-4 py-10"><div className="mx-auto max-w-[840px] space-y-5">
-    <Card><CardBody className="p-7"><div className="flex items-start gap-4"><span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-campo-50 text-monte"><IconUser size={27} /></span><div><p className="text-sm font-medium text-monte">{p.profesion}</p><h1 className="mt-1 text-3xl font-bold tracking-tight text-ink">{p.nombre}</h1>{p.matricula_declarada && <p className="mt-2 text-sm text-muted">{t.declared}: {p.matricula_declarada}</p>}</div></div>
+    <Card><CardBody className="p-7"><div className="flex items-start gap-4">{p.foto?.url || p.foto_url ? <Photo src={p.foto ?? p.foto_url} alt={p.foto?.alt ?? p.nombre ?? t.title} sizes="96px" className="h-24 w-24 shrink-0 rounded-full border border-border" /> : <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-campo-50 text-monte"><IconUser size={27} /></span>}<div><p className="text-sm font-medium text-monte">{p.profesion}</p><h1 className="mt-1 text-3xl font-bold tracking-tight text-ink">{p.nombre}</h1>{p.matricula_declarada && <p className="mt-2 text-sm text-muted">{t.declared}: {p.matricula_declarada}</p>}</div></div>
       {p.bio && <p className="mt-6 whitespace-pre-line text-[15px] leading-7 text-ink">{p.bio}</p>}</CardBody></Card>
     {(p.especialidades?.length || zonas?.provincias?.length || p.idiomas?.length) ? <Card><CardBody className="grid gap-5 sm:grid-cols-2">
       {p.especialidades?.length ? <section><h2 className="text-sm font-semibold text-ink">{t.specialties}</h2><p className="mt-1 text-sm text-muted">{p.especialidades.join(" · ")}</p></section> : null}

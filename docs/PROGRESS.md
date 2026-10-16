@@ -83,9 +83,10 @@ explica la propia página («nadie paga por aparecer primero»). Metadata, canon
 leyenda fija va en el pie de todo lo público. Fotos de campo de licencia libre (búfalo de agua, nunca africano).
 **Conexión a la API (2026-10-16):** se retiró el mock: el directorio, los conteos y el sitemap salen de la API real. El directorio,
 las portadas de perfil/oferta y las tarjetas de oferta consumen `Foto` con URL pública, texto alternativo y dimensiones; el panel
-muestra las fotos privadas firmadas del perfil, la oferta y el animal. La primera foto del perfil interno es la portada; no se copia
-ningún dato privado a la página pública. Si no hay foto se conserva un placeholder sobrio, sin stock ni datos falsos. La portada
-toma una foto real de un productor destacado. Si la API no responde, `app/[locale]/error.tsx` explica el problema en su idioma.
+muestra las fotos privadas firmadas del perfil, la oferta, el animal y el perfil profesional. La primera foto del perfil interno es
+la portada; el perfil profesional conserva `foto_sha256` al guardar y pinta la foto pública localizada. No se copia ningún dato
+privado a la página pública. Si no hay foto se conserva un placeholder sobrio, sin stock ni datos falsos. La portada toma una foto
+real de un productor destacado. Si la API no responde, `app/[locale]/error.tsx` explica el problema en su idioma.
 
 ## TPA-45 · Simulador de liquidación en pie vs al gancho · ✅ (web)
 
