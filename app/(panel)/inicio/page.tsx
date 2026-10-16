@@ -77,7 +77,7 @@ async function Tablero() {
         <KpiCard label="cabezas en potreros" value={d.cabezasPotreros != null ? nf.format(d.cabezasPotreros) : "—"} icon={<IconChart size={24} />} href="/establecimiento" />
         <KpiCard label="Bovinos identificados" value={nf.format(d.porEspecie.BOV)} icon={<IconCow size={24} />} href="/hacienda?especie=BOV" />
         <KpiCard label="Bubalinos identificados" value={nf.format(d.porEspecie.BUB)} icon={<IconBuffalo size={24} />} href="/hacienda?especie=BUB" />
-        <KpiCard label={`preñadas · ${d.partos30} ${d.partos30 === 1 ? "parto" : "partos"} en 30 días`} value={nf.format(d.prenadas)} icon={<IconHeart size={24} />} href="/hacienda?estado_reproductivo=prenada" />
+        <KpiCard label={`preñadas · ${d.partos30} ${d.partos30 === 1 ? "parto" : "partos"} en 30 días`} value={nf.format(d.prenadas)} icon={<IconHeart size={24} />} href="/reproduccion" />
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[1.15fr_1fr]">

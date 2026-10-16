@@ -3043,6 +3043,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/organizaciones/{organizacion}/miembros": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Designar admin/operador de la organización (aditivo TPA-51)
+         * @description Equipo TROPILLA (`es_staff`) o un admin de la organización. Body {email, rol: admin|operador} → 204. El alta de organizaciones (`POST /organizaciones`, aditivo, solo staff: {nombre, slug, tipo, ambito, especies[], descripcion}) es controlada en el MVP.
+         */
+        post: operations["post_organizaciones_organizacion_miembros"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/organizaciones/{organizacion}": {
         parameters: {
             query?: never;
@@ -5198,6 +5218,7 @@ export interface components {
                 estado?: string;
             }[];
         };
+        /** @description `comprador` = {tipo, pais} y, solo si `mostrar_nombre` (o es el propio comprador), {nombre, empresa}. `zona` = {cualquiera?, provincias[], departamentos[]} + aditivo `provincias_nombres`. `respuestas_count` solo para el dueño del Busco (TPA-58). Publicar exige perfil de comprador (403 `perfil_comprador_requerido`) y email verificado. `Demanda.puntaje` 0–100 (categoría con cabezas suficientes 50 / parciales 30, zona 25, raza 25). */
         Busco: {
             id?: components["schemas"]["Uuid"];
             /** @enum {string} */
@@ -5696,6 +5717,10 @@ export interface components {
             numero_socio?: string | null;
             alcances?: components["schemas"]["Alcances"];
             desde?: components["schemas"]["FechaHora"];
+            /** @description Aditivo TPA-51: solo lo consentido — `existencias` [{especie, cabezas}] si existencias_agregadas, `cobertura_sanitaria` [{enfermedad, registros}] (12 meses) si cobertura_sanitaria; null si no. Lotes postulados y precios agregados: fase 2. */
+            datos?: {
+                [key: string]: unknown;
+            };
         };
         ProfesionalEstablecimientoInput: {
             usuario_id: components["schemas"]["Uuid"];
@@ -11097,6 +11122,28 @@ export interface operations {
                 };
             };
             401: components["responses"]["NoAutenticado"];
+        };
+    };
+    post_organizaciones_organizacion_miembros: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizacion: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
         };
     };
     get_organizaciones_organizacion: {
