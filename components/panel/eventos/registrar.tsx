@@ -50,6 +50,7 @@ export type ProductoOpt = {
 };
 /** Tarea del plan sanitario que se cierra con este registro. */
 export type TareaOpt = { id: string; titulo: string; tipo: string; enfermedad: string | null; productoId: string | null; loteId: string | null; potreroId: string | null; vence: string };
+export type ReproductorExternoOpt = { id: string; nombre: string; rp?: string | null; registro_genealogico?: string | null; especie_codigo: string };
 
 export interface RegistrarEventoProps {
   /** Qué tipos ofrece el selector (Hacienda o Reproducción). */
@@ -71,6 +72,7 @@ export interface RegistrarEventoProps {
   tarea?: TareaOpt | null;
   potreroInicial?: string;
   pruebas?: TipoPrueba[];
+  reproductoresExternos?: ReproductorExternoOpt[];
 }
 
 type Fila = { key: number; especie: string; sexo: string; categoria: string };
@@ -102,6 +104,9 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
   const [filas, setFilas] = useState<Fila[]>([{ key: 0, especie: "BOV", sexo: "", categoria: "" }]);
   const [causa, setCausa] = useState("");
   const [madre, setMadre] = useState<AnimalElegido | null>(null);
+  const [padre, setPadre] = useState<AnimalElegido | null>(null);
+  const [madreExternaId, setMadreExternaId] = useState("");
+  const [padreExternoId, setPadreExternoId] = useState("");
   const [toros, setToros] = useState<AnimalElegido[]>([]);
 
   const sujetoEfectivo = meta && !meta.sujetos.includes(sujeto) ? meta.sujetos[0] : sujeto;
@@ -110,14 +115,18 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
   const conConteo = sujetoEfectivo === "lote" && ["hacienda.ingreso", "hacienda.nacimiento", "hacienda.egreso", "hacienda.muerte", "hacienda.perdida", "hacienda.faena"].includes(tipo);
   const especieSel = animales[0]?.especie ?? lote?.especie ?? "";
 
-  async function sumar(valor: string, destino: "animales" | "madre" | "toros" = "animales") {
+  async function sumar(valor: string, destino: "animales" | "madre" | "padre" | "toros" = "animales") {
     if (!valor.trim()) return;
     setBuscando(true);
     setBuscaErr("");
     const r = await buscarAnimalAction(valor);
     setBuscando(false);
     if (!r.animal) return setBuscaErr(r.error ?? "No lo encontramos.");
-    if (destino === "madre") return setMadre(r.animal);
+    if (destino === "madre") { setMadreExternaId(""); return setMadre(r.animal); }
+    if (destino === "padre") {
+      if (r.animal.sexo !== "M") return setBuscaErr(`${r.animal.ident} no es macho.`);
+      setPadreExternoId(""); return setPadre(r.animal);
+    }
     if (destino === "toros") {
       if (r.animal.sexo !== "M") return setBuscaErr(`${r.animal.ident} no es macho.`);
       if (!toros.some((t) => t.id === r.animal!.id)) setToros((xs) => [...xs, r.animal!]);
@@ -148,6 +157,9 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
       <input type="hidden" name="sujeto" value={sujetoEfectivo} />
       {sujetoEfectivo === "animales" && !creaAnimales && animales.map((a) => <input key={a.id} type="hidden" name="animal_id" value={a.id} />)}
       {madre && <input type="hidden" name="madre_id" value={madre.id} />}
+      {padre && <input type="hidden" name="padre_id" value={padre.id} />}
+      {madreExternaId && <input type="hidden" name="madre_externa_id" value={madreExternaId} />}
+      {padreExternoId && <input type="hidden" name="padre_externo_id" value={padreExternoId} />}
       {tipo === "reproduccion.servicio_natural" && toros.map((t) => <input key={t.id} type="hidden" name="toro_id" value={t.id} />)}
       {p.tarea && tipo === p.tarea.tipo && <input type="hidden" name="tarea_id" value={p.tarea.id} />}
 
@@ -296,7 +308,7 @@ export function RegistrarEvento(p: RegistrarEventoProps) {
                 <Field label={tipo === "reproduccion.servicio_natural" ? "Inicio del servicio" : "Fecha"} htmlFor="ocurrido_en" error={f.ocurrido_en}>
                   <Input id="ocurrido_en" name="ocurrido_en" type="date" defaultValue={p.hoy} max={p.hoy} {...fieldAria("ocurrido_en", f.ocurrido_en)} />
                 </Field>
-                <CamposTipo tipo={tipo} f={f} p={p} causa={causa} setCausa={setCausa} especie={especieSel} madre={madre} setMadre={setMadre} sumar={sumar} buscando={buscando} creaAnimales={creaAnimales} toros={toros} setToros={setToros} buscaErr={buscaErr} animales={animales} />
+                <CamposTipo tipo={tipo} f={f} p={p} causa={causa} setCausa={setCausa} especie={especieSel} madre={madre} setMadre={setMadre} padre={padre} setPadre={setPadre} madreExternaId={madreExternaId} setMadreExternaId={setMadreExternaId} padreExternoId={padreExternoId} setPadreExternoId={setPadreExternoId} sumar={sumar} buscando={buscando} creaAnimales={creaAnimales} toros={toros} setToros={setToros} buscaErr={buscaErr} animales={animales} />
                 <div className="sm:col-span-2">
                   <Field label="Observaciones" htmlFor="observaciones" optional>
                     <Textarea id="observaciones" name="observaciones" maxLength={2000} rows={3} className="min-h-[84px]" placeholder="Lo que sirva para entender el evento después." />
@@ -506,6 +518,12 @@ function CamposTipo({
   especie,
   madre,
   setMadre,
+  padre,
+  setPadre,
+  madreExternaId,
+  setMadreExternaId,
+  padreExternoId,
+  setPadreExternoId,
   sumar,
   buscando,
   creaAnimales,
@@ -522,7 +540,13 @@ function CamposTipo({
   especie: string;
   madre: AnimalElegido | null;
   setMadre: (a: AnimalElegido | null) => void;
-  sumar: (v: string, d?: "animales" | "madre" | "toros") => Promise<void>;
+  sumar: (v: string, d?: "animales" | "madre" | "padre" | "toros") => Promise<void>;
+  padre: AnimalElegido | null;
+  setPadre: (a: AnimalElegido | null) => void;
+  madreExternaId: string;
+  setMadreExternaId: (id: string) => void;
+  padreExternoId: string;
+  setPadreExternoId: (id: string) => void;
   buscando: boolean;
   creaAnimales: boolean;
   toros: AnimalElegido[];
@@ -614,6 +638,27 @@ function CamposTipo({
                   />
                   <Input name="madre_externa" maxLength={120} placeholder="O: «vaca colorada del vecino»" aria-label="Madre fuera del sistema" />
                 </div>
+              )}
+              {!madre && (p.reproductoresExternos ?? []).length > 0 && (
+                <Select aria-label="Madre reproductora externa" value={madreExternaId} onChange={(e) => { setMadre(null); setMadreExternaId(e.target.value); }} className="mt-2">
+                  <option value="">O elegí una madre del catálogo externo</option>
+                  {p.reproductoresExternos!.filter((r) => !especie || r.especie_codigo === especie).map((r) => <option key={r.id} value={r.id}>{r.nombre}{r.rp ? ` · RP ${r.rp}` : ""}</option>)}
+                </Select>
+              )}
+            </Field>
+          </div>
+          <div className="sm:col-span-2">
+            <Field label="Padre" htmlFor="padre_busca" optional hint="Buscá el macho por caravana o elegí un reproductor externo.">
+              {padre ? (
+                <div className="flex items-center justify-between rounded-[10px] border border-border bg-base px-3 py-2 text-[14px]"><span>{padre.ident} · del campo</span><button type="button" onClick={() => setPadre(null)} className="text-[13px] font-medium text-campo hover:underline">Cambiar</button></div>
+              ) : (
+                <Input id="padre_busca" placeholder="Caravana del padre y Enter" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void sumar(e.currentTarget.value, "padre"); } }} disabled={buscando} />
+              )}
+              {!padre && (p.reproductoresExternos ?? []).length > 0 && (
+                <Select aria-label="Padre reproductor externo" value={padreExternoId} onChange={(e) => { setPadre(null); setPadreExternoId(e.target.value); }} className="mt-2">
+                  <option value="">O elegí un padre del catálogo externo</option>
+                  {p.reproductoresExternos!.filter((r) => !especie || r.especie_codigo === especie).map((r) => <option key={r.id} value={r.id}>{r.nombre}{r.rp ? ` · RP ${r.rp}` : ""}</option>)}
+                </Select>
               )}
             </Field>
           </div>
@@ -788,7 +833,15 @@ function CamposTipo({
       return (
         <>
           {sel("tipo_ia", "Tipo", TIPOS_IA)}
-          {txt("toro_nombre", "Toro (semen)", { placeholder: "Nombre o código de la pajuela" })}
+          <Field label="Reproductor del semen" htmlFor="semen_reproductor_externo_id" optional>
+            <Select id="semen_reproductor_externo_id" name="semen_reproductor_externo_id" defaultValue="">
+              <option value="">Sin vincular al catálogo</option>
+              {(p.reproductoresExternos ?? []).filter((r) => !especie || r.especie_codigo === especie).map((r) => (
+                <option key={r.id} value={r.id}>{r.nombre}{r.rp ? ` · RP ${r.rp}` : ""}{r.registro_genealogico ? ` · ${r.registro_genealogico}` : ""}</option>
+              ))}
+            </Select>
+          </Field>
+          {txt("toro_nombre", "Toro (semen)", { optional: true, placeholder: "Nombre o código de la pajuela" })}
           <Field label="Raza del semen" htmlFor="semen_raza" optional>
             <Select id="semen_raza" name="semen_raza" defaultValue="">
               <option value="">Sin indicar</option>

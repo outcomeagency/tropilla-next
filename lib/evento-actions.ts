@@ -184,9 +184,12 @@ export async function registrarEventoAction(_prev: EventoActionState, fd: FormDa
       const facilidad = fdStr(fd, "facilidad");
       if (facilidad && !de(FACILIDAD_PARTO, facilidad)) fields.facilidad = "Elegí una opción.";
       const madreId = fdStr(fd, "madre_id");
-      payload = limpio({ facilidad: facilidad || undefined, madre_id: madreId || undefined, madre_externa: madreId ? undefined : corto(fd, "madre_externa") });
+      const madreExternaId = fdStr(fd, "madre_externa_id");
+      const padreId = fdStr(fd, "padre_id");
+      const padreExternoId = fdStr(fd, "padre_externo_id");
+      payload = limpio({ facilidad: facilidad || undefined, madre_id: madreId || undefined, madre_externa_id: madreExternaId || undefined, madre_externa: madreId || madreExternaId ? undefined : corto(fd, "madre_externa") });
       if (creaAnimales) {
-        const destino = limpio({ lote_id: fdStr(fd, "destino_lote_id") || undefined, potrero_id: fdStr(fd, "destino_potrero_id") || undefined, madre_id: madreId || undefined, madre_externa: madreId ? undefined : corto(fd, "madre_externa") });
+        const destino = limpio({ lote_id: fdStr(fd, "destino_lote_id") || undefined, potrero_id: fdStr(fd, "destino_potrero_id") || undefined, madre_id: madreId || undefined, madre_externa_id: madreExternaId || undefined, madre_externa: madreId || madreExternaId ? undefined : corto(fd, "madre_externa"), padre_id: padreId || undefined, padre_externo_id: padreExternoId || undefined });
         const crias = animalesNuevos(fd, fields, { ...destino, fecha_nacimiento: fecha });
         if (!crias.length) fields.animales = "Cargá al menos una cría.";
         payload.crias = crias.map((animal, j) => {
@@ -277,8 +280,8 @@ export async function registrarEventoAction(_prev: EventoActionState, fd: FormDa
     case "reproduccion.inseminacion": {
       const t = fdStr(fd, "tipo_ia");
       if (t !== "ia" && t !== "iatf") fields.tipo_ia = "Elegí IA o IATF.";
-      const semen = limpio({ toro_nombre: corto(fd, "toro_nombre"), raza: fdStr(fd, "semen_raza") || undefined, centro: corto(fd, "centro"), partida: corto(fd, "partida", 60) });
-      if (!semen.toro_nombre) fields.toro_nombre = "Indicá el toro (nombre o código de la pajuela).";
+      const semen = limpio({ reproductor_externo_id: fdStr(fd, "semen_reproductor_externo_id") || undefined, toro_nombre: corto(fd, "toro_nombre"), raza: fdStr(fd, "semen_raza") || undefined, centro: corto(fd, "centro"), partida: corto(fd, "partida", 60) });
+      if (!semen.toro_nombre && !semen.reproductor_externo_id) fields.toro_nombre = "Elegí un reproductor o indicá el toro (nombre o código de la pajuela).";
       payload = limpio({ tipo: t, semen, inseminador: corto(fd, "inseminador") });
       break;
     }
