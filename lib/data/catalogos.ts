@@ -9,6 +9,7 @@ export type Item = { codigo: string; especie?: string; nombre?: string; nombres?
 export type CatItem = { codigo: string; nombre: string };
 export type Departamento = { codigo: string; provincia_codigo: string; nombre: string; garrapata_sugerida?: string | null };
 export type Parametro = { clave: string; especie?: string | null; raza?: string | null; valor: unknown; unidad?: string | null; validado_por_vet?: boolean };
+export type ReglaCategoria = { id: number; categoria: string; prioridad: number; motivo: string };
 export type TipoEvento = { codigo: string; nombre: string; modulo: string; requiere_sexo?: string | null };
 
 type Raw = S<"Catalogos"> & Record<string, unknown>;
@@ -56,6 +57,7 @@ export async function getCatalogos() {
       tiposDocumento: ((d as Record<string, unknown>).tipos_documento ?? []) as Item[],
       tiposPrueba: ((d as Record<string, unknown>).tipos_prueba ?? []) as Item[],
       categoriasFaena: ((d as Record<string, unknown>).categorias_faena ?? []) as Item[],
+      reglas: ((d as Record<string, unknown>).reglas_categoria ?? []) as ReglaCategoria[],
       source: "api" as const,
     };
   } catch {
@@ -71,6 +73,7 @@ export async function getCatalogos() {
       tiposDocumento: [] as Item[],
       tiposPrueba: [] as Item[],
       categoriasFaena: [] as Item[],
+      reglas: [] as ReglaCategoria[],
       source: "mock" as const,
     };
   }
