@@ -101,7 +101,9 @@ export function CampoMap({
         const { lat, lng } = e.latlng;
         const d = cb.current.drawing;
         if (d && cb.current.onDrawingChange) {
-          cb.current.onDrawingChange([...d, [round(lng), round(lat)]]);
+          const next: Ring = [...d, [round(lng), round(lat)]];
+          cb.current.drawing = next; // clics rápidos antes del re-render
+          cb.current.onDrawingChange(next);
           return;
         }
         cb.current.onPoint?.({ lat: round(lat), lon: round(lng) });
@@ -109,6 +111,10 @@ export function CampoMap({
       // Rueda sólo con foco (no secuestra el scroll de la página).
       m.on("focus", () => m.scrollWheelZoom.enable());
       m.on("blur", () => m.scrollWheelZoom.disable());
+      // Etiquetas sólo con zoom suficiente (si no, se pisan).
+      const etiquetas = () => el.current?.classList.toggle("tp-map--far", m.getZoom() < 13);
+      m.on("zoomend", etiquetas);
+      etiquetas();
       polyLayer.current = lf.layerGroup().addTo(m);
       drawLayer.current = lf.layerGroup().addTo(m);
       map.current = m;
@@ -168,14 +174,20 @@ export function CampoMap({
       const poly = lf.polygon(latlngs, {
         className: cx("tp-poly", p.selected && "tp-poly--sel", p.muted && "tp-poly--muted", onPolygonClick && "tp-poly--click"),
         bubblingMouseEvents: false,
+        interactive: !!onPolygonClick,
       });
       if (p.label ?? p.nombre) poly.bindTooltip(p.label ?? p.nombre, { permanent: true, direction: "center", className: "tp-map-label" });
       if (onPolygonClick) poly.on("click", () => cb.current.onPolygonClick?.(p.id));
       g.addLayer(poly);
     }
     if (bounds.length && !fitted.current) {
-      m.fitBounds(lf.latLngBounds(bounds), { padding: [24, 24], maxZoom: 15 });
       fitted.current = true;
+      const b = lf.latLngBounds(bounds);
+      // Tras el primer layout (el tamaño del contenedor puede no estar listo todavía).
+      requestAnimationFrame(() => {
+        m.invalidateSize();
+        m.fitBounds(b, { padding: [32, 32], maxZoom: 16, animate: false });
+      });
     }
   }, [ready, polygons, onPolygonClick]);
 

@@ -283,3 +283,20 @@ productores» y el vencimiento de 2 días hábiles propuesto por Claude Design (
 Las zonas sanitarias se muestran como estados con ícono + texto y explican para qué sirven (arman el plan sugerido). La garrapata
 sugerida por departamento sale del catálogo de la API y se ofrece con un clic, nunca se impone. La interdicción es un evento
 (queda en la historia con autor), no un tilde. Los decimales viajan canónicos (`-27.7`, no `-27.70`): la API rechaza ceros sobrantes.
+
+## TPA-14 · Potreros · ✅ (web)
+
+**Rutas:** `/establecimiento/potreros` (KPIs, mapa satelital con contornos y tabla de ocupación; `?archivados=1`), `/establecimiento/potreros/nuevo`, `/establecimiento/potreros/[id]` (quién está ahora por lote y categoría + edición + archivar)
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Listado con ocupación derivada | `GET …/potreros?archivados=` | 🔌 API real |
+| Crear / editar (nombre, ha, ambiente, forraje, agua, revolcadero, notas, contorno) | `POST/PATCH …/potreros` (`poligono` GeoJSON, desvío aditivo de la API) | 🔌 probado con dibujo en el establecimiento de prueba |
+| Composición por lote y categoría | `GET …/lotes` (filtrado por `potrero.id`) | 🔌 |
+| Archivar con motivo | `POST …/potreros/{id}/archivar` | 🔌 |
+| Consulta offline | — | es de la app (Flutter) |
+
+**Comentario del dev:** El contorno se dibuja tocando las esquinas sobre la imagen satelital (Leaflet + Esri/OSM, sin plugins): las hectáreas
+se calculan en vivo y se pueden pisar a mano; los otros potreros quedan punteados como referencia para no superponer. En el listado el mapa
+muestra nombre y cabezas (las etiquetas se ocultan al alejarse para que no se pisen) y un clic abre la ficha. La ficha arranca por lo que el
+encargado necesita: quién está ahora, por lote y categoría, con carga cab/ha. Archivar pide motivo y avisa si todavía hay hacienda; nada se borra.

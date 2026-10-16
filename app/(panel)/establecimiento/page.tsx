@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { Badge, Button, Card, CardBody, CardHeader, DataList, EmptyState, Notice, PageHeader, SpeciesChip } from "@/components/ui";
 import { IconAlert, IconCheckCircle, IconClose, IconLock, IconMap, IconPin, IconShield } from "@/components/icons";
 import { CampoMap } from "@/components/map/campo-map";
+import { EstablecimientoTabs } from "@/components/panel/establecimiento/tabs";
 import { LevantarInterdiccion, RegistrarInterdiccion } from "@/components/panel/establecimiento/interdiccion";
 import { requireContexto } from "@/lib/establecimiento";
 import { getEstablecimiento, getProductor } from "@/lib/data/establecimientos";
@@ -85,6 +86,7 @@ async function Contenido({ searchParams }: { searchParams: Promise<{ ok?: string
         subtitle="Datos del campo, zonas sanitarias y ubicación. Con esto se arman el plan sanitario sugerido y tu perfil público."
         actions={editar ? <Button href="/establecimiento/editar">Editar datos</Button> : undefined}
       />
+      <EstablecimientoTabs activo="datos" />
       {ok === "datos" && (
         <div className="mb-4">
           <Notice tone="success" title="Datos guardados.">
