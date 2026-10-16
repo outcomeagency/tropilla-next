@@ -6,6 +6,8 @@ import { Card, EmptyState, FilterTabs, PageHeader, Select, buttonClass, inputCla
 import { IconArrowLeft, IconArrowRight, IconCow, IconFilter, IconSearch } from "@/components/icons";
 import { HaciendaTabla, type FilaAnimal } from "@/components/panel/hacienda/tabla";
 import { PersistFilters } from "@/components/panel/hacienda/persist-filters";
+import { HaciendaTabs } from "@/components/panel/hacienda/tabs";
+import { listLotes } from "@/lib/data/potreros";
 import { requireContexto } from "@/lib/establecimiento";
 import { FILTROS_HACIENDA, listAnimales, listPotreros, type FiltrosHacienda } from "@/lib/data/hacienda";
 import { getCatalogos } from "@/lib/data/catalogos";
@@ -45,13 +47,13 @@ async function Listado({ searchParams }: { searchParams: Promise<SP> }) {
   const ctx = await requireContexto();
   const { f, cursor } = leer(await searchParams);
   const est = ctx.activa.establecimiento_id;
-  const [res, potreros, cat] = await Promise.all([listAnimales(est, f, cursor), listPotreros(est).catch(() => []), getCatalogos()]);
+  const [res, potreros, cat, todosLotes] = await Promise.all([listAnimales(est, f, cursor), listPotreros(est).catch(() => []), getCatalogos(), listLotes(est).catch(() => [])]);
   await connection();
   const hoy = hoyAR(new Date());
 
   const catNombre = new Map(cat.categorias.map((c) => [c.codigo, c.nombre ?? c.codigo]));
   const razaNombre = new Map(cat.razas.map((r) => [r.codigo, r.nombre ?? r.codigo]));
-  const lotes = [...new Map(potreros.flatMap((p) => p.ocupacion?.lotes ?? []).map((l) => [l.id, l])).values()];
+  const lotes = todosLotes.filter((l) => !f.especie || l.especie === f.especie);
   const categorias = cat.categorias.filter((c) => !f.especie || c.especie === f.especie);
 
   const filas: FilaAnimal[] = res.data.map((a) => ({
@@ -177,7 +179,13 @@ async function Listado({ searchParams }: { searchParams: Promise<SP> }) {
         </form>
 
         {filas.length ? (
-          <HaciendaTabla filas={filas} potreros={potreros.map((p) => ({ id: p.id ?? "", nombre: p.nombre ?? "" }))} puedeCargar={ctx.can("hacienda.crear")} hoy={hoy} />
+          <HaciendaTabla
+            filas={filas}
+            potreros={potreros.map((p) => ({ id: p.id ?? "", nombre: p.nombre ?? "" }))}
+            lotes={todosLotes.map((l) => ({ id: l.id ?? "", nombre: l.nombre ?? "", especie: especieDe(l.especie) }))}
+            puedeCargar={ctx.can("hacienda.crear")}
+            hoy={hoy}
+          />
         ) : (
           <EmptyState
             icon={<IconCow size={24} />}
@@ -192,7 +200,11 @@ async function Listado({ searchParams }: { searchParams: Promise<SP> }) {
                 <Link href="/hacienda?limpiar=1" className={buttonClass("outline", "md")}>
                   Ver todo el rodeo
                 </Link>
-              ) : undefined
+              ) : (
+                <Link href="/hacienda/lotes" className={buttonClass("outline", "md")}>
+                  Ver lotes por cantidades
+                </Link>
+              )
             }
           />
         )}
@@ -223,6 +235,7 @@ export default function HaciendaPage(props: { searchParams: Promise<SP> }) {
   return (
     <>
       <PageHeader title="Hacienda" subtitle="Animales identificados del establecimiento. Buscá por cualquier identificador y trabajá sobre un grupo." />
+      <HaciendaTabs activo="animales" />
       <Suspense fallback={<div className="h-[520px] rounded-[var(--radius-card)] border border-border bg-surface" />}>
         <Listado searchParams={props.searchParams} />
       </Suspense>
