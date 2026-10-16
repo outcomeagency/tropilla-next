@@ -20,6 +20,16 @@ export async function guardarEstablecimientoAction(_prev: EventoActionState, fd:
   const est = ctx.activa.establecimiento_id;
 
   const fields: Record<string, string> = {};
+  let fichaAmpliada: Record<string, unknown> = {};
+  let visibilidadFicha: Record<string, boolean> = {};
+  try {
+    fichaAmpliada = JSON.parse(fdStr(fd, "ficha_ampliada") || "{}") as Record<string, unknown>;
+    visibilidadFicha = JSON.parse(fdStr(fd, "visibilidad_ficha") || "{}") as Record<string, boolean>;
+    if (!fichaAmpliada || Array.isArray(fichaAmpliada) || typeof fichaAmpliada !== "object") throw new Error();
+    if (!visibilidadFicha || Array.isArray(visibilidadFicha) || typeof visibilidadFicha !== "object" || Object.values(visibilidadFicha).some((v) => typeof v !== "boolean")) throw new Error();
+  } catch {
+    fields.ficha_ampliada = "Usá objetos JSON válidos; la visibilidad acepta valores true/false.";
+  }
   const nombre = fdStr(fd, "nombre");
   if (!nombre) fields.nombre = "Poné el nombre del establecimiento.";
   const sup = decimal(fdStr(fd, "superficie_ha"));
@@ -54,6 +64,8 @@ export async function guardarEstablecimientoAction(_prev: EventoActionState, fd:
     actividades,
     instalaciones: fd.getAll("instalaciones").map(String),
     historia: fdStr(fd, "historia") || null,
+    ficha_ampliada: fichaAmpliada,
+    visibilidad_ficha: visibilidadFicha,
     zonas_sanitarias: {
       aftosa_zona: fdStr(fd, "aftosa_zona") || null,
       garrapata: (garrapata || null) as S<"ZonasSanitarias">["garrapata"],

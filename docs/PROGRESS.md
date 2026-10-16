@@ -773,3 +773,7 @@ botón de verificación, más la aclaración de qué prueba la integridad. Si el
 | Sugerencia vigente descartada | `Animal.categorias_descartadas` y proyección de la API | 🔌 Sin persistencia local ni mock |
 
 **Comentario del dev:** Cada sugerencia se puede descartar por separado o junto con las seleccionadas, después de confirmar en un diálogo que explica qué va a pasar. Se envían el animal y la categoría sugerida vigente; si cambió desde que se abrió la pantalla, la API puede rechazar el conjunto sin aplicar una parte. Después del descarte, la lista se vuelve a cargar y la API deja de mostrar esa categoría para ese animal. La pantalla aclara que también se sugieren crías de más de 7 meses sin destete; no se usan datos de ejemplo.
+
+### TPA-76 · Ficha completa del establecimiento (en curso)
+
+El editor incluye bloques JSON de ficha y configuración de visibilidad por bloque; los datos no publicados permanecen privados en API. Es un editor de transición: falta reemplazarlo por formularios por dominio y mostrar datos en la ficha de lectura; también falta la vista offline de Flutter. Verificado: API types regenerados desde OpenAPI, `next typegen`, `tsc --noEmit` y ESLint. La ficha extensa usa como base el contexto de investigación SENASA/negocio; el clima incluye fuente y fecha para integrar TPA-70.

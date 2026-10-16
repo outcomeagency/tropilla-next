@@ -24,6 +24,8 @@ export interface EditarEstablecimientoProps {
     actividades: string[];
     instalaciones: string[];
     historia: string;
+    ficha_ampliada: Record<string, unknown>;
+    visibilidad_ficha: Record<string, boolean>;
     aftosa_zona: string;
     garrapata: string;
     rabia_endemica: boolean;
@@ -282,6 +284,17 @@ export function EditarEstablecimientoForm({ e, productor, privados, provincias, 
         <Field label="Contá la historia del campo" htmlFor="historia_txt" optional hint={`${historia.length}/2000`}>
           <Textarea id="historia_txt" name="historia" value={historia} onChange={(ev) => setHistoria(ev.target.value.slice(0, 2000))} rows={6} placeholder="Campo familiar desde 1968. Cría bovina y búfalos Murrah desde 2009…" />
         </Field>
+      </Seccion>
+
+      <Seccion id="ficha-completa" title="Ficha productiva y logística" description="Datos estructurados para completar con el equipo. Se guardan privados; la publicación por bloque se habilita desde el perfil.">
+        <p className="text-sm text-muted">La ficha ya admite bloques de sanidad, clima (fuente y fecha), suelo/pasturas, carga, infraestructura, personal, rodeo, certificaciones y logística. RENSPA, ubicación, superficie y potreros se administran en sus secciones actuales.</p>
+        <Field label="Datos por bloque (JSON)" htmlFor="ficha_ampliada" hint="Claves sugeridas: sanidad, clima, suelo_pasturas, capacidad_carga, infraestructura, personal, rodeo, certificaciones, logistica.">
+          <Textarea id="ficha_ampliada" name="ficha_ampliada" defaultValue={JSON.stringify(e.ficha_ampliada, null, 2)} rows={10} spellCheck={false} />
+        </Field>
+        <Field label="Bloques visibles en el perfil público (JSON)" htmlFor="visibilidad_ficha" hint="Ejemplo: { &quot;clima&quot;: true }. Los no incluidos quedan privados.">
+          <Textarea id="visibilidad_ficha" name="visibilidad_ficha" defaultValue={JSON.stringify(e.visibilidad_ficha, null, 2)} rows={4} spellCheck={false} />
+        </Field>
+        <p className="text-xs text-muted"><IconLock size={14} className="mr-1 inline" /> Privado por defecto. No incluyas identificadores personales en bloques públicos.</p>
       </Seccion>
 
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface lg:left-[264px]">
