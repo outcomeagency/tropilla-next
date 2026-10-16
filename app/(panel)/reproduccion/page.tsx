@@ -269,6 +269,7 @@ function Tabs({ especie }: { especie?: string }) {
           { href: filtro("BUB"), label: "Bubalinos", active: especie === "BUB" },
         ]}
       />
+      <Link href="/reproduccion/reproductores" className="inline-flex items-center rounded-lg border border-border px-3 py-2 text-[13px] font-medium text-ink hover:bg-base">Reproductores externos</Link>
     </ReproduccionTabs>
   );
 }
