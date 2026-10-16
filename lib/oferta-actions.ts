@@ -7,6 +7,7 @@ import { requireContexto } from "./establecimiento";
 import { isMockable } from "./mock/fallback";
 import { mockGuardarOferta, mockLote, mockOferta } from "./mock/ofertas-panel";
 import { categoriaNombre, razaNombre } from "./catalogo";
+import { listLotes } from "./data/ofertas";
 import type { One, S } from "./schemas";
 
 export interface OfertaFormState {
@@ -16,6 +17,13 @@ export interface OfertaFormState {
 }
 
 const base = (est: string) => `/establecimientos/${est}`;
+
+/** Lote real (GET …/lotes) adaptado a la forma del mock cuando sólo falta el módulo de ofertas. */
+async function loteReal(est: string, id: string) {
+  const l = (await listLotes(est)).data.find((x) => x.id === id);
+  if (!l) return null;
+  return { ...l, id: l.id ?? id, especie: l.especie ?? ("BOV" as const), extra: { raza: "", sanidad: [], edad: undefined, retiroHasta: undefined } };
+}
 
 function codigoNuevo(): string {
   return `TP${Math.floor(1000 + Math.random() * 9000)}`;
@@ -36,7 +44,7 @@ export async function crearDesdeLoteAction(formData: FormData): Promise<void> {
     id = res.data.id ?? "";
   } catch (e) {
     if (!isMockable(e)) throw e;
-    const lote = mockLote(loteId);
+    const lote = mockLote(loteId) ?? (await loteReal(est, loteId));
     if (!lote) redirect("/comercializacion/ofertas/nueva");
     const cat = Object.keys(lote.conteo ?? {})[0] ?? "";
     const cantidad = Object.values(lote.conteo ?? {}).reduce((a, b) => a + b, 0);
@@ -46,13 +54,13 @@ export async function crearDesdeLoteAction(formData: FormData): Promise<void> {
       tipo: "lote",
       especie: lote.especie,
       categorias: [cat],
-      razas: [lote.extra.raza],
+      razas: lote.extra.raza ? [lote.extra.raza] : [],
       lote_id: lote.id,
       cantidad,
       estado: "borrador",
       mostrar: { peso: true, edad: true, sanidad: true, origen: true, documentos: true, condiciones: true, precio: false },
       condiciones: { modalidad: "en_pie", precio: "a_consultar", lugar_carga: "", disponible_desde: "" },
-      textos: { titulo: `${cantidad} ${categoriaNombre(cat).toLowerCase()} ${razaNombre(lote.extra.raza)}`, sistema: "" },
+      textos: { titulo: `${cantidad} ${categoriaNombre(cat).toLowerCase()} ${lote.extra.raza ? razaNombre(lote.extra.raza) : ""}`.trim(), sistema: "" },
       precarga: {
         peso_promedio_kg: lote.peso_promedio_kg,
         peso_fecha: lote.peso_promedio_fecha,
