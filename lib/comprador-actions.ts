@@ -4,8 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { api, ApiError } from "./api";
 import { getSesionOpcional } from "./auth";
-import { isMockable } from "./mock/fallback";
-import { mockGuardarComprador, mockInformarPago, mockTomar } from "./mock/contratos";
 import type { S } from "./schemas";
 
 export interface CompradorState {
@@ -35,8 +33,7 @@ export async function guardarCompradorAction(_prev: CompradorState, fd: FormData
     await api("/me/comprador", { method: "PUT", body });
   } catch (e) {
     if (e instanceof ApiError && e.status === 422) return { error: e.message };
-    if (!isMockable(e)) return { error: "No pudimos guardar. Probá de nuevo." };
-    mockGuardarComprador(me.usuario.id, body);
+    return { error: e instanceof ApiError ? e.message : "No pudimos guardar. Probá de nuevo." };
   }
   const next = String(fd.get("next") ?? "");
   redirect(next.startsWith("/") && !next.startsWith("//") ? next : "/comprador");
@@ -63,10 +60,7 @@ export async function tomarTokensAction(_prev: TomaState, fd: FormData): Promise
     });
   } catch (e) {
     if (e instanceof ApiError && e.code === "tokens_insuficientes") return { error: "Ya no quedan tantos tokens libres. Elegí menos." };
-    if (!isMockable(e)) return { error: e instanceof ApiError ? e.message : "No pudimos reservar los tokens." };
-    const r = mockTomar(codigo, me.usuario.id, { nombre: me.usuario.nombre, empresa: me.comprador?.empresa }, tokens);
-    if (r === "insuficientes") return { error: "Ya no quedan tantos tokens libres. Elegí menos." };
-    if (!r) return { error: "El contrato no está disponible." };
+    return { error: e instanceof ApiError ? e.message : "No pudimos reservar los tokens." };
   }
   redirect("/comprador?reservada=1");
 }
@@ -77,11 +71,33 @@ export async function informarPagoAction(fd: FormData): Promise<void> {
   if (!me) redirect("/ingresar?next=/comprador");
   const id = String(fd.get("toma_id") ?? "");
   try {
-    await api(`/comprador/tomas/${id}/pago-informado`, { method: "POST", body: { fecha: new Date().toISOString().slice(0, 10) } });
+    await api(`/comprador/tomas/${id}/pago-informado`, { method: "POST", body: { fecha_pago: new Date().toISOString().slice(0, 10) } });
   } catch (e) {
-    if (!isMockable(e)) redirect("/comprador?error=pago");
-    mockInformarPago(me.usuario.id, id);
+    redirect(`/comprador?error=${encodeURIComponent(e instanceof ApiError ? e.message : "pago")}`);
   }
   revalidatePath("/comprador");
   redirect("/comprador?pago=1");
+}
+
+/** Alta de seguimiento para recibir novedades de ofertas y contratos publicados. */
+export async function seguirProductorAction(fd: FormData): Promise<void> {
+  const me = await getSesionOpcional();
+  const slug = String(fd.get("establecimiento_slug") ?? "");
+  if (!me) redirect(`/ingresar?next=${encodeURIComponent(`/es/p/${slug}`)}`);
+  if (!slug) redirect("/comprador/seguimientos?error=productor");
+  try {
+    await api("/seguimientos", { method: "POST", body: { establecimiento_slug: slug } satisfies S<"SeguimientoInput"> });
+  } catch (e) {
+    redirect(`/comprador/seguimientos?error=${encodeURIComponent(e instanceof ApiError ? e.message : "seguimiento")}`);
+  }
+  revalidatePath("/comprador/seguimientos");
+  redirect("/comprador/seguimientos?seguido=1");
+}
+
+export async function dejarDeSeguirAction(fd: FormData): Promise<void> {
+  if (!(await getSesionOpcional())) redirect("/ingresar?next=/comprador/seguimientos");
+  const slug = String(fd.get("establecimiento_slug") ?? "");
+  try { await api(`/seguimientos/${encodeURIComponent(slug)}`, { method: "DELETE" }); }
+  catch (e) { redirect(`/comprador/seguimientos?error=${encodeURIComponent(e instanceof ApiError ? e.message : "seguimiento")}`); }
+  revalidatePath("/comprador/seguimientos");
 }

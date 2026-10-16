@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { CompradorShell } from "@/components/comprador/shell";
 import { EstadoTomaBadge } from "@/components/panel/contratos/estado";
-import { Card, CardHeader, EmptyState, MockNotice, Notice, buttonClass } from "@/components/ui";
+import { Card, CardHeader, EmptyState, Notice, buttonClass } from "@/components/ui";
 import { IconCheckCircle, IconRoute } from "@/components/icons";
 import { getSesionOpcional } from "@/lib/auth";
 import { getComprador, getMisTomas } from "@/lib/data/comprador";
@@ -20,7 +20,7 @@ async function Contenido({ searchParams }: { searchParams: Promise<{ reservada?:
   const sp = await searchParams;
   const comprador = (await getComprador(me)).data;
   if (!comprador) redirect("/comprador/cuenta?next=/comprador");
-  const { data: tomas, source } = await getMisTomas(me);
+  const { data: tomas } = await getMisTomas();
 
   return (
     <div className="space-y-4">
@@ -30,13 +30,13 @@ async function Contenido({ searchParams }: { searchParams: Promise<{ reservada?:
           {comprador.empresa} · tomas de tokens, anticipos y fechas de entrega.
         </p>
       </div>
-      {source === "mock" && <MockNotice what="las tomas" />}
       {sp.reservada && (
         <Notice tone="success" title="Tokens reservados">
-          Pagá el anticipo al productor con los datos de cobro de abajo y marcá «Pagué». Si el productor no confirma, la reserva se libera.
+          Coordiná el pago del anticipo directamente con el productor. Cuando lo hayas hecho, marcá «Pagué» para que confirme la recepción. Si no confirma dentro del plazo, la reserva se libera.
         </Notice>
       )}
       {sp.pago && <Notice tone="success" title="Avisamos al productor que pagaste. Cuando confirme «recibí», la toma queda firme." />}
+      {sp.error && <Notice tone="danger" title="No pudimos registrar el pago informado.">{sp.error}</Notice>}
       <Card>
         <CardHeader title="Tomas" />
         {tomas.length ? (
@@ -45,16 +45,16 @@ async function Contenido({ searchParams }: { searchParams: Promise<{ reservada?:
               <li key={t.id} className="grid gap-3 px-5 py-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
                 <div className="min-w-0">
                   <p className="font-semibold text-ink">
-                    {c?.codigo_publico ? (
-                      <Link href={`/es/contratos/${c.codigo_publico}`} className="hover:text-campo hover:underline">
-                        {c.lote?.nombre ?? `Contrato ${c.codigo_publico}`}
+                    {c?.codigo ? (
+                      <Link href={`/es/contratos/${c.codigo}`} className="hover:text-campo hover:underline">
+                        {c.establecimiento?.nombre ?? c.categoria ?? `Contrato ${c.codigo}`}
                       </Link>
                     ) : (
                       "Contrato a futuro"
                     )}
                   </p>
                   <p className="text-[13px] tabular-nums text-muted">
-                    {t.tokens} tokens · {nf.format(t.kg ?? 0)} kg al gancho · entrega {fecha(c?.terminos?.fecha_entrega)}
+                    {t.tokens_vigentes ?? t.tokens} tokens · {nf.format(t.kg ?? 0)} kg al gancho · entrega {fecha(c?.fecha_entrega)}
                   </p>
                   <p className="mt-1 text-[13.5px] text-ink">
                     Anticipo: <span className="font-semibold tabular-nums">{ars.format(Number(t.anticipo_monto ?? 0))}</span>
@@ -62,8 +62,8 @@ async function Contenido({ searchParams }: { searchParams: Promise<{ reservada?:
                   </p>
                   {t.estado === "reservada" && (
                     <p className="mt-2 rounded-[8px] bg-base px-3 py-2 text-[13px] text-muted">
-                      Datos de cobro del productor: <span className="font-medium text-ink">alias LA.ESPERANZA.CAMPO</span> · el pago se hace fuera de TROPILLA.
-                      {t.vence_en && <> Reserva válida hasta el {fechaHora(t.vence_en)}.</>}
+                      El anticipo se paga directamente al productor. Después informá el pago para que lo confirme.
+                      {t.vence_en && <> Si no confirma la recepción, la reserva se libera el {fechaHora(t.vence_en)}.</>}
                     </p>
                   )}
                 </div>
