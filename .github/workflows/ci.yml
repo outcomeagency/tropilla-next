@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [integration, staging, production, "feature/**"]
+  pull_request:
+    branches: [integration, staging, production]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # Solo se cancelan corridas viejas de PRs y feature/**; las ramas de entorno corren siempre.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || startsWith(github.ref, 'refs/heads/feature/') }}
+
+jobs:
+  checks:
+    name: tsc + eslint + build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: npm ci
+        run: npm ci
+
+      # PageProps/LayoutProps son globales generados en .next/types; en un
+      # checkout limpio no existen hasta correr dev/build, así que se generan antes.
+      - name: Tipos de rutas
+        run: npx next typegen
+
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
