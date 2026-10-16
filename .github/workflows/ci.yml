@@ -28,13 +28,8 @@ jobs:
       - name: npm ci
         run: npm ci
 
-      # PageProps/LayoutProps son globales generados en .next/types; en un
-      # checkout limpio no existen hasta correr dev/build, así que se generan antes.
-      - name: Tipos de rutas
-        run: npx next typegen
-
-      - name: TypeScript
-        run: npx tsc --noEmit
+      - name: Typecheck
+        run: npm run typecheck
 
       - name: ESLint
         run: npm run lint

@@ -31,7 +31,7 @@ Web de TROPILLA: panel de gestión del productor (`app/(panel)`), ingreso (`app/
 
 ## Verificación (DoD)
 
-`npx tsc --noEmit` · `npm run lint` · `npm run build`, los tres en verde.
+`npm run typecheck` · `npm run lint` · `npm run build`, los tres en verde. `typecheck` genera primero los tipos de rutas con `next typegen`.
 
 ## Git
 

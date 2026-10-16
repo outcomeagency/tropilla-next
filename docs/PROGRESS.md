@@ -726,3 +726,14 @@ botón de verificación, más la aclaración de qué prueba la integridad. Si el
 | Seguir/dejar de seguir productores | `GET/POST /seguimientos`, `DELETE /seguimientos/{establecimiento_slug}` | 🔌 API real |
 
 **Comentario del dev:** La cuenta usa empresa, país y tipo de comprador; la API decide si el email está verificado. En el contrato el comprador calcula kg y anticipo por cantidad, y la reserva se envía con clave de idempotencia para no duplicar. «Mis contratos» muestra fecha de entrega, estado, anticipo y vencimiento devueltos por la API; el pago se informa como una transferencia externa y el productor confirma la recepción. Los seguimientos se gestionan desde perfiles/contratos y la API activa avisos por nuevas ofertas y contratos. Se retiraron fallbacks de muestra para todos estos endpoints.
+
+## TPA-3 · Estructura inicial de tropilla-next · ✅ (bugfix)
+
+**Alcance:** verificación TypeScript desde clon limpio; `package.json`, `.github/workflows/ci.yml`, `README.md` y `AGENTS.md`.
+
+| Pieza | Comando | Estado |
+|---|---|---|
+| Generación de tipos de rutas y verificación TS | `npm run typecheck` (`next typegen && tsc --noEmit`) | 🔌 sin datos de API |
+| CI y DoD documentado | workflow, README y AGENTS | Actualizados |
+
+**Comentario del dev:** En un checkout limpio `tsc` no encuentra los helpers globales de rutas hasta generar `.next/types`. El nuevo script `typecheck` hace esa generación y corre TypeScript en el mismo paso. CI, README y AGENTS usan ahora el mismo comando, para que local y GitHub ejecuten la misma secuencia. No agrega datos de ejemplo ni toca endpoints de producto.
