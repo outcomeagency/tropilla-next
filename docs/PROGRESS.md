@@ -128,17 +128,24 @@ confirmación explica qué pasa después; en modo demo lo dice explícitamente e
 
 | Pieza | Endpoint | Estado |
 |---|---|---|
-| Perfil público | `GET /public/establecimientos/{slug}` | 🧪 mock (9 perfiles; La Esperanza completo) |
-| Configuración (secciones, slug, directorio, historia, idiomas, ubicación pública, contacto visible) | `GET/PATCH …/perfil` | 🧪 mock en memoria |
-| Vista previa obligatoria | `GET …/perfil/preview`, `POST …/preview/aceptar` | 🧪 mock; «Publicar» deshabilitado hasta aceptar |
-| Publicar / despublicar | `POST …/perfil/publicar|despublicar` + `revalidateTag("perfil:<slug>")` | 🧪 mock |
-| Congelar sección derivada | `POST …/secciones/{s}/congelar|descongelar` | 🧪 mock |
+| Perfil público (slug viejo → 301 de la API → redirect permanente al nuevo) | `GET /public/establecimientos/{slug}` | 🔌 API real (mock retirado) |
+| Configuración (secciones, slug, directorio, textos por idioma: título/descripción/historia, ubicación pública, contacto visible) | `GET/PATCH …/perfil` (`textos.{es,en,pt}`, secciones fusionadas con lo actual) | 🔌 probado en el campo de prueba |
+| Completitud con «qué falta» accionable (enlace a dónde completarlo) | `…/perfil` (`completitud`, `faltantes`) | 🔌 |
+| Vista previa obligatoria | `GET …/perfil/preview`, `POST …/preview/aceptar` | 🔌; «Publicar» deshabilitado hasta aceptar |
+| Publicar / despublicar (email sin verificar → aviso) | `POST …/perfil/publicar|despublicar` + `revalidateTag("perfil:<slug>")` | 🔌 |
+| Congelar sección derivada | `POST …/secciones/{s}/congelar|descongelar` | 🔌 |
+| Fotos del perfil | `perfil.fotos` (hashes de `/archivos`) | ⬜ sin pantalla de subida en la web todavía (las fotos llegan desde la app) |
 
 **Comentario del dev:** Un solo componente (`PerfilView`) arma el perfil público y la vista previa del panel: el
 productor ve exactamente lo que ve el comprador, en los tres idiomas. Sólo se pintan las secciones que trae el
 Resource público (lo privado no llega ni se oculta con CSS). Rodeo en rangos, sanidad sin datos individuales,
 trazabilidad con % de integridad registrada e insignias sólo por hechos medibles. La primera publicación exige
 aceptar la vista previa; las secciones derivadas se pueden congelar. Leyenda fija en el pie con el texto del Resource.
+**Conexión a la API (2026-10-16):** se retiraron los mocks (`lib/mock/perfiles.ts`, `perfil-panel.ts`). Al conectar aparecieron
+desvíos que el mock escondía: los textos son por idioma (`textos.es.titulo/descripcion/historia`, no un `historia` suelto), la
+sección se llama `oferta` y `contacto_visible` no admite `formulario`. El editor ahora tiene título y descripción por idioma (la
+descripción alimenta Google y la completitud), «qué falta» lleva a dónde completarlo, y el perfil sin fotos arranca directo por el
+nombre en vez de una caja vacía; sanidad vacía y rodeo sin hacienda se explican o no se muestran.
 
 ## TPA-41 · Página pública de verificación · ✅ (web)
 

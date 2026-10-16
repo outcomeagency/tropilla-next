@@ -4,9 +4,8 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { api, ApiError } from "./api";
 import { requireContexto } from "./establecimiento";
-import { isMockable } from "./mock/fallback";
-import { SECCIONES, mockGuardarPerfil, mockPerfil } from "./mock/perfil-panel";
-import type { S } from "./schemas";
+import { SECCIONES, type TextosPerfil } from "./perfil";
+import type { One, S } from "./schemas";
 
 export interface PerfilFormState {
   error?: string;
@@ -19,7 +18,7 @@ const base = (est: string) => `/establecimientos/${est}/perfil`;
 async function ctxEditor(ability: string) {
   const ctx = await requireContexto();
   if (!ctx.can(ability)) throw new Error("sin_permiso");
-  return { est: ctx.activa.establecimiento_id, nombre: ctx.activa.establecimiento_nombre ?? "Establecimiento", ctx };
+  return { est: ctx.activa.establecimiento_id, ctx };
 }
 
 /** Guardar secciones, textos, idiomas, contacto visible y directorio (PATCH …/perfil). */
@@ -36,30 +35,48 @@ export async function guardarPerfilAction(_prev: PerfilFormState, fd: FormData):
   }
   const idiomas = fd.getAll("idiomas").map(String) as Array<"es" | "en" | "pt">;
   if (!idiomas.includes("es")) idiomas.unshift("es");
-  const prevSecciones = (mockPerfil(c.est, c.nombre).secciones ?? {}) as Record<string, { congelada_en?: string | null }>;
+  let actual: S<"Perfil">;
+  try {
+    actual = (await api<One<S<"Perfil">>>(base(c.est))).data;
+  } catch {
+    return { error: "No pudimos leer el perfil. Probá de nuevo." };
+  }
+  const prevSecciones = (actual.secciones ?? {}) as Record<string, Record<string, unknown>>;
+  const textos: TextosPerfil = { ...((actual.textos ?? {}) as TextosPerfil) };
+  const fields: Record<string, string> = {};
+  for (const l of ["es", "en", "pt"] as const) {
+    const titulo = String(fd.get(`titulo_${l}`) ?? "").trim();
+    const descripcion = String(fd.get(`descripcion_${l}`) ?? "").trim();
+    const historia = String(fd.get(`historia_${l}`) ?? "").trim();
+    if (descripcion.length > 160) fields[`descripcion_${l}`] = "Hasta 160 caracteres (es lo que muestra Google).";
+    if (titulo.length > 80) fields[`titulo_${l}`] = "Hasta 80 caracteres.";
+    if (fd.has(`titulo_${l}`)) textos[l] = { titulo: titulo || undefined, descripcion: descripcion || undefined, historia: historia || undefined };
+  }
+  if (Object.keys(fields).length) return { fields, error: "Revisá los textos marcados." };
   const body: S<"PerfilInput"> = {
     slug,
     en_directorio: fd.get("en_directorio") === "on",
-    secciones: Object.fromEntries(SECCIONES.map((s) => [s, { activa: fd.get(`sec_${s}`) === "on", congelada_en: prevSecciones[s]?.congelada_en ?? null }])),
-    textos: { historia: String(fd.get("historia") ?? "").trim() },
+    secciones: Object.fromEntries(SECCIONES.map(({ k }) => [k, { ...prevSecciones[k], activa: fd.get(`sec_${k}`) === "on" }])),
+    textos,
     idiomas,
     contacto_visible: {
-      formulario: fd.get("sec_contacto") === "on",
       whatsapp: fd.get("cv_whatsapp") === "on",
       email: fd.get("cv_email") === "on",
       telefono: fd.get("cv_telefono") === "on",
     },
     ubicacion_publica: String(fd.get("ubicacion_publica") ?? "departamento"),
-    row_version: Number(fd.get("row_version") ?? 0),
+    row_version: actual.row_version ?? Number(fd.get("row_version") ?? 0),
   };
   try {
     await api(base(c.est), { method: "PATCH", body });
   } catch (e) {
-    if (e instanceof ApiError && e.code === "conflicto_row_version") return { error: "Alguien más cambió el perfil. Recargá la página." };
+    if (e instanceof ApiError && (e.code === "conflicto_row_version" || e.status === 409)) return { error: "Alguien más cambió el perfil. Recargá la página." };
     if (e instanceof ApiError && e.status === 422) return { error: e.message, fields: e.field("slug") ? { slug: e.field("slug")! } : undefined };
-    if (!isMockable(e)) return { error: "No pudimos guardar. Probá de nuevo." };
-    mockGuardarPerfil(c.est, c.nombre, { ...body, slug, url_publica: `/es/p/${slug}` } as Partial<S<"Perfil">>);
+    return { error: "No pudimos guardar. Probá de nuevo." };
   }
+  revalidateTag(`perfil:${slug}`, "max");
+  if (actual.slug && actual.slug !== slug) revalidateTag(`perfil:${actual.slug}`, "max");
+  revalidateTag("directorio", "max");
   revalidatePath("/perfil-publico");
   return { ok: true };
 }
@@ -67,30 +84,22 @@ export async function guardarPerfilAction(_prev: PerfilFormState, fd: FormData):
 /** «Se ve bien»: registra la vista previa (obligatoria antes de la primera publicación). */
 export async function aceptarPreviewAction(): Promise<void> {
   const c = await ctxEditor("perfil.publicar");
-  try {
-    await api(`${base(c.est)}/preview/aceptar`, { method: "POST" });
-  } catch (e) {
-    if (!isMockable(e)) throw e;
-    mockGuardarPerfil(c.est, c.nombre, { preview_aceptada_en: new Date().toISOString() });
-  }
+  await api(`${base(c.est)}/preview/aceptar`, { method: "POST" });
   redirect("/perfil-publico?preview=ok");
 }
 
 export async function publicarPerfilAction(fd: FormData): Promise<void> {
   const c = await ctxEditor("perfil.publicar");
   const publicar = fd.get("accion") === "publicar";
+  let error: string | null = null;
   try {
     await api(`${base(c.est)}/${publicar ? "publicar" : "despublicar"}`, { method: "POST" });
   } catch (e) {
     if (e instanceof ApiError && e.code === "preview_requerida") redirect("/perfil-publico/vista-previa");
-    if (!isMockable(e)) throw e;
-    const actual = mockPerfil(c.est, c.nombre);
-    if (publicar && !actual.preview_aceptada_en) redirect("/perfil-publico/vista-previa");
-    mockGuardarPerfil(c.est, c.nombre, {
-      publicado: publicar,
-      primera_publicacion_en: actual.primera_publicacion_en ?? (publicar ? new Date().toISOString() : null),
-    });
+    if (e instanceof ApiError && (e.code === "email_no_verificado" || e.status === 403)) error = "email";
+    else throw e;
   }
+  if (error) redirect(`/perfil-publico?error=${error}`);
   const slug = String(fd.get("slug") ?? "");
   if (slug) revalidateTag(`perfil:${slug}`, "max");
   revalidateTag("directorio", "max");
@@ -102,14 +111,8 @@ export async function congelarSeccionAction(fd: FormData): Promise<void> {
   const c = await ctxEditor("perfil.editar");
   const seccion = String(fd.get("seccion") ?? "");
   const congelar = fd.get("accion") === "congelar";
-  try {
-    await api(`${base(c.est)}/secciones/${seccion}/${congelar ? "congelar" : "descongelar"}`, { method: "POST" });
-  } catch (e) {
-    if (!isMockable(e)) throw e;
-    const actual = mockPerfil(c.est, c.nombre);
-    const secs = { ...(actual.secciones ?? {}) } as Record<string, { activa?: boolean; congelada_en?: string | null }>;
-    secs[seccion] = { ...secs[seccion], congelada_en: congelar ? new Date().toISOString() : null };
-    mockGuardarPerfil(c.est, c.nombre, { secciones: secs });
-  }
+  await api(`${base(c.est)}/secciones/${seccion}/${congelar ? "congelar" : "descongelar"}`, { method: "POST" });
+  const slug = String(fd.get("slug") ?? "");
+  if (slug) revalidateTag(`perfil:${slug}`, "max");
   redirect("/perfil-publico");
 }

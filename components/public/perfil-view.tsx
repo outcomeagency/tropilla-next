@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Badge, Progress, SpeciesChip, TrustBadge, buttonClass } from "@/components/ui";
-import { IconArrowRight, IconCheckCircle, IconFile, IconMessage, IconPin, IconShieldCheck, IconStar } from "@/components/icons";
+import { IconArrowRight, IconBuffalo, IconCheckCircle, IconClock, IconCow, IconFile, IconMessage, IconPin, IconShieldCheck, IconStar } from "@/components/icons";
 import { Photo } from "@/components/public/photo";
 import { actividadNombre, departamentoNombre, provinciaNombre } from "@/lib/geo";
 import { categoriaNombre, razaNombre } from "@/lib/catalogo";
@@ -13,6 +13,25 @@ import type { S } from "@/lib/schemas";
 const LANG: Record<Locale, string> = { es: "es-AR", en: "en-US", pt: "pt-BR" };
 type Codigo = { codigo?: string; nombre?: string };
 const codigos = (xs: unknown): Codigo[] => (Array.isArray(xs) ? (xs as Codigo[]) : []);
+
+const ENFERMEDADES: Record<string, Record<Locale, string>> = {
+  aftosa: { es: "Fiebre aftosa", en: "Foot-and-mouth disease", pt: "Febre aftosa" },
+  rabia: { es: "Rabia paresiante", en: "Paralytic rabies", pt: "Raiva" },
+  brucelosis: { es: "Brucelosis", en: "Brucellosis", pt: "Brucelose" },
+  tuberculosis: { es: "Tuberculosis", en: "Tuberculosis", pt: "Tuberculose" },
+  carbunclo: { es: "Carbunclo", en: "Anthrax", pt: "Carbúnculo" },
+  clostridiales: { es: "Clostridiales", en: "Clostridial diseases", pt: "Clostridioses" },
+  parasitosis: { es: "Parásitos", en: "Parasites", pt: "Parasitas" },
+  garrapata: { es: "Garrapata", en: "Ticks", pt: "Carrapato" },
+  leptospirosis: { es: "Leptospirosis", en: "Leptospirosis", pt: "Leptospirose" },
+  ibr_dvb: { es: "IBR / DVB", en: "IBR / BVD", pt: "IBR / BVD" },
+  queratoconjuntivitis: { es: "Queratoconjuntivitis", en: "Pinkeye", pt: "Ceratoconjuntivite" },
+};
+
+function enfermedadNombre(codigo: string | undefined, locale: Locale): string {
+  if (!codigo) return "";
+  return ENFERMEDADES[codigo]?.[locale] ?? codigo.charAt(0).toUpperCase() + codigo.slice(1).replace(/_/g, " ");
+}
 
 function Seccion({ id, title, lead, children }: { id: string; title: string; lead?: string; children: ReactNode }) {
   return (
@@ -39,6 +58,7 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
     .filter(Boolean)
     .join(", ");
   const nf = new Intl.NumberFormat(LANG[locale]);
+  const pct = (v?: string | number | null) => new Intl.NumberFormat(LANG[locale], { maximumFractionDigits: 1 }).format(Number(v ?? 0));
   const fotos = portada?.fotos ?? [];
   const especies = codigos(act?.especies).map((e) => e.codigo as "BOV" | "BUB");
   const actualizado = p.actualizado_en
@@ -49,13 +69,15 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
     <>
       {/* Portada */}
       <section className="mx-auto max-w-[1240px] px-[clamp(16px,4vw,40px)] pt-[clamp(16px,3vw,32px)]">
+        {fotos.length > 0 && (
         <div className="grid gap-2.5 md:grid-cols-[2fr_1fr] md:grid-rows-2">
           <Photo src={fotos[0]} alt={p.nombre ?? ""} sizes="(min-width:768px) 800px, 100vw" className="aspect-[16/9] rounded-[16px] border border-border md:row-span-2 md:aspect-auto md:h-full md:min-h-[380px]" preload />
           {fotos.slice(1, 3).map((f) => (
             <Photo key={f} src={f} alt={p.nombre ?? ""} sizes="400px" className="hidden aspect-[16/10] rounded-[16px] border border-border md:block" />
           ))}
         </div>
-        <div className="mt-6 flex flex-wrap items-end justify-between gap-6 border-b border-border pb-8">
+        )}
+        <div className={`${fotos.length ? "mt-6" : "mt-4"} flex flex-wrap items-end justify-between gap-6 border-b border-border pb-8`}>
           <div className="min-w-0">
             <p className="flex items-center gap-1.5 text-[13px] font-semibold uppercase tracking-[0.12em] text-muted">
               <IconPin size={15} /> {zona}
@@ -100,7 +122,10 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
             {!!portada.asociaciones?.length && (
               <p className="mt-4 text-[14px] text-muted">
                 {t.profile.associations}:{" "}
-                <span className="text-ink">{portada.asociaciones.map((a) => String((a as { nombre?: string }).nombre ?? "")).join(" · ")}</span>
+                <span className="text-ink">{portada.asociaciones
+                  .map((a) => String((a as { nombre?: string; entidad?: string }).nombre ?? (a as { entidad?: string }).entidad ?? ""))
+                  .filter(Boolean)
+                  .join(" · ")}</span>
               </p>
             )}
           </Seccion>
@@ -139,7 +164,7 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
           </Seccion>
         )}
 
-        {sec.rodeo && (
+        {sec.rodeo && codigos(sec.rodeo.por_especie).length > 0 && (
           <Seccion id="rodeo" title={t.profile.herd} lead={t.profile.herdLead}>
             <div className="grid gap-4 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
               {codigos(sec.rodeo.por_especie).map((r) => {
@@ -158,7 +183,7 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
                   <div>
                     <p className="flex items-baseline justify-between text-[13px] text-muted">
                       {t.profile.individualId}
-                      <span className="text-[16px] font-bold tabular-nums text-ink">{sec.rodeo.pct_identificacion_individual} %</span>
+                      <span className="text-[16px] font-bold tabular-nums text-ink">{pct(sec.rodeo.pct_identificacion_individual)} %</span>
                     </p>
                     <div className="mt-1.5">
                       <Progress value={Number(sec.rodeo.pct_identificacion_individual)} label={t.profile.individualId} />
@@ -168,7 +193,7 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
                     <div>
                       <p className="flex items-baseline justify-between text-[13px] text-muted">
                         {t.profile.rfid}
-                        <span className="text-[16px] font-bold tabular-nums text-ink">{sec.rodeo.pct_rfid} %</span>
+                        <span className="text-[16px] font-bold tabular-nums text-ink">{pct(sec.rodeo.pct_rfid)} %</span>
                       </p>
                       <div className="mt-1.5">
                         <Progress value={Number(sec.rodeo.pct_rfid)} label={t.profile.rfid} />
@@ -189,12 +214,15 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
                   {t.profile.health}
                 </h2>
                 <p className="mt-1 text-[14px] text-muted">{t.profile.healthLead}</p>
-                <ul className="mt-4 divide-y divide-border rounded-[var(--radius-card)] border border-border bg-surface">
+                {!(sec.sanidad.ultimos_12_meses ?? []).length && (
+                  <p className="mt-4 rounded-[var(--radius-card)] border border-border bg-surface p-4 text-[14px] text-muted">{t.profile.healthEmpty}</p>
+                )}
+                <ul className="mt-4 divide-y divide-border rounded-[var(--radius-card)] border border-border bg-surface empty:hidden">
                   {(sec.sanidad.ultimos_12_meses ?? []).map((s) => (
                     <li key={s.enfermedad} className="flex items-start gap-3 px-4 py-3">
                       <IconShieldCheck size={20} className="mt-0.5 shrink-0 text-campo" />
                       <div className="min-w-0 flex-1">
-                        <p className="text-[14.5px] font-semibold text-ink">{s.enfermedad}</p>
+                        <p className="text-[14.5px] font-semibold text-ink">{enfermedadNombre(s.enfermedad, locale)}</p>
                         <p className="text-[13px] text-muted">{s.texto}</p>
                       </div>
                       {s.registros != null && <span className="text-[12.5px] tabular-nums text-muted">{t.profile.records(s.registros)}</span>}
@@ -217,11 +245,17 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
                     <dd className="text-[26px] font-bold tabular-nums text-ink">{sec.trazabilidad.historial_meses}</dd>
                     <dt className="text-[13px] text-muted">{t.profile.months}</dt>
                   </div>
-                  {sec.trazabilidad.pct_integridad_registrada && (
+                  {Number(sec.trazabilidad.pct_integridad_registrada ?? 0) === 0 && (
+                    <p className="col-span-2 flex items-start gap-2 rounded-[var(--radius-card)] border border-border bg-surface p-4 text-[13px] text-muted">
+                      <IconClock size={16} className="mt-0.5 shrink-0" />
+                      {t.profile.integrityPending}
+                    </p>
+                  )}
+                  {Number(sec.trazabilidad.pct_integridad_registrada ?? 0) > 0 && (
                     <div className="col-span-2 rounded-[var(--radius-card)] border border-border bg-surface p-4">
                       <p className="flex items-baseline justify-between">
                         <TrustBadge nivel="integridad_registrada" label={t.common.trust.integridad_registrada} />
-                        <span className="text-[20px] font-bold tabular-nums text-ink">{sec.trazabilidad.pct_integridad_registrada} %</span>
+                        <span className="text-[20px] font-bold tabular-nums text-ink">{pct(sec.trazabilidad.pct_integridad_registrada)} %</span>
                       </p>
                       <p className="mt-1 text-[13px] text-muted">{t.profile.integrity}</p>
                       <div className="mt-2">
@@ -269,7 +303,17 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
                     href={`/${locale}/ofertas/${o.codigo}`}
                     className="group overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface transition-shadow hover:shadow-[var(--shadow-hover)]"
                   >
-                    <Photo src={o.foto_url} alt={o.titulo ?? ""} sizes="(min-width:1024px) 380px, 100vw" className="aspect-[16/10]" />
+                    {o.foto_url ? (
+                      <Photo src={o.foto_url} alt={o.titulo ?? ""} sizes="(min-width:1024px) 380px, 100vw" className="aspect-[16/10]" />
+                    ) : (
+                      <div className="flex aspect-[16/8] items-end justify-between bg-campo-50 p-4 text-monte" role="img" aria-label={o.titulo ?? ""}>
+                        <span className="text-[34px] font-bold leading-none tracking-[-0.03em] tabular-nums">
+                          {o.cantidad}
+                          <span className="ml-1.5 text-[15px] font-semibold tracking-normal">{t.common.heads}</span>
+                        </span>
+                        {(o as { especie?: string }).especie === "BUB" || o.categorias?.[0]?.startsWith("BUB") ? <IconBuffalo size={40} /> : <IconCow size={40} />}
+                      </div>
+                    )}
                     <div className="p-4">
                       <p className="text-[16px] font-semibold text-ink">{o.titulo}</p>
                       <p className="mt-0.5 text-[13px] text-muted">
