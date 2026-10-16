@@ -436,3 +436,18 @@ lleva a la actual; los anulados quedan tachados en el registro, la timeline y el
 Las nuevas llevan punto y negrita; el detalle muestra el mensaje tal cual, en qué idioma escribió («Escribió en inglés») y la oferta
 de origen. Responder abre WhatsApp o el correo del productor con el saludo que arma la API en el idioma del comprador y marca la consulta
 como respondida con el canal: TROPILLA no intermedia ni guarda la conversación. El encargado no ve la pestaña (las consultas pueden traer precios).
+
+## TPA-27 · Servicio natural e inseminación · ✅ (web)
+
+**Rutas:** `/reproduccion/registrar?tipo=&animales=&lote=` (selector de Reproducción: servicio, diagnóstico, partos), acceso «Registrar» en la ficha → Reproducción. El detalle queda en `/hacienda/eventos/[id]`.
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Servicio natural: vientres (animales o lote), inicio/fin, toros con caravana (sólo machos), lote de toros o de afuera | `POST …/eventos` (`reproduccion.servicio_natural`) | 🔌 probado (0501 con 0502 + toro del vecino) |
+| IA / IATF: toro y raza del semen, centro, partida, inseminador | `POST …/eventos` (`reproduccion.inseminacion`, sólo hembras) | 🔌 probado |
+| Estado «servida» y último servicio con su tipo en la ficha | `GET …/animales/{id}` (`servicio_fecha`, `servicio_tipo`) | 🔌 |
+
+**Comentario del dev:** Reproducción usa el mismo «Registrar» de Hacienda (qué pasó → a quiénes → datos) con su propio selector, así
+el equipo aprende una sola pantalla. Los toros se suman por caravana (la web rechaza hembras antes de mandar) o se describen si son
+prestados; el semen lleva toro, raza (del catálogo por especie), centro y partida. El estado «servida» lo deriva la API y la ficha muestra
+el último servicio con su tipo. El registrar se movió a un componente compartido (`registrar-pagina.tsx`) para Hacienda y Reproducción.

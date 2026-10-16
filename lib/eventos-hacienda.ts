@@ -12,7 +12,7 @@ export interface TipoHacienda {
   /** Una línea para el selector. */
   corto: string;
   ayuda: string;
-  grupo: "movimientos" | "bajas" | "manejo" | "altas";
+  grupo: "movimientos" | "bajas" | "manejo" | "altas" | "servicio" | "diagnostico" | "partos";
   sujetos: SujetoTipo[];
   /** Pantalla propia en vez del formulario genérico. */
   redirige?: string;
@@ -23,6 +23,15 @@ export const GRUPOS: Record<TipoHacienda["grupo"], string> = {
   movimientos: "Movimientos",
   manejo: "Manejo",
   bajas: "Bajas",
+  servicio: "Servicio",
+  diagnostico: "Diagnóstico",
+  partos: "Partos y destete",
+};
+
+/** Grupos de cada módulo en el selector de «Registrar». */
+export const GRUPOS_MODULO: Record<"hacienda" | "reproduccion", TipoHacienda["grupo"][]> = {
+  hacienda: ["altas", "movimientos", "manejo", "bajas"],
+  reproduccion: ["servicio", "diagnostico", "partos"],
 };
 
 export const TIPOS_HACIENDA: TipoHacienda[] = [
@@ -39,6 +48,8 @@ export const TIPOS_HACIENDA: TipoHacienda[] = [
   { codigo: "hacienda.muerte", corto: "Causa y hallazgos", titulo: "Muerte", ayuda: "Resta del stock. Causa de la lista y hallazgos.", grupo: "bajas", sujetos: ["animales", "lote"] },
   { codigo: "hacienda.perdida", corto: "Faltante, pérdida o robo", titulo: "Pérdida o robo", ayuda: "Faltante en el recuento, pérdida o robo con denuncia.", grupo: "bajas", sujetos: ["animales", "lote"] },
   { codigo: "hacienda.faena", corto: "Frigorífico, tropa y pesos", titulo: "Faena", ayuda: "Frigorífico, tropa, pesos y tipificación.", grupo: "bajas", sujetos: ["animales", "lote"] },
+  { codigo: "reproduccion.servicio_natural", corto: "Toros con los vientres", titulo: "Servicio natural", ayuda: "Toros (con caravana, un lote de toros o de afuera) y el período del servicio. Las hembras quedan «servidas».", grupo: "servicio", sujetos: ["animales", "lote"] },
+  { codigo: "reproduccion.inseminacion", corto: "IA o IATF con datos del semen", titulo: "Inseminación", ayuda: "IA o IATF: toro y raza del semen, centro, partida e inseminador. La hembra queda «servida».", grupo: "servicio", sujetos: ["animales"] },
 ];
 
 export const tipoHacienda = (codigo: string) => TIPOS_HACIENDA.find((t) => t.codigo === codigo);
@@ -69,6 +80,11 @@ export const METODOS_CASTRACION = [
   ["goma", "Goma (anillo)"],
   ["burdizzo", "Burdizzo"],
   ["otro", "Otro"],
+] as const;
+
+export const TIPOS_IA = [
+  ["ia", "IA (celo detectado)"],
+  ["iatf", "IATF (a tiempo fijo)"],
 ] as const;
 
 export const DENTICION = [
@@ -126,6 +142,18 @@ export const ETIQUETAS: Record<string, string> = {
   peso_kg: "Peso",
   desbaste: "Desbaste",
   sugerida: "Sugerida por reglas",
+  inicio: "Inicio del servicio",
+  fin: "Fin del servicio",
+  lote_toros_id: "Lote de toros",
+  toros_externos: "Toros de afuera",
+  semen: "Semen",
+  toro_nombre: "Toro",
+  raza: "Raza",
+  centro: "Centro",
+  partida: "Partida",
+  inseminador: "Inseminador",
+  protocolo: "Protocolo",
+  dia_protocolo: "Día del protocolo",
 };
 
 export const VALORES: Record<string, string> = Object.fromEntries([
@@ -148,6 +176,8 @@ export const VALORES: Record<string, string> = Object.fromEntries([
   ["inventario_inicial", "Inventario inicial"],
   ["alta_rapida", "Alta rápida"],
   ["importacion", "Planilla"],
+  ["ia", "IA"],
+  ["iatf", "IATF"],
   ["1-5", "1 a 5"],
   ["1-9", "1 a 9"],
 ]);

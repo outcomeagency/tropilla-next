@@ -206,13 +206,22 @@ async function Ficha({ params, searchParams }: { params: Params; searchParams: S
             )}
             {tab === "reproduccion" && a.sexo === "H" && (
               <Card>
-                <CardHeader title="Estado reproductivo" />
+                <CardHeader
+                  title="Estado reproductivo"
+                  action={
+                    ctx.can("reproduccion.crear") && (a.estado ?? "activo") === "activo" ? (
+                      <Link href={`/reproduccion/registrar?animales=${id}`} className="inline-flex items-center gap-1 text-[13px] font-medium text-campo hover:underline">
+                        <IconPlus size={15} /> Registrar
+                      </Link>
+                    ) : undefined
+                  }
+                />
                 <CardBody>
                   <DataList
                     className="sm:grid-cols-1"
                     items={[
                       { label: "Estado", value: REPRO[a.estado_reproductivo ?? ""] ?? "Sin dato" },
-                      { label: "Último servicio", value: fecha(a.servicio_fecha) || "—" },
+                      { label: "Último servicio", value: a.servicio_fecha ? `${fecha(a.servicio_fecha)}${a.servicio_tipo ? ` · ${a.servicio_tipo === "natural" ? "natural" : String(a.servicio_tipo).toUpperCase()}` : ""}` : "—" },
                       {
                         label: "Fecha probable de parto",
                         value: a.fecha_probable_parto ? `${fechaLarga(a.fecha_probable_parto)}${a.fpp_precision ? ` · según ${String(a.fpp_precision)}` : ""}` : "—",

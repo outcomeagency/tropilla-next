@@ -110,11 +110,11 @@ function animalesNuevos(fd: FormData, fields: Record<string, string>, extra: Rec
  */
 export async function registrarEventoAction(_prev: EventoActionState, fd: FormData): Promise<EventoActionState> {
   const ctx = await requireContexto();
-  if (!ctx.can("hacienda.crear")) return { error: "Tu rol no permite cargar eventos." };
   const est = ctx.activa.establecimiento_id;
   const tipo = fdStr(fd, "tipo");
   const meta = tipoHacienda(tipo);
   if (!meta) return { error: "Elegí qué evento querés registrar." };
+  if (!ctx.can(tipo.startsWith("reproduccion.") ? "reproduccion.crear" : "hacienda.crear")) return { error: "Tu rol no permite cargar este evento." };
 
   const fields: Record<string, string> = {};
   const fecha = fdStr(fd, "ocurrido_en");
@@ -242,6 +242,27 @@ export async function registrarEventoAction(_prev: EventoActionState, fd: FormDa
       payload = limpio({ tipo: t, circunstancias: corto(fd, "circunstancias", 2000), denuncia_numero: corto(fd, "denuncia_numero", 40) });
       break;
     }
+    case "reproduccion.servicio_natural": {
+      const fin = fdStr(fd, "fin");
+      if (fin && (!isFecha(fin) || fin < fecha)) fields.fin = "El fin no puede ser anterior al inicio.";
+      const toros = [...new Set(fd.getAll("toro_id").map(String).filter(Boolean))];
+      const externos = fdStr(fd, "toros_externos")
+        .split(/[,\n]/)
+        .map((t) => t.trim().slice(0, 120))
+        .filter(Boolean);
+      const loteToros = fdStr(fd, "lote_toros_id");
+      if (!toros.length && !externos.length && !loteToros) fields.toros = "Indicá qué toros: con caravana, un lote de toros o de afuera.";
+      payload = limpio({ inicio: fecha, fin: fin || undefined, toro_ids: toros.length ? toros : undefined, lote_toros_id: loteToros || undefined, toros_externos: externos.length ? externos : undefined });
+      break;
+    }
+    case "reproduccion.inseminacion": {
+      const t = fdStr(fd, "tipo_ia");
+      if (t !== "ia" && t !== "iatf") fields.tipo_ia = "Elegí IA o IATF.";
+      const semen = limpio({ toro_nombre: corto(fd, "toro_nombre"), raza: fdStr(fd, "semen_raza") || undefined, centro: corto(fd, "centro"), partida: corto(fd, "partida", 60) });
+      if (!semen.toro_nombre) fields.toro_nombre = "Indicá el toro (nombre o código de la pajuela).";
+      payload = limpio({ tipo: t, semen, inseminador: corto(fd, "inseminador") });
+      break;
+    }
     case "hacienda.faena": {
       const frig = corto(fd, "frigorifico");
       if (!frig) fields.frigorifico = "Indicá el frigorífico.";
@@ -287,7 +308,7 @@ export async function registrarEventoAction(_prev: EventoActionState, fd: FormDa
   } catch (e) {
     return estadoDeError(
       e,
-      { "sujetos.animal_ids": "animales", "sujetos.lote_id": "lote_id", "sujetos.conteo": "conteo", "payload.tipo": "tipo_perdida", "payload.animales": "animales", "payload.crias": "animales" },
+      { "sujetos.animal_ids": "animales", "sujetos.lote_id": "lote_id", "sujetos.conteo": "conteo", "payload.tipo": tipo === "reproduccion.inseminacion" ? "tipo_ia" : "tipo_perdida", "payload.toro_ids": "toros", "payload.animales": "animales", "payload.crias": "animales" },
       "No pudimos registrar el evento. Probá de nuevo.",
     );
   }
