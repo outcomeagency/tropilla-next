@@ -126,7 +126,7 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
       // ⚠ Registro demo: la cuenta no se guarda; sirve para recorrer el onboarding.
       const payload = Buffer.from(`${nombre}|${id.email ?? id.telefono ?? ""}`, "utf8").toString("base64url");
       await setSession(`${MOCK_TOKEN_PREFIX}new.${payload}`);
-      redirect("/bienvenida");
+      redirect(safeNext(formData.get("next"), "/bienvenida"));
     }
     if (e instanceof ApiError && e.status === 422) {
       const f = fieldErrors(e, { nombre: "nombre", email: "usuario", telefono: "usuario", password: "password" });
@@ -135,7 +135,8 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
     return { error: commonError(e), values };
   }
 
-  redirect("/bienvenida");
+  // Invitados: vuelven a aceptar la invitación en vez de crear un establecimiento.
+  redirect(safeNext(formData.get("next"), "/bienvenida"));
 }
 
 /* ───────────────────────── Recuperar contraseña ───────────────────────── */

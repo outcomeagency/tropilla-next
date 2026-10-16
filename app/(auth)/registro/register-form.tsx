@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { registerAction, type FormState } from "@/lib/auth-actions";
 import { PasswordInput } from "@/components/auth/password-input";
 import { IconCheck } from "@/components/icons";
@@ -28,6 +29,7 @@ function PasswordRules({ value }: { value: string }) {
 }
 
 export function RegisterForm() {
+  const next = useSearchParams().get("next") ?? "";
   const [state, action, pending] = useActionState(registerAction, initial);
   const [password, setPassword] = useState("");
   const f = state.fields ?? {};
@@ -35,6 +37,7 @@ export function RegisterForm() {
   return (
     <form action={action} className="space-y-5" noValidate>
       {state.error && <Notice tone="danger" title={state.error} />}
+      {next && <input type="hidden" name="next" value={next} />}
 
       <Field label="Nombre y apellido" htmlFor="nombre" error={f.nombre}>
         <Input
