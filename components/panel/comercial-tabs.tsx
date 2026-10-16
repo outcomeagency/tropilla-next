@@ -3,9 +3,9 @@ import { FilterTabs } from "@/components/ui";
 import { requireContexto } from "@/lib/establecimiento";
 import { listConsultas } from "@/lib/data/consultas";
 
-type Seccion = "ofertas" | "consultas" | "contratos";
+type Seccion = "ofertas" | "consultas" | "contratos" | "simulador" | "ventas" | "precios";
 
-function Tabs({ actual, consultas }: { actual: Seccion; consultas: number | null | false }) {
+function Tabs({ actual, consultas, precios = false }: { actual: Seccion; consultas: number | null | false; precios?: boolean }) {
   return (
     <div className="mb-4">
       <FilterTabs
@@ -14,6 +14,7 @@ function Tabs({ actual, consultas }: { actual: Seccion; consultas: number | null
           { href: "/comercializacion", label: "Ofertas", active: actual === "ofertas" },
           ...(consultas !== false ? [{ href: "/comercializacion/consultas", label: "Consultas", count: consultas || undefined, active: actual === "consultas" }] : []),
           { href: "/comercializacion/contratos", label: "Contratos a futuro", active: actual === "contratos" },
+          ...(precios ? [{ href: "/comercializacion/simulador", label: "Simulador", active: actual === "simulador" }] : []),
         ]}
       />
     </div>
@@ -23,11 +24,12 @@ function Tabs({ actual, consultas }: { actual: Seccion; consultas: number | null
 /** Consultas sólo para quien puede verlas (pueden traer precios: Claude Design, duda 21), con el número de nuevas. */
 async function TabsConConsultas({ actual }: { actual: Seccion }) {
   const ctx = await requireContexto();
-  if (!ctx.can("consultas.ver")) return <Tabs actual={actual} consultas={false} />;
+  const precios = ctx.can("comercial.precios");
+  if (!ctx.can("consultas.ver")) return <Tabs actual={actual} consultas={false} precios={precios} />;
   const nuevas = await listConsultas(ctx.activa.establecimiento_id, "nueva")
     .then((r) => r.data.length)
     .catch(() => null);
-  return <Tabs actual={actual} consultas={nuevas} />;
+  return <Tabs actual={actual} consultas={nuevas} precios={precios} />;
 }
 
 /** Secciones de Comercialización. */
