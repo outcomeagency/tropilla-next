@@ -6,7 +6,7 @@ import { SwitchRow } from "@/components/choice";
 type Bloque = { id: string; titulo: string; privado?: boolean; campos: readonly (readonly [string, string, string])[] };
 
 const bloques: Bloque[] = [
-  { id: "sanidad_renspa", titulo: "Sanidad, RENSPA y vencimientos", privado: true, campos: [["renspa_vencimiento", "Vencimiento del RENSPA", "date"], ["senasa_vencimiento", "Próximo vencimiento SENASA", "date"], ["plan_sanitario", "Plan sanitario vigente", "text"], ["observaciones", "Observaciones sanitarias", "text"]] },
+  { id: "sanidad_renspa", titulo: "Sanidad, RENSPA y vencimientos", campos: [["renspa_vencimiento", "Vencimiento del RENSPA", "date"], ["senasa_vencimiento", "Próximo vencimiento SENASA", "date"], ["plan_sanitario", "Plan sanitario vigente", "text"], ["observaciones", "Observaciones sanitarias", "text"]] },
   { id: "sanidad", titulo: "Resumen sanitario publicable", campos: [["manejo", "Manejo sanitario declarado", "text"], ["vacunaciones_actualizadas", "Campañas registradas al día", "text"], ["fecha", "Fecha de actualización", "date"]] },
   { id: "potreros_aguadas", titulo: "Potreros y aguadas", campos: [["potreros", "Cantidad de potreros", "number"], ["aguadas", "Cantidad de aguadas", "number"], ["rotacion", "Esquema de rotación", "text"], ["fuentes_agua", "Fuentes de agua", "text"]] },
   { id: "suelo_pasturas", titulo: "Suelos y pasturas", campos: [["suelos", "Tipos de suelo", "text"], ["pasturas", "Pasturas y recursos forrajeros", "text"], ["ambientes", "Ambientes", "text"], ["manejo", "Manejo del suelo", "text"]] },
@@ -23,7 +23,7 @@ type Ficha = Record<string, unknown>;
 
 export function FichaCompleta({ ficha, visibilidad }: { ficha: Ficha; visibilidad: Record<string, boolean> }) {
   return <div className="space-y-4">
-    <p className="text-sm text-muted">Completá cada bloque. Los datos personales, sanitarios identificatorios y registrales quedan siempre privados.</p>
+    <p className="text-sm text-muted">Completá cada bloque y elegí si lo publicás. Los identificadores registrales y las observaciones libres quedan siempre privados.</p>
     {bloques.map((b) => <section key={b.id} className="rounded-[var(--radius-card)] border border-border p-4">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div><h3 className="font-semibold text-ink">{b.titulo}</h3><p className="text-xs text-muted">{b.privado ? "Privado siempre" : "La publicación se controla por separado"}</p></div>
