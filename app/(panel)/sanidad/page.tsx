@@ -2,11 +2,15 @@ import Link from "next/link";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import { Button, Card, CardHeader, EmptyState, KpiCard, PageHeader, Table, Td, Th, Tr, TrustInline } from "@/components/ui";
-import { IconAlert, IconArrowRight, IconChevronRight, IconClock, IconList, IconHeart, IconPlus, IconShield, IconShieldCheck, IconSyringe } from "@/components/icons";
+import { Badge, Button, Card, CardHeader, EmptyState, KpiCard, PageHeader, Table, Td, Th, Tr, TrustInline } from "@/components/ui";
+import { IconAlert, IconArrowRight, IconCalendar, IconChevronRight, IconClock, IconList, IconHeart, IconPlus, IconShield, IconShieldCheck, IconSyringe } from "@/components/icons";
 import { SanidadTabs } from "@/components/panel/sanidad/tabs";
 import { requireContexto } from "@/lib/establecimiento";
-import { listProductos, listReactores, listRetiros } from "@/lib/data/sanidad";
+import { listProductos, listReactores, listRetiros, listTareas, type Tarea } from "@/lib/data/sanidad";
+import { getCatalogos } from "@/lib/data/catalogos";
+import { listLotes } from "@/lib/data/potreros";
+import { MESES_CORTOS, aQuienes, type Alcance } from "@/lib/plan-sanitario";
+import { OmitirTarea, ReprogramarTarea } from "@/components/panel/sanidad/plan";
 import { listEventos } from "@/lib/data/eventos";
 import { fecha, hoyAR, nf } from "@/lib/format";
 import { ROL_LABEL } from "@/lib/auth";
@@ -30,12 +34,20 @@ async function Contenido() {
   await connection();
   const est = ctx.activa.establecimiento_id;
   const hoy = hoyAR(new Date());
-  const [eventos, retiros, reactores, productos] = await Promise.all([
+  const [eventos, retiros, reactores, productos, tareasRes, cat, lotes] = await Promise.all([
     listEventos(est, { modulo: "sanidad", desde: sumarDias(hoy, -90) }, undefined, 12),
     listRetiros(est).catch(() => ({ data: [], lotes: [] })),
     listReactores(est).catch(() => []),
     listProductos(est).catch(() => []),
+    listTareas(est, { estado: "abiertas", hasta: sumarDias(hoy, 60), limit: 100 }).catch(() => ({ data: [] as Tarea[] })),
+    getCatalogos(),
+    listLotes(est).catch(() => []),
   ]);
+  const catNombre = new Map(cat.categorias.map((c) => [c.codigo, c.nombre ?? c.codigo]));
+  const loteNombre = new Map(lotes.map((l) => [l.id ?? "", l.nombre ?? ""]));
+  const tareas = tareasRes.data.sort((a, b) => Number(b.estado === "vencida") - Number(a.estado === "vencida") || (a.vence_en ?? "").localeCompare(b.vence_en ?? ""));
+  const vencidas = tareas.filter((t) => t.estado === "vencida").length;
+  const gestiona = ctx.can("tareas.gestionar");
   const enRetiro = retiros.data.length + (retiros.lotes ?? []).reduce((s, l) => s + (l.cabezas ?? 0), 0);
   const aplicaciones30 = eventos.data.filter((e) => !e.anulado && (e.ocurrido_en ?? "") >= sumarDias(hoy, -30)).length;
   const puedeRegistrar = ctx.can("sanidad.crear");
@@ -50,6 +62,72 @@ async function Contenido() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="min-w-0 space-y-4">
+        <Card>
+          <CardHeader
+            title="Tareas del plan"
+            description={tareas.length ? `${vencidas ? `${vencidas} ${vencidas === 1 ? "vencida" : "vencidas"} y las de los` : "Las de los"} próximos 60 días. Se cierran solas al registrar la aplicación.` : undefined}
+            action={
+              <Link href="/sanidad/plan" className="inline-flex items-center gap-1 text-[13px] font-medium text-campo hover:underline">
+                Plan sanitario <IconArrowRight size={14} />
+              </Link>
+            }
+          />
+          {tareas.length ? (
+            <ul className="divide-y divide-border">
+              {tareas.slice(0, 10).map((t) => {
+                const vencida = t.estado === "vencida";
+                const a = (t.alcance ?? {}) as Alcance;
+                return (
+                  <li key={t.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3">
+                    <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-[10px] text-center leading-none ${vencida ? "bg-danger-bg text-danger" : "bg-campo-50 text-monte"}`}>
+                      <span>
+                        <span className="block text-[17px] font-bold tabular-nums">{(t.vence_en ?? "").slice(8, 10)}</span>
+                        <span className="block text-[10.5px] font-semibold uppercase">{MESES_CORTOS[Number((t.vence_en ?? "").slice(5, 7)) - 1]}</span>
+                      </span>
+                    </span>
+                    <span className="min-w-[200px] flex-1">
+                      <span className="flex flex-wrap items-center gap-2">
+                        <span className="text-[14.5px] font-semibold text-ink">{t.titulo}</span>
+                        {vencida && (
+                          <Badge tone="danger" icon={<IconAlert size={14} />}>
+                            Vencida
+                          </Badge>
+                        )}
+                      </span>
+                      <span className="block text-[12.5px] text-muted">
+                        {t.fecha_desde && t.fecha_desde !== t.vence_en ? `Del ${fecha(t.fecha_desde)} al ${fecha(t.vence_en)}` : `Hasta el ${fecha(t.vence_en)}`}
+                        {" · "}
+                        {aQuienes(a, (c) => catNombre.get(c) ?? c, (id) => loteNombre.get(id) ?? "un lote")}
+                        {t.cabezas_estimadas ? ` · ~${nf.format(t.cabezas_estimadas)} cab.` : ""}
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      {puedeRegistrar && (
+                        <Button href={`/sanidad/registrar?tarea=${t.id}`} variant="outline" size="sm">
+                          Registrar
+                        </Button>
+                      )}
+                      {gestiona && <ReprogramarTarea id={t.id ?? ""} titulo={t.titulo ?? ""} desde={t.fecha_desde ?? null} vence={t.vence_en ?? ""} rowVersion={t.row_version ?? 1} />}
+                      {gestiona && <OmitirTarea id={t.id ?? ""} titulo={t.titulo ?? ""} />}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <EmptyState
+              icon={<IconCalendar size={24} />}
+              title="Sin tareas en los próximos 60 días"
+              description="Las tareas salen del plan sanitario: aftosa, rabia, antiparasitarios de los bucerros. Si todavía no lo armaste, empezá por las plantillas."
+              action={
+                <Button href="/sanidad/plan" variant="outline">
+                  Ver el plan sanitario
+                </Button>
+              }
+            />
+          )}
+        </Card>
         <Card>
           <CardHeader
             title="Últimos registros"
@@ -114,6 +192,7 @@ async function Contenido() {
             />
           )}
         </Card>
+        </div>
 
         {puedeRegistrar && (
           <Card className="self-start">

@@ -9,6 +9,7 @@ export function SanidadTabs({ activo, children }: { activo: "resumen" | "plan" |
         label="Secciones de sanidad"
         items={[
           { href: "/sanidad", label: "Resumen", active: activo === "resumen" },
+          { href: "/sanidad/plan", label: "Plan sanitario", active: activo === "plan" },
           { href: "/sanidad/productos", label: "Productos", active: activo === "productos" },
         ]}
       />
