@@ -21,10 +21,18 @@ import type { One, S } from "@/lib/schemas";
 export const metadata: Metadata = { title: "Evento" };
 
 type Params = { id: string };
+type Cria = { viva?: boolean; sexo?: string; peso_kg?: string; animal?: { animal_id?: string; sexo?: string; identificaciones?: Array<{ valor?: string }> } };
 type SP = { ok?: string };
 
 const ORIGEN: Record<string, string> = { web: "Web", app: "App de campo", push: "App de campo", importacion: "Planilla", sistema: "Sistema" };
 const OCULTAR = new Set(["animales", "crias", "operacion_id", "documento_ids", "contrato_id", "regla_id", "movimientos"]);
+const OBSERVACION: Record<string, string> = {
+  gestacion_corta: "Gestación más corta que el mínimo de la especie",
+  gestacion_larga: "Gestación más larga que el máximo de la especie",
+  pesaje_atipico: "El peso difiere más de 30 % del anterior en menos de 30 días",
+  posterior_a_baja: "Evento posterior a la baja del animal",
+  servicio_posparto_temprano: "Servicio antes de los días mínimos desde el parto",
+};
 const KG = new Set(["peso_kg", "peso_vivo_kg", "pcc_kg", "pcf_kg", "peso_min_kg", "peso_max_kg"]);
 
 async function Contenido({ params, searchParams }: { params: Promise<Params>; searchParams: Promise<SP> }) {
@@ -48,6 +56,7 @@ async function Contenido({ params, searchParams }: { params: Promise<Params>; se
     Promise.all(ids.slice(0, 24).map((a) => getAnimal(est, a).catch(() => null))),
   ]);
   const toroIds = (ev.payload?.toro_ids as string[] | undefined) ?? [];
+  const crias = ((ev.payload?.crias as Cria[] | undefined) ?? []).slice(0, 4);
   const toros = await Promise.all(toroIds.slice(0, 12).map((t) => getAnimal(est, t).catch(() => null)));
 
   const nombres = new Map<string, string>([
@@ -190,7 +199,7 @@ async function Contenido({ params, searchParams }: { params: Promise<Params>; se
                   <Notice tone="warning" title="Se guardó con advertencias confirmadas">
                     <ul className="mt-1 list-disc space-y-0.5 pl-5">
                       {ev.observaciones_validacion.map((o) => (
-                        <li key={o}>{o}</li>
+                        <li key={o}>{OBSERVACION[o] ?? o.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase())}</li>
                       ))}
                     </ul>
                   </Notice>
@@ -246,6 +255,28 @@ async function Contenido({ params, searchParams }: { params: Promise<Params>; se
                   ) : null,
                 )}
               </ul>
+            )}
+            {crias.length > 0 && (
+              <div className="border-t border-border px-5 py-3">
+                <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.05em] text-muted">Crías</p>
+                <ul className="space-y-1.5 text-[14px]">
+                  {crias.map((c, i) => (
+                    <li key={i} className="flex flex-wrap items-center gap-2">
+                      {c.viva && c.animal?.animal_id ? (
+                        <Link href={`/hacienda/${c.animal.animal_id}`} className="font-semibold text-ink hover:underline">
+                          {c.animal.identificaciones?.[0]?.valor ?? "Cría sin caravana"}
+                        </Link>
+                      ) : (
+                        <span className="font-semibold text-muted">Nació muerta</span>
+                      )}
+                      <span className="text-muted">
+                        {(c.animal?.sexo ?? c.sexo) === "H" ? "hembra" : "macho"}
+                        {c.peso_kg ? ` · ${String(c.peso_kg).replace(".", ",")} kg` : ""}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
             {ids.length > 24 && <p className="px-5 py-3 text-[13px] text-muted">y {ids.length - 24} más.</p>}
             {!ids.length && !loteSujeto && <p className="px-5 py-4 text-[14px] text-muted">Sin animales asociados.</p>}

@@ -466,3 +466,20 @@ el último servicio con su tipo. El registrar se movió a un componente comparti
 machos y los animales dados de baja se rechazan en la fila. La fecha probable de parto se calcula en vivo con la gestación de la especie
 y la raza de cada hembra (parámetros del catálogo, no constantes) y coincide con la que deriva la API. El pie lleva el % de preñez de la
 sesión. Las advertencias de la API se confirman por fila con «Guardar igual», igual que en la pesada.
+
+## TPA-29 · Parto, nacimiento, aborto y destete · ✅ (web)
+
+**Rutas:** `/reproduccion/registrar?tipo=reproduccion.parto|aborto|destete&animales=` (grupo «Partos y destete»); el detalle del parto lista las crías con enlace a su ficha.
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Parto: tipo y crías (viva/muerta, sexo, caravana, raza, peso); las vivas nacen con `madre_id`, lote y potrero de la madre y categoría de cría por especie y sexo | `POST …/eventos` (`reproduccion.parto`) | 🔌 probado (0501 → C-0501) |
+| Gestación mínima por especie | `422 requiere_confirmacion` (`gestacion_corta`) → «Guardar igual», queda en el detalle | 🔌 probado |
+| Aborto (días estimados, causa presunta) → vacía | `reproduccion.aborto` | 🔌 |
+| Destete (tipo, peso, categoría nueva opcional) sobre crías o lote | `reproduccion.destete` | 🔌 |
+| Nacimiento de madre sin caravana o de lote | `hacienda.nacimiento` (TPA-22) | 🔌 |
+
+**Comentario del dev:** El parto se carga sobre una sola madre con sus crías en filas (mellizos con «agregar otra cría»); la cría viva
+nace en el sistema vinculada a la madre y hereda su lote y potrero, y la muerta queda registrada en el parto sin crear animal. La categoría
+de la cría no se elige: sale del catálogo (cría de la especie y el sexo). Si la gestación es más corta que el mínimo, la API lo advierte y
+se confirma; el detalle muestra la advertencia confirmada en castellano y las crías con enlace a su ficha. El destete recategoriza por regla.

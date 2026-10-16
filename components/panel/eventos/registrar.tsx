@@ -12,6 +12,8 @@ import {
   TIPOS_IA,
   METODOS_TACTO,
   TAMANOS,
+  TIPOS_PARTO,
+  TIPOS_DESTETE,
   METODOS_CASTRACION,
   MOTIVOS_EGRESO,
   MOTIVOS_INGRESO,
@@ -382,16 +384,16 @@ function FilasNuevas({
       {filas.map((r, i) => (
         <div key={r.key} className="grid grid-cols-2 gap-2 rounded-[10px] border border-border p-2 md:grid-cols-[1.1fr_0.9fr_0.8fr_1.2fr_1fr_1fr_36px] md:border-0 md:p-0">
           <input name={`n_caravana_${i}`} aria-label={`Caravana fila ${i + 1}`} placeholder="Ej. 0731" maxLength={64} className={cx(cls, err(`n_caravana_${i}`), "tabular-nums")} />
-          <select name={`n_especie_${i}`} aria-label={`Especie fila ${i + 1}`} value={r.especie} onChange={(e) => set(i, "especie", e.target.value)} className={cx(cls, "border-border-strong")}>
+          <Select name={`n_especie_${i}`} aria-label={`Especie fila ${i + 1}`} value={r.especie} onChange={(e) => set(i, "especie", e.target.value)} className="h-10 px-2.5 text-[14px]">
             <option value="BOV">Bovino</option>
             <option value="BUB">Bubalino</option>
-          </select>
-          <select name={`n_sexo_${i}`} aria-label={`Sexo fila ${i + 1}`} value={r.sexo} onChange={(e) => set(i, "sexo", e.target.value)} className={cx(cls, err(`n_sexo_${i}`))}>
+          </Select>
+          <Select name={`n_sexo_${i}`} aria-label={`Sexo fila ${i + 1}`} value={r.sexo} onChange={(e) => set(i, "sexo", e.target.value)} className={cx("h-10 px-2.5 text-[14px]", err(`n_sexo_${i}`))}>
             <option value="">Sexo</option>
             <option value="H">Hembra</option>
             <option value="M">Macho</option>
-          </select>
-          <select name={`n_categoria_${i}`} aria-label={`Categoría fila ${i + 1}`} value={r.categoria} onChange={(e) => set(i, "categoria", e.target.value)} className={cx(cls, err(`n_categoria_${i}`))}>
+          </Select>
+          <Select name={`n_categoria_${i}`} aria-label={`Categoría fila ${i + 1}`} value={r.categoria} onChange={(e) => set(i, "categoria", e.target.value)} className={cx("h-10 px-2.5 text-[14px]", err(`n_categoria_${i}`))}>
             <option value="">Categoría</option>
             {categorias
               .filter((c) => c.especie === r.especie && (!r.sexo || !c.sexo || c.sexo === r.sexo))
@@ -400,8 +402,8 @@ function FilasNuevas({
                   {c.nombre}
                 </option>
               ))}
-          </select>
-          <select name={`n_raza_${i}`} aria-label={`Raza fila ${i + 1}`} defaultValue="" className={cx(cls, "border-border-strong")}>
+          </Select>
+          <Select name={`n_raza_${i}`} aria-label={`Raza fila ${i + 1}`} defaultValue="" className={cx("h-10 px-2.5 text-[14px]", "border-border-strong")}>
             <option value="">Raza</option>
             {razas
               .filter((z) => z.especie === r.especie)
@@ -410,7 +412,7 @@ function FilasNuevas({
                   {z.nombre}
                 </option>
               ))}
-          </select>
+          </Select>
           {conPeso ? (
             <input name={`n_peso_${i}`} inputMode="decimal" aria-label={`Peso al nacer fila ${i + 1}`} placeholder="kg" className={cx(cls, "border-border-strong tabular-nums")} />
           ) : (
@@ -683,6 +685,25 @@ function CamposTipo({
       );
     case "reproduccion.tacto":
       return <CamposTacto f={f} p={p} animales={animales} />;
+    case "reproduccion.parto":
+      return <CamposParto f={f} p={p} madre={animales[0]} />;
+    case "reproduccion.aborto":
+      return (
+        <>
+          <Field label="Días de gestación estimados" htmlFor="dias_gestacion" error={f.dias_gestacion} optional>
+            <Input id="dias_gestacion" name="dias_gestacion" inputMode="numeric" maxLength={3} className="tabular-nums" {...fieldAria("dias_gestacion", f.dias_gestacion)} />
+          </Field>
+          {txt("causa_presunta", "Causa presunta", { optional: true, placeholder: "Ej. brucelosis, golpe, desconocida" })}
+        </>
+      );
+    case "reproduccion.destete":
+      return (
+        <>
+          {sel("tipo_destete", "Tipo de destete", TIPOS_DESTETE)}
+          {txt("peso_kg", "Peso al destete", { optional: true, kg: true })}
+          {sel("categoria_nueva", "Pasa a categoría", p.categorias.filter((c) => !especie || c.especie === especie), "Que lo sugieran las reglas", true)}
+        </>
+      );
     case "reproduccion.inseminacion":
       return (
         <>
@@ -797,5 +818,76 @@ function FechaSync({ onChange }: { onChange: (v: string) => void }) {
         return () => input.removeEventListener("change", h);
       }}
     />
+  );
+}
+
+type Cria = { key: number; viva: boolean; sexo: string };
+
+/** Parto: tipo y crías (vivas nacen en el sistema con la madre; muertas quedan en el parto). */
+function CamposParto({ f, p, madre }: { f: Record<string, string>; p: RegistrarEventoProps; madre?: AnimalElegido }) {
+  const [crias, setCrias] = useState<Cria[]>([{ key: 0, viva: true, sexo: "" }]);
+  const setC = (i: number, c: Partial<Cria>) => setCrias((xs) => xs.map((x, j) => (j === i ? { ...x, ...c } : x)));
+  const razas = p.razas.filter((z) => !madre?.especie || z.especie === madre.especie);
+  const cls = "h-10 w-full rounded-[8px] border border-border-strong bg-surface px-2.5 text-[14px] focus:border-campo focus:outline-none";
+  return (
+    <>
+      <Field label="Cómo fue" htmlFor="tipo_parto" error={f.tipo_parto}>
+        <Select id="tipo_parto" name="tipo_parto" defaultValue="normal" {...fieldAria("tipo_parto", f.tipo_parto)}>
+          <Opciones lista={TIPOS_PARTO} />
+        </Select>
+      </Field>
+      <div className="hidden sm:block" />
+      <div className="sm:col-span-2 space-y-2">
+        <input type="hidden" name="crias" value={crias.length} />
+        <p className="text-[13px] font-semibold text-ink">
+          Crías {madre && <span className="font-normal text-muted">· de {madre.ident} ({madre.categoria})</span>}
+        </p>
+        {crias.map((c, i) => (
+          <div key={c.key} className="grid grid-cols-2 items-center gap-2 rounded-[10px] border border-border p-2.5 md:grid-cols-[150px_130px_minmax(0,1fr)_minmax(0,1.3fr)_110px_36px]">
+            <input type="hidden" name={`cr_viva_${i}`} value={c.viva ? "1" : "0"} />
+            <div className="flex gap-1.5">
+              {[true, false].map((v) => (
+                <button
+                  key={String(v)}
+                  type="button"
+                  onClick={() => setC(i, { viva: v })}
+                  className={cx("h-10 flex-1 rounded-[8px] border text-[13px] font-semibold", c.viva === v ? (v ? "border-monte bg-monte text-blanco" : "border-ink bg-ink text-blanco") : "border-border-strong bg-surface text-ink hover:border-campo")}
+                >
+                  {v ? "Viva" : "Muerta"}
+                </button>
+              ))}
+            </div>
+            <Select name={`cr_sexo_${i}`} aria-label={`Sexo cría ${i + 1}`} value={c.sexo} onChange={(e) => setC(i, { sexo: e.target.value })} className={cx("h-10 px-2.5 text-[14px]", f[`cr_sexo_${i}`] && "border-danger")}>
+              <option value="">Sexo</option>
+              <option value="H">Hembra</option>
+              <option value="M">Macho</option>
+            </Select>
+            <input name={`cr_caravana_${i}`} aria-label={`Caravana cría ${i + 1}`} placeholder={c.viva ? "Caravana (opcional)" : "—"} disabled={!c.viva} maxLength={64} className={cx(cls, "tabular-nums disabled:bg-base")} />
+            <Select name={`cr_raza_${i}`} aria-label={`Raza cría ${i + 1}`} defaultValue="" disabled={!c.viva} className={cx("h-10 px-2.5 text-[14px]", "disabled:bg-base")}>
+              <option value="">{madre?.raza ? "Raza de la madre" : "Raza"}</option>
+              {razas.map((z) => (
+                <option key={z.codigo} value={z.codigo}>
+                  {z.nombre}
+                </option>
+              ))}
+            </Select>
+            <div className="relative">
+              <input name={`cr_peso_${i}`} inputMode="decimal" aria-label={`Peso al nacer cría ${i + 1}`} placeholder="Peso" className={cx(cls, "pr-9 tabular-nums", f[`cr_peso_${i}`] && "border-danger")} />
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-muted">kg</span>
+            </div>
+            <button type="button" aria-label={`Quitar cría ${i + 1}`} disabled={crias.length === 1} onClick={() => setCrias((xs) => xs.filter((_, j) => j !== i))} className="grid h-10 w-9 place-items-center rounded-[8px] text-muted hover:bg-base disabled:opacity-30">
+              <IconClose size={16} />
+            </button>
+          </div>
+        ))}
+        {(f.crias || Object.keys(f).some((k) => k.startsWith("cr_"))) && <p className="text-[12.5px] font-medium text-danger">{f.crias ?? "Completá el sexo de cada cría."}</p>}
+        {crias.length < 3 && (
+          <button type="button" onClick={() => setCrias((xs) => [...xs, { key: Date.now(), viva: true, sexo: "" }])} className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-campo hover:underline">
+            <IconPlus size={16} /> Mellizos: agregar otra cría
+          </button>
+        )}
+        <p className="text-[12.5px] text-muted">La categoría de cada cría sale de la especie y el sexo (ternero/a, bucerro/a); queda en el lote y potrero de la madre.</p>
+      </div>
+    </>
   );
 }
