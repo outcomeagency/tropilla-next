@@ -70,6 +70,8 @@ export const pt: Dictionary = {
   footer: {
     legend:
       "Informação declarada pelo produtor. A TROPILLA registra evidência de integridade; não certifica seu conteúdo nem substitui habilitações oficiais.",
+    androidDownload: "Baixe o app para Android",
+    androidDownloadNote: "Android · versão de teste",
     rights: "TROPILLA · A plataforma integral do produtor pecuário do Nordeste argentino.",
   },
 };

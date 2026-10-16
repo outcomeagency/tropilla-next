@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const publicSiteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://tropilla.ar");
+
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
@@ -8,6 +10,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       // Debe coincidir con PHOTO_QUERY de lib/photos.ts.
       { protocol: "https", hostname: "images.unsplash.com", pathname: "/photo-*", search: "?w=1600&q=80&fm=jpg&fit=crop" },
+      { protocol: publicSiteUrl.protocol.slice(0, -1) as "http" | "https", hostname: publicSiteUrl.hostname, port: publicSiteUrl.port, pathname: "/**" },
     ],
     qualities: [70, 75],
   },
