@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/public/site-header";
 import { SiteFooter } from "@/components/public/site-footer";
 import { ProducerCard } from "@/components/public/producer-card";
 import { Photo } from "@/components/public/photo";
-import { Card, EmptyState, MockNotice, TrustBadge, buttonClass, inputClass } from "@/components/ui";
+import { Card, EmptyState, TrustBadge, buttonClass, inputClass } from "@/components/ui";
 import { IconArrowRight, IconPin, IconSearch } from "@/components/icons";
 import { getDictionary, hasLocale, type Locale } from "@/lib/i18n";
 import { getPortalDict } from "@/lib/i18n/portal";
@@ -19,7 +19,7 @@ import { PHOTOS } from "@/lib/photos";
  */
 async function Destacados({ locale }: { locale: Locale }) {
   const p = getPortalDict(locale);
-  const { data, source } = await getDirectorio({}, locale);
+  const { data } = await getDirectorio({}, locale, 3);
   if (!data.length) {
     return (
       <Card className="mt-6">
@@ -29,15 +29,27 @@ async function Destacados({ locale }: { locale: Locale }) {
   }
   return (
     <>
-      {source === "mock" && (
-        <div className="mt-4">
-          <MockNotice text={p.common.sampleData} />
-        </div>
-      )}
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {data.slice(0, 3).map((it) => (
           <ProducerCard key={it.slug} p={it} locale={locale} t={p} />
         ))}
+        {data.length < 3 && (
+          <Link
+            href="/registro"
+            className="group flex flex-col justify-between gap-6 rounded-[var(--radius-card)] border border-border bg-surface p-6 transition-shadow hover:shadow-[var(--shadow-hover)]"
+          >
+            <span className="grid h-11 w-11 place-items-center rounded-[10px] bg-campo-50 text-monte">
+              <IconPin size={22} />
+            </span>
+            <span>
+              <span className="block text-[19px] font-semibold leading-snug tracking-[-0.01em] text-ink">{p.directory.producerCta}</span>
+              <span className="mt-2 block text-[14px] leading-relaxed text-muted">{p.directory.producerCtaBody}</span>
+            </span>
+            <span className="inline-flex items-center gap-1 text-[14px] font-medium text-campo group-hover:underline">
+              {p.directory.producerCtaAction} <IconArrowRight size={16} />
+            </span>
+          </Link>
+        )}
       </div>
     </>
   );

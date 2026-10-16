@@ -70,15 +70,20 @@ acciones sin re-implementar la matriz de permisos.
 
 | Pieza | Endpoint | Estado |
 |---|---|---|
-| Búsqueda y filtros (provincia, especie, raza, categoría, con oferta, con contrato) | `GET /public/directorio` | 🧪 mock (9 productores ficticios, zonas reales) hasta que la API lo publique |
-| Sitemap con hreflang | `GET /public/sitemap` | 🧪 → con mock sólo se publican portada y directorio (nunca URLs de ejemplo) |
-| Nombres de categorías y razas es/en/pt | `lib/catalogo.ts` | estático hasta `/catalogos` con nombres traducidos |
+| Búsqueda y filtros (provincia, especie, raza, categoría, con oferta, con contrato) + «Ver más» por cursor | `GET /public/directorio` | 🔌 API real (mock retirado) |
+| Conteos en los filtros (provincias, razas, categorías, con oferta/contrato) | `GET /public/directorio/facetas` | 🔌 (si falla, los filtros usan el catálogo estático sin conteo) |
+| Sitemap con hreflang (`/o/{codigo}` de la API → `/ofertas/{codigo}`) | `GET /public/sitemap` | 🔌 (sin API: sólo portada y directorio) |
+| Portada: productores destacados + tarjeta «Sumá tu campo» si hay menos de 3 | `GET /public/directorio?limit=3` | 🔌 |
+| Nombres de categorías y razas es/en/pt | facetas de la API; `lib/catalogo.ts` como respaldo | 🔌 |
 
 **Comentario del dev:** Filtros en la URL (compartibles, indexables, funcionan sin JS; con JS se aplican al cambiar).
 Datos cacheados con `"use cache"` + `cacheTag("directorio")` para revalidar por tag al publicar. Las tarjetas muestran
 sólo zona general (departamento + provincia), especie con chip, razas, ofertas/contratos y frescura; el orden lo
 explica la propia página («nadie paga por aparecer primero»). Metadata, canonical y alternates por idioma; la
 leyenda fija va en el pie de todo lo público. Fotos de campo de licencia libre (búfalo de agua, nunca africano).
+**Conexión a la API (2026-10-16):** se retiró el mock: el directorio, los conteos y el sitemap salen de la API real. Un perfil
+sin foto ya no muestra una caja vacía con una cámara sino un monograma sobre verde monte con las especies (nunca una foto de
+stock que haga pasar otro campo por el suyo). Si la API no responde, `app/[locale]/error.tsx` explica en el idioma de la ruta.
 
 ## TPA-48 · Ofertas de animales y lotes · ✅ (web)
 

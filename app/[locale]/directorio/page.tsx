@@ -5,16 +5,16 @@ import type { Metadata } from "next";
 import { SiteHeader } from "@/components/public/site-header";
 import { SiteFooter } from "@/components/public/site-footer";
 import { ProducerCard } from "@/components/public/producer-card";
-import { Card, EmptyState, MockNotice, Select, buttonClass, inputClass } from "@/components/ui";
+import { Card, EmptyState, Select, buttonClass, inputClass } from "@/components/ui";
 import { IconArrowRight, IconFilter, IconSearch } from "@/components/icons";
 import { getDictionary, hasLocale, LOCALE_HTML_LANG, LOCALES, type Locale } from "@/lib/i18n";
 import { getPortalDict, type PortalDict } from "@/lib/i18n/portal";
-import { getDirectorio, type DirectorioQuery } from "@/lib/data/portal";
+import { getDirectorio, getDirectorioFacetas, type DirectorioFacetas, type DirectorioQuery } from "@/lib/data/portal";
 import { PROVINCIAS } from "@/lib/geo";
 import { CATEGORIAS, RAZAS } from "@/lib/catalogo";
 import { AutoSubmit } from "./auto-submit";
 
-const FILTROS = ["q", "provincia", "especie", "raza", "categoria", "con_oferta", "con_contrato"] as const;
+const FILTROS = ["q", "provincia", "especie", "raza", "categoria", "con_oferta", "con_contrato", "cursor"] as const;
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -41,9 +41,34 @@ function limpiar(sp: Record<string, string | string[] | undefined>): DirectorioQ
   return out;
 }
 
-function Filtros({ f, t, locale }: { f: DirectorioQuery; t: PortalDict; locale: Locale }) {
-  const razas = RAZAS.filter((r) => !f.especie || r.especie === f.especie);
-  const categorias = CATEGORIAS.filter((c) => !f.especie || c.especie === f.especie);
+type Opcion = { codigo: string; nombre: string; count?: number };
+
+/** Opciones de un filtro: las facetas de la API (con conteo) y, si no hay, el catálogo estático. Lo elegido siempre queda. */
+function opciones(facetas: Array<{ codigo?: string; nombre?: string; count?: number }> | undefined, estaticas: Opcion[], elegido?: string, todas: Opcion[] = estaticas): Opcion[] {
+  const base = facetas?.length ? facetas.map((x) => ({ codigo: x.codigo ?? "", nombre: x.nombre ?? x.codigo ?? "", count: x.count })) : estaticas;
+  if (elegido && !base.some((o) => o.codigo === elegido)) {
+    const e = todas.find((o) => o.codigo === elegido);
+    return [...base, { codigo: elegido, nombre: e?.nombre ?? elegido, count: 0 }];
+  }
+  return base;
+}
+
+const conConteo = (o: Opcion) => (o.count != null ? `${o.nombre} (${o.count})` : o.nombre);
+
+function Filtros({ f, t, locale, facetas }: { f: DirectorioQuery; t: PortalDict; locale: Locale; facetas: DirectorioFacetas | null }) {
+  const provincias = opciones(facetas?.provincias, PROVINCIAS.map((p) => ({ codigo: p.codigo, nombre: p.nombre })), f.provincia);
+  const razas = opciones(
+    facetas?.razas,
+    RAZAS.filter((r) => !f.especie || r.especie === f.especie).map((r) => ({ codigo: r.codigo, nombre: r.nombre })),
+    f.raza,
+    RAZAS.map((r) => ({ codigo: r.codigo, nombre: r.nombre })),
+  );
+  const categorias = opciones(
+    facetas?.categorias,
+    CATEGORIAS.filter((c) => !f.especie || c.especie === f.especie).map((c) => ({ codigo: c.codigo, nombre: c.nombres[locale] })),
+    f.categoria,
+    CATEGORIAS.map((c) => ({ codigo: c.codigo, nombre: c.nombres[locale] })),
+  );
   return (
     <form action={`/${locale}/directorio`} className="space-y-5">
       <AutoSubmit />
@@ -54,9 +79,9 @@ function Filtros({ f, t, locale }: { f: DirectorioQuery; t: PortalDict; locale: 
         </label>
         <Select id="f-provincia" name="provincia" defaultValue={f.provincia ?? ""}>
           <option value="">{t.directory.allProvinces}</option>
-          {PROVINCIAS.map((p) => (
+          {provincias.map((p) => (
             <option key={p.codigo} value={p.codigo}>
-              {p.nombre}
+              {conConteo(p)}
             </option>
           ))}
         </Select>
@@ -87,7 +112,7 @@ function Filtros({ f, t, locale }: { f: DirectorioQuery; t: PortalDict; locale: 
           <option value="">{t.directory.anyBreed}</option>
           {razas.map((r) => (
             <option key={r.codigo} value={r.codigo}>
-              {r.nombre}
+              {conConteo(r)}
             </option>
           ))}
         </Select>
@@ -100,7 +125,7 @@ function Filtros({ f, t, locale }: { f: DirectorioQuery; t: PortalDict; locale: 
           <option value="">{t.directory.anyCategory}</option>
           {categorias.map((c) => (
             <option key={c.codigo} value={c.codigo}>
-              {c.nombres[locale]}
+              {conConteo(c)}
             </option>
           ))}
         </Select>
@@ -110,6 +135,7 @@ function Filtros({ f, t, locale }: { f: DirectorioQuery; t: PortalDict; locale: 
           <label key={k} className="flex cursor-pointer items-center gap-2.5 text-[14px] text-ink">
             <input type="checkbox" name={k} value="1" defaultChecked={!!f[k]} className="h-[18px] w-[18px] accent-monte" />
             {k === "con_oferta" ? t.directory.withOffer : t.directory.withContract}
+            {facetas && <span className="ml-auto text-[12.5px] tabular-nums text-subtle">{k === "con_oferta" ? facetas.con_oferta : facetas.con_contrato}</span>}
           </label>
         ))}
       </div>
@@ -128,14 +154,23 @@ function Filtros({ f, t, locale }: { f: DirectorioQuery; t: PortalDict; locale: 
 async function Directorio({ locale, searchParams }: { locale: Locale; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const t = getPortalDict(locale);
   const f = limpiar(await searchParams);
-  const { data, source } = await getDirectorio(f, locale);
-  const activos = Object.keys(f).filter((k) => k !== "q").length;
+  const [{ data, next }, facetas] = await Promise.all([
+    getDirectorio(f, locale),
+    getDirectorioFacetas({ q: f.q, provincia: f.provincia, especie: f.especie }, locale),
+  ]);
+  const activos = Object.keys(f).filter((k) => k !== "q" && k !== "cursor").length;
+  const qsSin = (extra: Record<string, string>) => {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries({ ...f, cursor: undefined, ...extra })) if (v) qs.set(k, v);
+    const str = qs.toString();
+    return `/${locale}/directorio${str ? `?${str}` : ""}`;
+  };
 
   return (
     <>
       <form action={`/${locale}/directorio`} role="search" className="mx-auto -mt-7 flex max-w-[1320px] flex-col gap-2 px-[clamp(16px,4vw,40px)] sm:flex-row">
         {Object.entries(f)
-          .filter(([k]) => k !== "q")
+          .filter(([k]) => k !== "q" && k !== "cursor")
           .map(([k, v]) => (
             <input key={k} type="hidden" name={k} value={v} />
           ))}
@@ -159,14 +194,14 @@ async function Directorio({ locale, searchParams }: { locale: Locale; searchPara
               {activos > 0 && <span className="rounded-full bg-monte px-1.5 text-[12px] tabular-nums text-blanco">{activos}</span>}
             </summary>
             <div className="border-t border-border p-4">
-              <Filtros f={f} t={t} locale={locale} />
+              <Filtros f={f} t={t} locale={locale} facetas={facetas} />
             </div>
           </details>
           <div className="hidden rounded-[var(--radius-card)] border border-border bg-surface p-5 lg:sticky lg:top-24 lg:block">
             <p className="mb-4 flex items-center gap-2 text-[14px] font-semibold text-ink">
               <IconFilter size={18} /> {t.directory.filters}
             </p>
-            <Filtros f={f} t={t} locale={locale} />
+            <Filtros f={f} t={t} locale={locale} facetas={facetas} />
           </div>
         </aside>
 
@@ -175,11 +210,6 @@ async function Directorio({ locale, searchParams }: { locale: Locale; searchPara
             <h2 className="text-[18px] font-semibold text-ink">{t.directory.results(data.length)}</h2>
             <p className="text-[12.5px] text-muted">{t.directory.order}</p>
           </div>
-          {source === "mock" && (
-            <div className="mb-4">
-              <MockNotice text={t.common.sampleData} />
-            </div>
-          )}
           {data.length ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {data.map((p) => (
@@ -209,6 +239,20 @@ async function Directorio({ locale, searchParams }: { locale: Locale; searchPara
                 }
               />
             </Card>
+          )}
+          {(next || f.cursor) && (
+            <nav aria-label={t.directory.loadMore} className="mt-6 flex flex-wrap items-center gap-3">
+              {next && (
+                <Link href={qsSin({ cursor: next })} className={buttonClass("outline", "md")}>
+                  {t.directory.loadMore} <IconArrowRight size={16} />
+                </Link>
+              )}
+              {f.cursor && (
+                <Link href={qsSin({})} className="text-[13px] font-medium text-campo hover:underline">
+                  {t.directory.backToStart}
+                </Link>
+              )}
+            </nav>
           )}
           <Link href="/registro" className="mt-8 inline-flex items-center gap-1.5 text-[14px] font-medium text-campo hover:underline">
             {t.directory.producerCta} <IconArrowRight size={16} />
