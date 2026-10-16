@@ -150,3 +150,21 @@ archivo nunca se sube. La página dice explícitamente qué prueba (que el regis
 no (veracidad, habilitaciones); muestra correcciones con transparencia («tuvo N correcciones · esta es / NO es la
 vigente») y el anclaje con su red y fecha. Las verificaciones no se indexan. Huella inválida o inexistente: estado
 claro con buscador y verificación de archivo como salida.
+
+## TPA-18 · Listado de hacienda con búsqueda y filtros · ✅ (web)
+
+**Ruta:** `/hacienda` (+ `?q, especie, categoria, lote_id, potrero_id, estado_reproductivo, sanidad, sugerencia_categoria, orden, cursor`)
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Listado, búsqueda por cualquier identificador, filtros, orden | `GET …/animales` (cursor) | 🔌 API real (seeder demo: 44 animales) |
+| Potreros y lotes para filtros | `GET …/potreros` (lotes desde `ocupacion`) | 🔌 |
+| Nombres de categorías y razas | `GET /catalogos` (cache 1 h, fallback estático) | 🔌 |
+| Evento grupal desde la selección: traslado de potrero | `POST …/eventos` (`hacienda.traslado`, `sujetos.animal_ids`) con `422 requiere_confirmacion` → «Guardar igual» | 🔌 (no ejecutado contra el demo para no alterar sus datos) |
+
+**Comentario del dev:** Paginado server-side por cursor opaco (Anteriores/Siguientes) y filtros en la URL; además se
+recuerdan en el navegador y se restauran al volver a Hacienda («Limpiar todo» los borra). La tabla muestra
+categoría con recategorización sugerida, peso con fecha, lote y potrero, estado reproductivo con fecha probable de
+parto y retiro vigente, siempre con texto. La selección múltiple abre una barra fija con el evento grupal; las
+advertencias de coherencia de la API se muestran y se confirman, nunca se pisan. Sin mocks: si la API cae, el
+error boundary del panel explica y ofrece reintentar.
