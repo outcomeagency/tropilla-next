@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, type ComponentType, type ReactNode } from "react";
+import { Suspense, useState, type ComponentType, type ReactNode } from "react";
 import { Logo } from "@/components/brand";
 import { cx } from "@/components/ui";
 import {
@@ -55,15 +55,23 @@ function NavLink({ item, active, onNavigate }: { item: NavItem; active: boolean;
   );
 }
 
+function NavItems({ items, pathname, onNavigate }: { items: NavItem[]; pathname: string; onNavigate: () => void }) {
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  return items.map((item) => <NavLink key={item.href} item={item} active={isActive(item.href)} onNavigate={onNavigate} />);
+}
+
+/** Lee la URL (dato de request en rutas dinámicas): va detrás de Suspense para no bloquear el shell. */
+function ActiveNavItems({ items, onNavigate }: { items: NavItem[]; onNavigate: () => void }) {
+  return <NavItems items={items} pathname={usePathname()} onNavigate={onNavigate} />;
+}
+
 /**
  * Sidebar verde monte del panel (preview 01). En escritorio queda fija; en
  * móvil se abre como panel lateral desde la barra superior.
  */
 export function PanelSidebar({ selectorSlot, userSlot }: { selectorSlot: ReactNode; userSlot: ReactNode }) {
-  const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <>
@@ -118,15 +126,15 @@ export function PanelSidebar({ selectorSlot, userSlot }: { selectorSlot: ReactNo
         {selectorSlot}
 
         <nav aria-label="Panel" className="mt-5 flex-1 space-y-0.5 overflow-y-auto">
-          {PANEL_NAV.map((item) => (
-            <NavLink key={item.href} item={item} active={isActive(item.href)} onNavigate={() => setOpen(false)} />
-          ))}
+          <Suspense fallback={<NavItems items={PANEL_NAV} pathname="" onNavigate={() => setOpen(false)} />}>
+            <ActiveNavItems items={PANEL_NAV} onNavigate={() => setOpen(false)} />
+          </Suspense>
         </nav>
 
         <div className="space-y-3 border-t border-sidebar-border pt-3">
-          {PANEL_NAV_FOOTER.map((item) => (
-            <NavLink key={item.href} item={item} active={isActive(item.href)} onNavigate={() => setOpen(false)} />
-          ))}
+          <Suspense fallback={<NavItems items={PANEL_NAV_FOOTER} pathname="" onNavigate={() => setOpen(false)} />}>
+            <ActiveNavItems items={PANEL_NAV_FOOTER} onNavigate={() => setOpen(false)} />
+          </Suspense>
           {userSlot}
         </div>
       </aside>

@@ -39,12 +39,12 @@ export async function withMock<T>(load: () => Promise<T>, mock: () => T): Promis
 }
 
 /** Igual que withMock, pero el mock puede no existir (detalle por id/slug ajeno → null). */
-export async function withMockIf<T>(load: () => Promise<T>, mock: () => T | null): Promise<Sourced<T> | null> {
+export async function withMockIf<T>(load: () => Promise<T>, mock: () => T | null | Promise<T | null>): Promise<Sourced<T> | null> {
   try {
     return { data: await load(), source: "api" };
   } catch (e) {
     if (isMockable(e)) {
-      const m = mock();
+      const m = await mock();
       return m == null ? null : { data: m, source: "mock" };
     }
     if (e instanceof ApiError && e.status === 404) return null;

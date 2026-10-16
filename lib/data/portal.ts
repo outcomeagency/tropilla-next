@@ -1,12 +1,12 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { api, query } from "@/lib/api";
-import { withMock } from "@/lib/mock/fallback";
+import { withMock, withMockIf } from "@/lib/mock/fallback";
 import { mockDirectorio, type DirectorioQuery } from "@/lib/mock/portal";
 import { departamentoNombre, provinciaNombre } from "@/lib/geo";
 import { razaNombre } from "@/lib/catalogo";
 import type { Locale } from "@/lib/i18n";
-import type { Many, S } from "@/lib/schemas";
+import type { Many, One, S } from "@/lib/schemas";
 
 export type { DirectorioQuery };
 
@@ -44,5 +44,29 @@ export async function getSitemapEntradas() {
     async () => (await api<Many<S<"SitemapEntrada">>>("/public/sitemap", { auth: false })).data,
     (): S<"SitemapEntrada">[] =>
       MOCK_PRODUCTORES.map((p) => ({ tipo: "perfil", path: `/p/${p.slug}`, locales: ["es", "en", "pt"], actualizado_en: p.actualizado_en })),
+  );
+}
+
+/** Ficha pública de oferta (TPA-48). 404 si no existe o no está publicada. */
+export async function getOfertaPublica(codigo: string, locale: Locale) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(`oferta:${codigo}`);
+  const { mockOfertaPublica } = await import("@/lib/mock/ofertas");
+  return withMockIf(
+    async () => (await api<One<S<"OfertaPublica">>>(`/public/ofertas/${encodeURIComponent(codigo)}${query({ locale })}`, { auth: false, locale })).data,
+    () => mockOfertaPublica(codigo, locale),
+  );
+}
+
+/** Perfil público del establecimiento (TPA-50). */
+export async function getPerfilPublico(slug: string, locale: Locale) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(`perfil:${slug}`);
+  const { mockPerfilPublico } = await import("@/lib/mock/perfiles");
+  return withMockIf(
+    async () => (await api<One<S<"PerfilPublico">>>(`/public/establecimientos/${encodeURIComponent(slug)}${query({ locale })}`, { auth: false, locale })).data,
+    () => mockPerfilPublico(slug, locale),
   );
 }

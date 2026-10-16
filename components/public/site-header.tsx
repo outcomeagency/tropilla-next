@@ -12,15 +12,29 @@ export function SiteHeader({
   dict,
   path = "",
   current,
+  context,
+  cta,
 }: {
   locale: Locale;
   dict: Dictionary;
   path?: string;
   current?: "directory" | "offers";
+  /** Ficha de un productor: «Agropecuaria Don Ramón · La Esperanza» en lugar de las secciones. */
+  context?: string;
+  /** Botón principal (ej. «Consultar» en una oferta) en lugar de «Ingresar». */
+  cta?: { href: string; label: string };
 }) {
   const nav = [
-    { key: "directory", href: `/${locale}/directorio`, label: dict.nav.directory },
-    { key: "offers", href: `/${locale}/directorio?con_oferta=1`, label: dict.nav.offers },
+    {
+      key: "directory",
+      href: `/${locale}/directorio`,
+      label: dict.nav.directory,
+    },
+    {
+      key: "offers",
+      href: `/${locale}/directorio?con_oferta=1`,
+      label: dict.nav.offers,
+    },
     { key: "producers", href: "/registro", label: dict.nav.producers },
   ];
   return (
@@ -30,18 +44,22 @@ export function SiteHeader({
           <Logo height={34} />
         </Link>
 
-        <nav aria-label="Secciones" className="hidden items-center gap-6 text-[14px] md:flex">
-          {nav.map((n) => (
-            <Link
-              key={n.key}
-              href={n.href}
-              aria-current={current === n.key ? "page" : undefined}
-              className={cx(current === n.key ? "font-semibold text-ink" : "text-muted hover:text-ink")}
-            >
-              {n.label}
-            </Link>
-          ))}
-        </nav>
+        {context ? (
+          <p className="hidden min-w-0 truncate border-l border-border pl-6 text-[14px] text-muted md:block">{context}</p>
+        ) : (
+          <nav aria-label="Secciones" className="hidden items-center gap-6 text-[14px] md:flex">
+            {nav.map((n) => (
+              <Link
+                key={n.key}
+                href={n.href}
+                aria-current={current === n.key ? "page" : undefined}
+                className={cx(current === n.key ? "font-semibold text-ink" : "text-muted hover:text-ink")}
+              >
+                {n.label}
+              </Link>
+            ))}
+          </nav>
+        )}
 
         <div className="ml-auto flex items-center gap-3">
           <nav aria-label={dict.nav.language} className="flex items-center text-[13px] font-medium">
@@ -64,8 +82,8 @@ export function SiteHeader({
               </span>
             ))}
           </nav>
-          <Link href="/ingresar" className={buttonClass("primary", "sm")}>
-            {dict.nav.login}
+          <Link href={cta?.href ?? "/ingresar"} className={buttonClass("primary", "sm")}>
+            {cta?.label ?? dict.nav.login}
           </Link>
         </div>
       </div>

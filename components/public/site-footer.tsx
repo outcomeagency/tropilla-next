@@ -4,13 +4,13 @@ import { IconInfo } from "@/components/icons";
 import type { Dictionary, Locale } from "@/lib/i18n";
 
 /** Pie público con la leyenda fija de no certificación (invariante de producto). */
-export function SiteFooter({ locale, dict }: { locale: Locale; dict: Dictionary }) {
+export function SiteFooter({ locale, dict, legend }: { locale: Locale; dict: Dictionary; /** Leyenda que trae el Resource público (mismo sentido, texto de la API). */ legend?: string }) {
   return (
     <footer className="border-t border-border bg-surface">
       <div className="mx-auto max-w-[1320px] px-[clamp(16px,4vw,40px)] py-8">
         <p className="flex gap-2.5 rounded-[10px] border border-border bg-base px-4 py-3 text-[13px] leading-relaxed text-muted">
           <IconInfo size={16} className="mt-0.5 shrink-0" />
-          {dict.footer.legend}
+          {legend ?? dict.footer.legend}
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
           <Link href={`/${locale}`} aria-label="TROPILLA">

@@ -162,16 +162,28 @@ const ESTADO_ICON: Record<Estado, ComponentType<IconProps>> = {
 };
 
 /** Badge genérico: tono semántico + ícono + texto (nunca sólo color). */
-export function Badge({ tone = "neutral", icon, children }: { tone?: Tone; icon?: ReactNode; children: ReactNode }) {
+export function Badge({ tone = "neutral", icon, children, wrap = false }: { tone?: Tone; icon?: ReactNode; children: ReactNode; wrap?: boolean }) {
   return (
     <span
       className={cx(
-        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-[var(--radius-chip)] border px-2 py-0.5 text-[12px] font-semibold leading-5",
+        "inline-flex items-center gap-1.5 rounded-[var(--radius-chip)] border px-2 py-0.5 text-[12px] font-semibold leading-5",
+        wrap ? "max-w-full" : "whitespace-nowrap",
         TONE_CLASS[tone],
       )}
     >
       {icon}
       {children}
+    </span>
+  );
+}
+
+/** Nivel de confianza compacto (líneas de tiempo densas): ícono + texto, sin caja. */
+export function TrustInline({ nivel, label }: { nivel: NivelConfianza; label?: string }) {
+  const { Icon } = TRUST[nivel];
+  return (
+    <span className={cx("inline-flex items-center gap-1 text-[12px] font-semibold", nivel === "integridad_registrada" ? "text-success" : "text-neutral")}>
+      <Icon size={14} className="shrink-0" />
+      {label ?? TRUST[nivel].label}
     </span>
   );
 }
@@ -203,7 +215,7 @@ export function TrustBadge({ nivel, detail, label: labelOverride }: { nivel: Niv
   const { tone, Icon } = TRUST[nivel];
   const label = labelOverride ?? TRUST[nivel].label;
   return (
-    <Badge tone={tone} icon={<Icon size={14} />}>
+    <Badge tone={tone} icon={<Icon size={14} className="shrink-0" />} wrap={!!detail}>
       {detail ? `${detail} · ${label}` : label}
     </Badge>
   );
@@ -398,7 +410,7 @@ export function EmptyState({
 }
 
 export function Notice({ tone = "info", title, children }: { tone?: Tone; title: string; children?: ReactNode }) {
-  const Icon = tone === "danger" || tone === "warning" ? IconAlert : IconInfo;
+  const Icon = tone === "danger" || tone === "warning" ? IconAlert : tone === "success" ? IconCheckCircle : IconInfo;
   return (
     <div role="status" className={cx("flex gap-3 rounded-[10px] border px-4 py-3 text-sm", TONE_CLASS[tone])}>
       <Icon size={18} className="mt-0.5 shrink-0" />
