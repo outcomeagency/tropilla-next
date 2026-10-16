@@ -25,21 +25,38 @@ const fmt = (iso?: string | null) => (iso ? iso.slice(0, 10).split("-").reverse(
 
 function Registrado({ o }: { o: S<"Oferta"> }) {
   const lote = o.lote_id ? mockLote(o.lote_id) : null;
-  const pre = (o.precarga ?? {}) as { peso_promedio_kg?: string; peso_fecha?: string; edad_min?: number; edad_max?: number; sanidad?: Sanidad[] };
+  const pre = (o.precarga ?? {}) as {
+    peso_promedio_kg?: string;
+    peso_fecha?: string;
+    edad_min?: number;
+    edad_max?: number;
+    sanidad?: Sanidad[];
+  };
   const peso = pre.peso_promedio_kg ?? lote?.peso_promedio_kg;
   const pesoFecha = pre.peso_fecha ?? lote?.peso_promedio_fecha;
   const sanidad = pre.sanidad ?? lote?.extra.sanidad ?? [];
   const edad = pre.edad_min ? { min: pre.edad_min, max: pre.edad_max } : lote?.extra.edad;
   return (
     <Card>
-      <CardHeader title="Lo que viene del registro" description="Sale de los eventos del lote. Para cambiarlo, cargá un pesaje o evento nuevo." />
+      <CardHeader
+        title="Lo que viene del registro"
+        description="Sale de los eventos del lote. Para cambiarlo, cargá un pesaje o evento nuevo."
+      />
       <CardBody className="space-y-4 text-[14px]">
         <div className="flex flex-wrap items-center gap-2">
           <SpeciesChip especie={especieDe(o.especie)} withIcon />
-          {o.categorias?.map((c) => <Badge key={c}>{categoriaNombre(c)}</Badge>)}
-          {o.razas?.map((r) => <Badge key={r}>{razaNombre(r)}</Badge>)}
+          {o.categorias?.map((c) => (
+            <Badge key={c}>{categoriaNombre(c)}</Badge>
+          ))}
+          {o.razas?.map((r) => (
+            <Badge key={r}>{razaNombre(r)}</Badge>
+          ))}
         </div>
-        {lote && <p className="text-muted">Lote: <span className="font-medium text-ink">{lote.nombre}</span></p>}
+        {lote && (
+          <p className="text-muted">
+            Lote: <span className="font-medium text-ink">{lote.nombre}</span>
+          </p>
+        )}
         {peso && (
           <div>
             <p className="font-semibold text-ink">{peso} kg promedio</p>
@@ -48,13 +65,20 @@ function Registrado({ o }: { o: S<"Oferta"> }) {
             </div>
           </div>
         )}
-        {edad && <p className="text-ink">{edad.min}–{edad.max} meses</p>}
+        {edad && (
+          <p className="text-ink">
+            {edad.min}–{edad.max} meses
+          </p>
+        )}
         {sanidad.length > 0 && (
           <ul className="space-y-2 border-t border-border pt-3">
             {sanidad.map((s) => (
               <li key={`${s.evento}${s.fecha}`} className="flex flex-wrap items-center justify-between gap-2">
                 <span>
-                  <span className="font-medium text-ink">{s.evento}</span> <span className="text-muted">· {s.detalle} · {fmt(s.fecha)}</span>
+                  <span className="font-medium text-ink">{s.evento}</span>{" "}
+                  <span className="text-muted">
+                    · {s.detalle} · {fmt(s.fecha)}
+                  </span>
                 </span>
                 <TrustBadge nivel={s.confianza} />
               </li>
@@ -66,7 +90,13 @@ function Registrado({ o }: { o: S<"Oferta"> }) {
   );
 }
 
-async function Detalle({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ paso?: string; publicada?: string }> }) {
+async function Detalle({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ paso?: string; publicada?: string }>;
+}) {
   const ctx = await requireContexto();
   const { id } = await params;
   const { paso, publicada } = await searchParams;
@@ -74,7 +104,11 @@ async function Detalle({ params, searchParams }: { params: Promise<{ id: string 
   if (!res) notFound();
   const o = res.data;
   const titulo = String(o.textos?.titulo ?? categoriaNombre(o.categorias?.[0] ?? ""));
-  const mock = res.source === "mock" && <div className="mb-4"><MockNotice what="las ofertas" /></div>;
+  const mock = res.source === "mock" && (
+    <div className="mb-4">
+      <MockNotice what="las ofertas" />
+    </div>
+  );
 
   /* ── Borrador: datos y qué se muestra ── */
   if (o.estado === "borrador" && paso !== "publicar") {
@@ -111,7 +145,11 @@ async function Detalle({ params, searchParams }: { params: Promise<{ id: string 
     const avisos = await getAvisos(ctx.activa.establecimiento_id, o, res.source);
     return (
       <>
-        <PageHeader title={titulo} subtitle="Revisá los avisos y cómo la va a ver el comprador." actions={<EstadoOfertaBadge estado={o.estado} />} />
+        <PageHeader
+          title={titulo}
+          subtitle="Revisá los avisos y cómo la va a ver el comprador."
+          actions={<EstadoOfertaBadge estado={o.estado} />}
+        />
         <PasosOferta actual={2} />
         {mock}
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
@@ -139,7 +177,10 @@ async function Detalle({ params, searchParams }: { params: Promise<{ id: string 
               )}
             </Card>
             <Registrado o={o} />
-            <Link href={`/comercializacion/ofertas/${o.id}`} className="inline-flex items-center gap-1 text-[13px] font-medium text-campo hover:underline">
+            <Link
+              href={`/comercializacion/ofertas/${o.id}`}
+              className="inline-flex items-center gap-1 text-[13px] font-medium text-campo hover:underline"
+            >
               <IconArrowLeft size={16} /> Volver a editar
             </Link>
           </div>
@@ -186,10 +227,20 @@ async function Detalle({ params, searchParams }: { params: Promise<{ id: string 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-4">
           <Card>
-            <CardHeader title="Compartí tu oferta" description="Mismo enlace en español, inglés y portugués: cada comprador la ve en su idioma." />
+            <CardHeader
+              title="Compartí tu oferta"
+              description="Mismo enlace en español, inglés y portugués: cada comprador la ve en su idioma."
+            />
             <CardBody className="space-y-4">
-              <label htmlFor="url-publica" className="sr-only">Enlace público</label>
-              <input id="url-publica" readOnly value={url} className="h-11 w-full rounded-[var(--radius-control)] border border-border bg-base px-3 font-mono text-[13.5px] text-ink" />
+              <label htmlFor="url-publica" className="sr-only">
+                Enlace público
+              </label>
+              <input
+                id="url-publica"
+                readOnly
+                value={url}
+                className="h-11 w-full rounded-[var(--radius-control)] border border-border bg-base px-3 font-mono text-[13.5px] text-ink"
+              />
               <div className="flex flex-wrap gap-2">
                 <a href={wa} target="_blank" rel="noopener noreferrer" className={buttonClass("primary", "md")}>
                   <IconWhatsapp size={18} /> Compartir por WhatsApp
@@ -220,17 +271,19 @@ async function Detalle({ params, searchParams }: { params: Promise<{ id: string 
               ))}
             </CardBody>
           </Card>
-          <Card>
-            <div className="flex items-center gap-4 px-5 py-4">
-              <span className="grid h-11 w-11 place-items-center rounded-[10px] bg-campo-50 text-monte">
-                <IconMessage size={22} />
-              </span>
-              <div className="flex-1">
-                <p className="text-[22px] font-bold tabular-nums text-ink">{o.consultas_count ?? 0}</p>
-                <p className="text-[13px] text-muted">consultas de compradores por esta oferta</p>
+          {ctx.can("consultas.ver") && (
+            <Card>
+              <div className="flex items-center gap-4 px-5 py-4">
+                <span className="grid h-11 w-11 place-items-center rounded-[10px] bg-campo-50 text-monte">
+                  <IconMessage size={22} />
+                </span>
+                <div className="flex-1">
+                  <p className="text-[22px] font-bold tabular-nums text-ink">{o.consultas_count ?? 0}</p>
+                  <p className="text-[13px] text-muted">consultas de compradores por esta oferta</p>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          )}
         </div>
         <Card className="xl:self-start">
           <CardHeader title="QR de la oferta" description="Para imprimir en el remate, la tranquera o el camión." />
@@ -248,7 +301,10 @@ async function Detalle({ params, searchParams }: { params: Promise<{ id: string 
 
 type EditorCond = { modalidad?: string; lugar_carga?: string; disponible_desde?: string; precio_monto?: string; precio_unidad?: string };
 
-export default function OfertaDetallePage(props: { params: Promise<{ id: string }>; searchParams: Promise<{ paso?: string; publicada?: string }> }) {
+export default function OfertaDetallePage(props: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ paso?: string; publicada?: string }>;
+}) {
   return (
     <>
       <Link href="/comercializacion" className="mb-3 inline-flex items-center gap-1 text-[13px] font-medium text-muted hover:text-ink">

@@ -36,7 +36,11 @@ type Params = Promise<{ locale: string; codigo: string }>;
 
 const LANG: Record<Locale, string> = { es: "es-AR", en: "en-US", pt: "pt-BR" };
 
-function fecha(iso: string | null | undefined, locale: Locale, opts: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" }) {
+function fecha(
+  iso: string | null | undefined,
+  locale: Locale,
+  opts: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" },
+) {
   if (!iso) return "";
   const d = iso.length === 10 ? new Date(`${iso}T12:00:00Z`) : new Date(iso);
   return new Intl.DateTimeFormat(LANG[locale], { ...opts, timeZone: "America/Argentina/Buenos_Aires" }).format(d);
@@ -55,8 +59,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const o = res.data;
   const titulo = o.seo?.titulo ?? titulo_de(o, locale);
   const descripcion =
-    o.seo?.descripcion ??
-    [o.establecimiento?.nombre, o.establecimiento?.zona, o.contenido?.sistema].filter(Boolean).join(" · ");
+    o.seo?.descripcion ?? [o.establecimiento?.nombre, o.establecimiento?.zona, o.contenido?.sistema].filter(Boolean).join(" · ");
   const foto = o.contenido?.fotos?.[0];
   return {
     title: titulo,
@@ -83,7 +86,12 @@ function hitos(o: S<"OfertaPublica">, locale: Locale, t: PortalDict) {
   const items: Array<{ titulo: string; detalle: string; fecha?: string; confianza?: "declarado" | "integridad_registrada" }> = [];
   const origen = c.origen as { nacidos_pct?: number } | null | undefined;
   if (origen?.nacidos_pct) items.push({ titulo: t.offer.birth, detalle: t.offer.birthBody(origen.nacidos_pct), confianza: "declarado" });
-  const sanidad = (c.sanidad ?? []) as Array<{ evento?: string; detalle?: string; fecha?: string; confianza?: "declarado" | "integridad_registrada" }>;
+  const sanidad = (c.sanidad ?? []) as Array<{
+    evento?: string;
+    detalle?: string;
+    fecha?: string;
+    confianza?: "declarado" | "integridad_registrada";
+  }>;
   for (const s of [...sanidad].sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)))) {
     items.push({ titulo: s.evento ?? "", detalle: s.detalle ?? "", fecha: s.fecha, confianza: s.confianza });
   }
@@ -112,7 +120,12 @@ async function Oferta({ params }: { params: Params }) {
   const raza = codigos(c.razas)[0]?.codigo;
   const edad = c.edad as { min_meses?: number; max_meses?: number } | null | undefined;
   const clase = c.clase_faena as { nombre?: string } | null | undefined;
-  const sanidad = (c.sanidad ?? []) as Array<{ evento?: string; detalle?: string; fecha?: string; confianza?: "declarado" | "integridad_registrada" }>;
+  const sanidad = (c.sanidad ?? []) as Array<{
+    evento?: string;
+    detalle?: string;
+    fecha?: string;
+    confianza?: "declarado" | "integridad_registrada";
+  }>;
   const cond = (c.condiciones ?? {}) as { modalidad?: string; precio?: string; lugar_carga?: string; disponible_desde?: string };
   const titulo = o.seo?.titulo ?? titulo_de(o, locale);
   const verifUrl = o.verificacion_url ? `${SITE_URL}/${locale}${o.verificacion_url}` : null;
@@ -153,14 +166,16 @@ async function Oferta({ params }: { params: Params }) {
             <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-muted">
               {o.establecimiento?.zona} · {t.offer.lotForSale}
             </p>
-            <h1 className="mt-3 font-display text-[clamp(34px,4.6vw,58px)] font-bold leading-[1.02] tracking-[-0.03em] text-ink">{titulo}</h1>
+            <h1 className="mt-3 font-display text-[clamp(34px,4.6vw,58px)] font-bold leading-[1.02] tracking-[-0.03em] text-ink">
+              {titulo}
+            </h1>
             {meta.length > 0 && <p className="mt-3 text-[16px] text-muted">{meta.join(" · ")}</p>}
             <div className="mt-5 flex flex-wrap gap-2">
               <SpeciesChip especie={especieDe(especie)} withIcon label={t.common.speciesOne[especie]} />
               {raza && <Badge tone="neutral">{razaNombre(raza)}</Badge>}
               {sanidad.length > 0 && (
                 <Badge tone="success" icon={<IconShieldCheck size={14} />}>
-                  {t.offer.healthUpToDate}
+                  {t.offer.vaccinesLoaded([...new Set(sanidad.map((x) => x.evento?.toLowerCase()).filter(Boolean))].slice(0, 3).join(", "))}
                 </Badge>
               )}
               {c.sin_retiro_vigente && (
@@ -223,7 +238,9 @@ async function Oferta({ params }: { params: Params }) {
                 <dd className="text-[20px] font-bold tabular-nums text-ink">
                   {num(c.peso.promedio_kg ?? 0, locale)} <span className="text-[15px] font-medium">{t.offer.avgWeight}</span>
                 </dd>
-                {c.peso.min_kg && c.peso.max_kg && <dd className="text-[12.5px] text-muted">{t.offer.range(c.peso.min_kg, c.peso.max_kg)}</dd>}
+                {c.peso.min_kg && c.peso.max_kg && (
+                  <dd className="text-[12.5px] text-muted">{t.offer.range(c.peso.min_kg, c.peso.max_kg)}</dd>
+                )}
                 <dd className="mt-2">
                   <TrustBadge
                     nivel={c.peso.declarado ? "declarado" : "integridad_registrada"}
@@ -249,10 +266,7 @@ async function Oferta({ params }: { params: Params }) {
                   {sanidad[0]?.evento} {sanidad[0]?.detalle}
                 </dd>
                 <dd className="mt-2">
-                  <TrustBadge
-                    nivel={sanidad[0]?.confianza ?? "declarado"}
-                    label={t.common.trust[sanidad[0]?.confianza ?? "declarado"]}
-                  />
+                  <TrustBadge nivel={sanidad[0]?.confianza ?? "declarado"} label={t.common.trust[sanidad[0]?.confianza ?? "declarado"]} />
                 </dd>
               </div>
             )}
@@ -264,7 +278,12 @@ async function Oferta({ params }: { params: Params }) {
             {/* Sobre el establecimiento */}
             {pf && (
               <section aria-labelledby="sobre" className="grid gap-6 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-                <Photo src={fotoCampo} alt={pf.nombre ?? ""} sizes="(min-width:768px) 360px, 100vw" className="aspect-[4/3] rounded-[14px] border border-border" />
+                <Photo
+                  src={fotoCampo}
+                  alt={pf.nombre ?? ""}
+                  sizes="(min-width:768px) 360px, 100vw"
+                  className="aspect-[4/3] rounded-[14px] border border-border"
+                />
                 <div>
                   <h2 id="sobre" className="text-[20px] font-bold tracking-[-0.01em] text-ink">
                     {t.offer.about}
@@ -342,7 +361,10 @@ async function Oferta({ params }: { params: Params }) {
                           i === linea.length - 1 && "hidden",
                         )}
                       />
-                      <span aria-hidden="true" className="relative z-10 mt-1 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-monte bg-monte sm:mt-0 sm:block" />
+                      <span
+                        aria-hidden="true"
+                        className="relative z-10 mt-1 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-monte bg-monte sm:mt-0 sm:block"
+                      />
                       <div className="sm:mt-3">
                         <p className="text-[14.5px] font-semibold text-ink">{h.titulo}</p>
                         <p className="text-[13px] text-muted">{h.detalle}</p>
@@ -420,7 +442,9 @@ async function Oferta({ params }: { params: Params }) {
                     <IconCalendar size={18} className="mt-0.5 shrink-0 text-monte" />
                     <div>
                       <dt className="text-muted">{t.offer.available}</dt>
-                      <dd className="text-ink">{fecha(cond.disponible_desde, locale, { day: "numeric", month: "long", year: "numeric" })}</dd>
+                      <dd className="text-ink">
+                        {fecha(cond.disponible_desde, locale, { day: "numeric", month: "long", year: "numeric" })}
+                      </dd>
                     </div>
                   </div>
                 )}
@@ -438,7 +462,10 @@ async function Oferta({ params }: { params: Params }) {
                 <div className="min-w-0">
                   <h2 className="text-[15px] font-semibold text-ink">{t.offer.qrTitle}</h2>
                   <p className="mt-1 text-[12.5px] leading-snug text-muted">{t.offer.qrBody}</p>
-                  <Link href={`/${locale}${o.verificacion_url}`} className="mt-2 inline-flex items-center gap-1 text-[13px] font-medium text-campo hover:underline">
+                  <Link
+                    href={`/${locale}${o.verificacion_url}`}
+                    className="mt-2 inline-flex items-center gap-1 text-[13px] font-medium text-campo hover:underline"
+                  >
                     {t.offer.verify} <IconArrowRight size={14} />
                   </Link>
                 </div>
