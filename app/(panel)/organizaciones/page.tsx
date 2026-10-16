@@ -21,12 +21,23 @@ async function Contenido() {
   }
   const organizaciones = organizacionesResult.status === "fulfilled" ? organizacionesResult.value.data : [];
   const adhesiones = adhesionesResult.status === "fulfilled" ? adhesionesResult.value.data : [];
+  const administrables = ctx.me.usuario.es_staff
+    ? organizacionesResult.status === "fulfilled" ? organizaciones.map((org) => ({ id: org.id, nombre: org.nombre, rol: "admin" as const })) : []
+    : ctx.me.organizaciones?.filter((org) => org.id && org.rol === "admin") ?? [];
+  const integrantes = await Promise.all(administrables.map(async (org) => {
+    try {
+      const result = await api<{ data: { usuario: { id: string; nombre: string; email: string }; rol: "admin" | "operador" }[] }>(`/organizaciones/${org.id}/miembros`);
+      return { ...org, miembros: result.data };
+    } catch { return { ...org, miembros: [] }; }
+  }));
   return (
     <OrganizacionesManager
       organizaciones={organizaciones}
       adhesiones={adhesiones}
       puedeAdherir={ctx.can("organizaciones.adherir")}
       puedeGestionar={ctx.can("consentimientos.gestionar")}
+      integrantes={integrantes}
+      esStaff={ctx.me.usuario.es_staff ?? false}
     />
   );
 }

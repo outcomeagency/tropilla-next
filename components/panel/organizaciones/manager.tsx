@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { S } from "@/lib/schemas";
 import { Button, Card, CardBody, CardHeader, Notice } from "@/components/ui";
 import { IconCheckCircle, IconClock, IconInfo } from "@/components/icons";
-import { adherirAction, consentimientoAction, revocarAction } from "@/app/(panel)/organizaciones/actions";
+import { adherirAction, consentimientoAction, revocarAction, miembroAction, cambiarRolMiembroAction, quitarMiembroAction } from "@/app/(panel)/organizaciones/actions";
 
 const CAMPOS: Array<{ key: keyof S<"Alcances">; label: string; detail: string }> = [
   { key: "existencias_agregadas", label: "Existencias agregadas", detail: "Totales por categoría, sin identificar animales." },
@@ -27,15 +27,30 @@ export function OrganizacionesManager({
   adhesiones,
   puedeAdherir,
   puedeGestionar,
+  integrantes,
+  esStaff,
 }: {
   organizaciones: S<"Organizacion">[];
   adhesiones: S<"Adhesion">[];
   puedeAdherir: boolean;
   puedeGestionar: boolean;
+  integrantes: { id?: string; nombre?: string; rol?: "admin" | "operador"; miembros: { usuario: { id: string; nombre: string; email: string }; rol: "admin" | "operador" }[] }[];
+  esStaff: boolean;
 }) {
   const [confirmar, setConfirmar] = useState<string | null>(null);
   const adheridas = new Set(adhesiones.filter((a) => a.estado === "activa").map((a) => a.organizacion?.id));
   return <div className="space-y-6">
+    {(integrantes.length > 0 || esStaff) && <section className="space-y-3"><h2 className="text-lg font-semibold text-ink">Administrar integrantes</h2>
+      {integrantes.map((org) => <Card key={org.id}><CardHeader title={org.nombre ?? "Organización"} description="Administradores y operadores" /><CardBody className="space-y-4">
+        {org.miembros.map((m) => <div key={m.usuario.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3 text-sm">
+          <span>{m.usuario.nombre} · {m.usuario.email}</span><div className="flex gap-2">
+            <form action={cambiarRolMiembroAction} className="flex items-center gap-2"><input type="hidden" name="organizacion_id" value={org.id} /><input type="hidden" name="usuario_id" value={m.usuario.id} /><select name="rol" defaultValue={m.rol} className="h-9 rounded border border-border px-2"><option value="admin">Admin</option><option value="operador">Operador</option></select><Button type="submit" variant="outline" size="sm">Guardar rol</Button></form>
+            <form action={quitarMiembroAction}><input type="hidden" name="organizacion_id" value={org.id} /><input type="hidden" name="usuario_id" value={m.usuario.id} /><Button type="submit" variant="danger" size="sm">Dar de baja</Button></form>
+          </div></div>)}
+        <form action={miembroAction} className="flex flex-wrap items-end gap-3"><input type="hidden" name="organizacion_id" value={org.id} /><label className="text-xs text-muted">Email<input required type="email" name="email" className="mt-1 block h-9 rounded border border-border px-2 text-sm" /></label><label className="text-xs text-muted">Rol<select name="rol" className="mt-1 block h-9 rounded border border-border px-2 text-sm"><option value="operador">Operador</option><option value="admin">Admin</option></select></label><Button type="submit" size="sm">Agregar integrante</Button></form>
+      </CardBody></Card>)}
+      {esStaff && integrantes.length === 0 && <p className="text-sm text-muted">Tu cuenta es de staff; para administrar integrantes, accedé desde una organización donde tengas rol admin.</p>}
+    </section>}
     <Notice tone="info" title="Vos decidís qué compartir.">Cada cambio registra una nueva versión y su huella. La adhesión no publica datos en el directorio.</Notice>
     <section className="space-y-3">
       <h2 className="text-lg font-semibold text-ink">Organizaciones disponibles</h2>
