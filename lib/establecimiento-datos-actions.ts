@@ -35,7 +35,6 @@ export async function guardarEstablecimientoAction(_prev: EventoActionState, fd:
   };
   const fichaAmpliada = Object.fromEntries(Object.entries(fichaKeys).map(([block, keys]) => [block, Object.fromEntries(keys.map((key) => [key, fdStr(fd, `ficha_${block}_${key}`)]).filter(([, value]) => value !== ""))]));
   const visibilidadFicha = Object.fromEntries(Object.keys(fichaKeys).map((block) => [block, fd.get(`publico_${block}`) === "on"]));
-  visibilidadFicha.sanidad_renspa = false;
   let linderoGeojson: NonNullable<S<"EstablecimientoInput">["lindero_geojson"]> | null = null;
   const linderoRaw = fdStr(fd, "lindero_geojson").trim();
   if (linderoRaw) {
