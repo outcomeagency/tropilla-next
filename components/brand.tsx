@@ -11,7 +11,7 @@ export function Logo({ onDark = false, height = 32 }: { onDark?: boolean; height
   if (onDark) {
     return (
       <span className="inline-flex items-center gap-2.5" aria-label="TROPILLA">
-        <Image src="/brand/isotipo-negativo.png" alt="" width={Math.round(height * 0.9)} height={height} preload />
+        <Image src="/brand/isotipo-negativo.png" alt="" width={Math.round(height * 0.9)} height={height} style={{ height, width: "auto" }} preload />
         <Image
           src="/brand/wordmark-blanco.png"
           alt="TROPILLA"

@@ -55,6 +55,7 @@ export async function getCatalogos() {
       plantillas: ((d as Record<string, unknown>).plantillas_sanitarias ?? []) as Item[],
       tiposDocumento: ((d as Record<string, unknown>).tipos_documento ?? []) as Item[],
       tiposPrueba: ((d as Record<string, unknown>).tipos_prueba ?? []) as Item[],
+      categoriasFaena: ((d as Record<string, unknown>).categorias_faena ?? []) as Item[],
       source: "api" as const,
     };
   } catch {
@@ -69,6 +70,7 @@ export async function getCatalogos() {
       plantillas: [] as Item[],
       tiposDocumento: [] as Item[],
       tiposPrueba: [] as Item[],
+      categoriasFaena: [] as Item[],
       source: "mock" as const,
     };
   }

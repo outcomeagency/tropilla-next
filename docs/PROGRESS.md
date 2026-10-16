@@ -353,3 +353,21 @@ ahora son genéricos para estados extendidos. El timeline muestra «Reposición:
 **Comentario del dev:** La API guarda cada fila ya normalizada y descarta lo que no entiende («Vaquillona» para búfalos, «2020-02-30»), así que para corregir el navegador lee el CSV al elegirlo y guarda lo escrito en `localStorage`: la celda en error muestra el valor original y el editor lo precarga; con XLSX (o en otro navegador) la celda dice «Falta». Lo ideal es que la API devuelva el valor original por fila (pedido para api). El editor rearma la fila completa (códigos → nombres, ids de lote/potrero → nombres) porque el PATCH revalida desde cero.
 Probado de punta a punta en «Campo de Prueba Web» con una planilla con RFID corto, categoría que no corresponde al sexo, categoría inexistente, fecha futura e inválida, caravana repetida, sexo «X», potrero y lote inexistentes y una fila sin identificación: 3 filas corregidas en línea, 1 descartada, 1 dejada con error; se importaron 6 y el resultado lista las 2 que quedaron afuera. También XLSX y cancelar.
 Confirmar con filas en error importa sólo las válidas (así lo hace la API) y el diálogo avisa que esas filas no se pueden importar después desde la misma planilla. No hay listado de importaciones en la API: la última sin confirmar se recuerda en la cookie `tropilla_imp`.
+
+## TPA-22 · Eventos de hacienda · ✅ (web)
+
+**Rutas:** `/hacienda/eventos` (registro del establecimiento, pestaña «Eventos» de Hacienda; `?modulo, tipo, desde, hasta, cursor`), `/hacienda/eventos/nuevo?tipo=&animales=id,id&lote=` (registrar), `/hacienda/eventos/[id]` (detalle). Accesos: «Registrar evento» en la ficha del animal y «Otro evento» en la barra de selección de `/hacienda`.
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Registro filtrable con autor, rol, confianza, corregido/anulado, agrupado por mes | `GET …/eventos` (cursor) | 🔌 API real |
+| Registrar: ingreso/compra (por conteo a un lote o animales nuevos con caravana), nacimiento, traslado, cambio de lote, egreso/venta, castración, dentición, condición corporal, recategorización manual, muerte, pérdida/robo, faena | `POST …/eventos` (JSON Schema v1 por tipo) + `422 requiere_confirmacion` → «Guardar igual» | 🔌 probado en el campo de prueba (CC, ingreso con caravana, muerte por conteo sobre lote) |
+| Sumar animales por cualquier identificador | `GET …/animales/identificador` | 🔌 |
+| Detalle: datos legibles (ids → nombres de potrero/lote/categoría/causa), sujetos, versiones | `GET …/eventos/{id}` | 🔌 |
+| Integridad: huella, eslabón, anclaje y enlace a la verificación pública | `GET …/eventos/{id}/integridad` | 🔌 (anclaje: «pendiente» hasta que la API ancle) |
+
+**Comentario del dev:** El alta de eventos es una sola pantalla en tres pasos (qué pasó → a quiénes → datos) con un resumen fijo a la
+derecha que dice qué se va a guardar; los formularios salen del catálogo de `functional/02 §2.1`, nunca JSON crudo. Un evento va sobre
+animales identificados (buscados por caravana/RFID/tatuaje o traídos desde la selección del listado) o sobre un lote, con conteo por
+categoría y tope de lo que hay para las bajas. Las coherencias (posterior a una baja, especie, sexo) las valida la API y se confirman con
+«Guardar igual»; los animales dados de baja ni se ofrecen. Identificación y pesaje no se duplican: viven en la ficha y en el lote (TPA-19/20/23).
