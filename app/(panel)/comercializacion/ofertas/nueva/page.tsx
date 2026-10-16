@@ -48,7 +48,7 @@ async function Lotes() {
     <>
       {source === "mock" && (
         <div className="mb-4">
-          <MockNotice what="Los lotes" />
+          <MockNotice what="los lotes" />
         </div>
       )}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

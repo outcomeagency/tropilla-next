@@ -23,7 +23,7 @@ async function Lista() {
     <>
       {lista?.source === "mock" && (
         <div className="mb-4">
-          <MockNotice what="Las ubicaciones" />
+          <MockNotice what="las ubicaciones" />
         </div>
       )}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">

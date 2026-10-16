@@ -74,7 +74,7 @@ async function Detalle({ params, searchParams }: { params: Promise<{ id: string 
   if (!res) notFound();
   const o = res.data;
   const titulo = String(o.textos?.titulo ?? categoriaNombre(o.categorias?.[0] ?? ""));
-  const mock = res.source === "mock" && <div className="mb-4"><MockNotice what="Las ofertas" /></div>;
+  const mock = res.source === "mock" && <div className="mb-4"><MockNotice what="las ofertas" /></div>;
 
   /* ── Borrador: datos y qué se muestra ── */
   if (o.estado === "borrador" && paso !== "publicar") {
