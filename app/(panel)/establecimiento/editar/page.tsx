@@ -45,6 +45,7 @@ async function Contenido() {
         historia: e.historia ?? "",
         ficha_ampliada: e.ficha_ampliada ?? {},
         visibilidad_ficha: e.visibilidad_ficha ?? {},
+        lindero_geojson: e.lindero_geojson ?? null,
         aftosa_zona: z.aftosa_zona ?? "",
         garrapata: z.garrapata ?? "",
         rabia_endemica: !!z.rabia_endemica,

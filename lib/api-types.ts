@@ -3869,6 +3869,10 @@ export interface components {
                 lat?: components["schemas"]["Decimal"];
                 lon?: components["schemas"]["Decimal"];
             } | null;
+            /** @description Geometría privada del establecimiento en GeoJSON Polygon/MultiPolygon. */
+            lindero_geojson?: {
+                [key: string]: unknown;
+            } | null;
             superficie_ha?: components["schemas"]["Decimal"] | null;
             actividades?: string[];
             especies: ("BOV" | "BUB")[];
@@ -3913,6 +3917,12 @@ export interface components {
             ficha_ampliada?: {
                 [key: string]: unknown;
             };
+            /** @description Lindero privado en GeoJSON WGS84. */
+            lindero_geojson?: {
+                /** @enum {string} */
+                type?: "Polygon" | "MultiPolygon";
+                coordinates?: unknown[][];
+            } | null;
             /** @description Opt-in público por bloque; los campos no marcados permanecen privados. */
             visibilidad_ficha?: {
                 [key: string]: boolean;
@@ -5578,6 +5588,11 @@ export interface components {
             /** @enum {string} */
             locale?: "es" | "en" | "pt";
             secciones?: {
+                ficha_establecimiento?: {
+                    [key: string]: {
+                        [key: string]: string | number;
+                    };
+                };
                 portada?: {
                     fotos?: components["schemas"]["Foto"][];
                     historia?: string | null;
