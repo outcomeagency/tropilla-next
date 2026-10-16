@@ -119,20 +119,26 @@ export async function registrarEventoAction(_prev: EventoActionState, fd: FormDa
   const tipo = fdStr(fd, "tipo");
   const meta = tipoHacienda(tipo);
   if (!meta) return { error: "Elegí qué evento querés registrar." };
-  if (!ctx.can(tipo.startsWith("reproduccion.") ? "reproduccion.crear" : "hacienda.crear")) return { error: "Tu rol no permite cargar este evento." };
+  const modulo = tipo.split(".")[0];
+  if (!ctx.can(modulo === "reproduccion" ? "reproduccion.crear" : modulo === "sanidad" ? "sanidad.crear" : "hacienda.crear")) return { error: "Tu rol no permite cargar este evento." };
 
   const fields: Record<string, string> = {};
   const fecha = fdStr(fd, "ocurrido_en");
   if (!isFecha(fecha)) fields.ocurrido_en = "Indicá la fecha.";
   else if (fecha > new Date(Date.now() + 86_400_000).toISOString().slice(0, 10)) fields.ocurrido_en = "La fecha no puede ser futura.";
 
-  const sujetoTipo = fdStr(fd, "sujeto") === "lote" && meta.sujetos.includes("lote") ? "lote" : "animales";
+  const pedido = fdStr(fd, "sujeto");
+  const sujetoTipo = (pedido === "lote" || pedido === "potrero") && meta.sujetos.includes(pedido) ? pedido : "animales";
   const animalIds = [...new Set(fd.getAll("animal_id").map(String).filter(Boolean))];
   const loteId = fdStr(fd, "lote_id");
   const creaAnimales = sujetoTipo === "animales" && (tipo === "hacienda.ingreso" || tipo === "hacienda.nacimiento");
 
   let sujetos: S<"EventoInput">["sujetos"];
-  if (sujetoTipo === "lote") {
+  if (sujetoTipo === "potrero") {
+    const potreroId = fdStr(fd, "potrero_id");
+    if (!potreroId) fields.potrero_id = "Elegí el potrero.";
+    sujetos = { tipo: "potrero", potrero_id: potreroId };
+  } else if (sujetoTipo === "lote") {
     if (!loteId) fields.lote_id = "Elegí el lote.";
     sujetos = { tipo: "lote", lote_id: loteId };
     if (["hacienda.ingreso", "hacienda.nacimiento", "hacienda.egreso", "hacienda.muerte", "hacienda.perdida", "hacienda.faena"].includes(tipo)) {
@@ -346,6 +352,66 @@ export async function registrarEventoAction(_prev: EventoActionState, fd: FormDa
       payload = limpio({ tipo: t, peso_kg: peso || undefined, categoria_nueva: fdStr(fd, "categoria_nueva") || undefined });
       break;
     }
+    case "sanidad.vacunacion":
+    case "sanidad.desparasitacion":
+    case "sanidad.tratamiento": {
+      const productoId = fdStr(fd, "producto_id");
+      const nombre = corto(fd, "producto_nombre", 200);
+      const diasRetiro = (k: string) => {
+        const v = fdStr(fd, k);
+        if (!v) return undefined;
+        if (!/^\d{1,3}$/.test(v)) {
+          fields[k] = "Días enteros.";
+          return undefined;
+        }
+        return Number(v);
+      };
+      const comun = {
+        producto_id: productoId && productoId !== "_otro" ? productoId : undefined,
+        producto_nombre: nombre,
+        dosis_aplicada: corto(fd, "dosis_aplicada", 200),
+        retiro_carne_dias: diasRetiro("retiro_carne_dias"),
+        retiro_leche_dias: diasRetiro("retiro_leche_dias"),
+        tarea_id: fdStr(fd, "tarea_id") || undefined,
+      };
+      if (tipo === "sanidad.vacunacion") {
+        if (!nombre) fields.producto_id = "Elegí el producto o escribí su nombre.";
+        const enfermedad = fdStr(fd, "enfermedad");
+        if (!enfermedad) fields.enfermedad = "Elegí contra qué enfermedad.";
+        const vence = fdStr(fd, "envase_vence");
+        if (vence && !isFecha(vence)) fields.envase_vence = "Fecha inválida.";
+        payload = limpio({
+          ...comun,
+          enfermedad,
+          numero_dosis: fdStr(fd, "numero_dosis") || undefined,
+          via: fdStr(fd, "via") || undefined,
+          vacunador: corto(fd, "vacunador", 200),
+          campana: corto(fd, "campana", 200),
+          envase_lote: corto(fd, "envase_lote", 200),
+          envase_vence: vence || undefined,
+        });
+      } else if (tipo === "sanidad.desparasitacion") {
+        if (!nombre) fields.producto_id = "Elegí el producto o escribí su nombre.";
+        const t = fdStr(fd, "tipo_desparasitacion");
+        if (!["interno", "externo", "ambos"].includes(t)) fields.tipo_desparasitacion = "Elegí interna, externa o ambas.";
+        const peso = decimal(fdStr(fd, "peso_dosificacion_kg"));
+        if (peso === null) fields.peso_dosificacion_kg = "Peso en kg (ej. 420).";
+        payload = limpio({
+          ...comun,
+          tipo: t,
+          principio_activo: corto(fd, "principio_activo", 200),
+          metodo_dosificacion: fdStr(fd, "metodo_dosificacion") || undefined,
+          peso_dosificacion_kg: peso || undefined,
+        });
+      } else {
+        const dx = corto(fd, "diagnostico_presuntivo", 200);
+        if (!dx) fields.diagnostico_presuntivo = "Indicá el diagnóstico presuntivo.";
+        const dur = fdStr(fd, "duracion_dias");
+        if (dur && !/^\d{1,3}$/.test(dur)) fields.duracion_dias = "Días enteros.";
+        payload = limpio({ ...comun, diagnostico_presuntivo: dx, duracion_dias: dur ? Number(dur) : undefined, veterinario: corto(fd, "veterinario", 200) });
+      }
+      break;
+    }
     case "hacienda.faena": {
       const frig = corto(fd, "frigorifico");
       if (!frig) fields.frigorifico = "Indicá el frigorífico.";
@@ -395,7 +461,8 @@ export async function registrarEventoAction(_prev: EventoActionState, fd: FormDa
         "sujetos.animal_ids": "animales",
         "sujetos.lote_id": "lote_id",
         "sujetos.conteo": "conteo",
-        "payload.tipo": { "reproduccion.parto": "tipo_parto", "reproduccion.destete": "tipo_destete", "reproduccion.inseminacion": "tipo_ia" }[tipo] ?? "tipo_perdida",
+        "sujetos.potrero_id": "potrero_id",
+        "payload.tipo": { "reproduccion.parto": "tipo_parto", "reproduccion.destete": "tipo_destete", "reproduccion.inseminacion": "tipo_ia", "sanidad.desparasitacion": "tipo_desparasitacion" }[tipo] ?? "tipo_perdida",
         "payload.toro_ids": "toros",
         "payload.animales": "animales",
         "payload.crias": tipo === "reproduccion.parto" ? "crias" : "animales",
@@ -404,5 +471,6 @@ export async function registrarEventoAction(_prev: EventoActionState, fd: FormDa
     );
   }
   revalidatePath("/hacienda", "layout");
+  if (modulo === "sanidad") revalidatePath("/sanidad", "layout");
   redirect(`/hacienda/eventos/${nuevoId}?ok=registrado`);
 }
