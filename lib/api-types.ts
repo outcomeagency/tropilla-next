@@ -273,7 +273,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Preferencias guardadas (aditivo TPA-53)
+         * @description Lista [{establecimiento_id, tipo, push, email, resumen_diario}] + `meta.defaults` (push sí, email y resumen no).
+         */
+        get: operations["get_me_preferencias_notificacion"];
         /**
          * Preferencias push/email/resumen diario
          * @description Body [{establecimiento_id?, tipo, push, email, resumen_diario}]
@@ -643,7 +647,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Base sugerida de productos sanitarios (sin dosis) */
+        /**
+         * Base sugerida de productos sanitarios (sin dosis)
+         * @description Genéricos por principio activo, sin dosis **ni retiro** (la dosis la indica el veterinario y el retiro sale del marbete). Cada ítem trae `id: null` y `codigo` (desvío aditivo TPA-31); para copiarlo al catálogo se hace `POST …/productos-sanitarios` con `sugerido_codigo`.
+         */
         get: operations["get_catalogos_productos_sugeridos"];
         put?: never;
         post?: never;
@@ -902,7 +909,7 @@ export interface paths {
         };
         /**
          * Buscar por identificador exacto (chequeo de duplicado)
-         * @description **Ability:** `hacienda.ver` (modelo-datos.md §13).
+         * @description **Ability:** `hacienda.ver` (modelo-datos.md §13). Compara normalizado (mayúsculas, sin espacios/guiones/puntos) y tolera ceros a la izquierda en cada tramo numérico: «142» encuentra «0142», «U142» encuentra «U-0142».
          */
         get: operations["get_establecimientos_establecimiento_animales_identificador"];
         put?: never;
@@ -1028,7 +1035,7 @@ export interface paths {
         put?: never;
         /**
          * Registrar evento (web/online: el servidor arma el sobre y la huella)
-         * @description **Ability:** `hacienda.crear` (modelo-datos.md §13). Ability según módulo del tipo. 422 requiere_confirmacion con advertencias; 422 regla_bloqueante
+         * @description **Ability:** `hacienda.crear` (modelo-datos.md §13). Ability según módulo del tipo. 422 requiere_confirmacion con advertencias; 422 regla_bloqueante. Sanidad (TPA-32): un evento a un lote **no anónimo** se expande en el servidor a `animales` con `lote_id` de contexto; con `producto_id` se copian al payload `producto_nombre`, `principio_activo` (desparasitación), `via` (vacunación) y los retiros del producto si no vienen. A un `potrero`, el servidor fija los animales presentes. Advertencias nuevas: `retiro_menor_al_producto`, `envase_vencido`, `producto_otra_especie`. Prueba diagnóstica (TPA-34): con `lectura_0h_mm` y `lectura_72h_mm` y sin `resultado`, el servidor lo calcula (`resultado_origen: calculado`, `umbrales_version`) con los parámetros `<prueba>_negativo_lt_mm` / `<prueba>_positivo_gte_mm`; un `calculado` que no coincide → 422 `regla_bloqueante` (por sync: aceptado + revisión `resultado_prueba_discrepante`); advertencias `marca_reactor`, `resultado_distinto_al_calculado`, `lectura_72h_menor`. Venta (TPA-35): `reactor` en `hacienda.egreso` que no va a faena y `retiro_vigente` también para lotes anónimos.
          */
         post: operations["post_establecimientos_establecimiento_eventos"];
         delete?: never;
@@ -1644,7 +1651,7 @@ export interface paths {
         put?: never;
         /**
          * Iniciar subida (dedupe por SHA-256)
-         * @description 200 {estado: completo} si ya existe. TPA-44
+         * @description 200 {estado: completo} si ya existe (dedupe por SHA-256: no se sube de nuevo). TPA-44. `simple` (un PUT a `url`) si `bytes` < 8 MiB; si no `multipart` con `partes[]` de `parte_bytes` (5 MiB). URLs prefirmadas contra el almacén (S3/MinIO, host `AWS_PUBLIC_ENDPOINT`), vencen a las 24 h; reintentar = iniciar otra subida. Requiere `documentos.crear`, `sync.push` o `importaciones.gestionar` en el establecimiento.
          */
         post: operations["post_archivos_subidas"];
         delete?: never;
@@ -1662,7 +1669,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Completar multipart */
+        /**
+         * Completar multipart
+         * @description Cierra el multipart (o ensambla la subida simple) y **verifica SHA-256 y bytes** del objeto: si no coinciden el objeto se borra (la clave es el hash) → 422 `archivo_corrupto`. Subida vencida o cerrada → 422 `subida_vencida`. Idempotente si el archivo ya quedó completo por otra subida. Simple: `partes` vacío u omitido.
+         */
         post: operations["post_archivos_subidas_subida_completar"];
         delete?: never;
         options?: never;
@@ -1776,7 +1786,7 @@ export interface paths {
         };
         /**
          * Catálogos si cambió la versión
-         * @description 304 si está al día
+         * @description 304 (sin cuerpo) si `version` es la vigente (también acepta `If-None-Match` con el ETag). `Cache-Control: private, no-cache`.
          */
         get: operations["get_sync_catalogos"];
         put?: never;
@@ -2662,7 +2672,7 @@ export interface paths {
         put?: never;
         /**
          * Tomar N tokens
-         * @description Requiere perfil comprador y email verificado. 409 tokens_insuficientes. Idempotency-Key
+         * @description Requiere perfil comprador (403 `perfil_comprador_requerido`) y email verificado (403 `email_no_verificado`). 409 tokens_insuficientes. Header `Idempotency-Key`: un reintento con la misma clave devuelve la misma toma (200). La reserva vence a las `toma_vencimiento_horas` sin «recibí».
          */
         post: operations["post_contratos_codigo_tomas"];
         delete?: never;
@@ -3367,6 +3377,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/public/anclajes/{anclaje}/recibo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recibo del anclaje (.ots más reciente) — aditivo TPA-40
+         * @description Para verificar con el cliente `ots` (OpenTimestamps) que la raíz del Merkle existía en la fecha del bloque, sin confiar en TROPILLA. Es el `anclaje.recibo_url` de `IntegridadRegistro`.
+         */
+        get: operations["get_public_anclajes_anclaje_recibo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/public/verificaciones/archivo/{sha256}": {
         parameters: {
             query?: never;
@@ -3765,6 +3795,7 @@ export interface components {
             motivo?: string | null;
             created_at?: components["schemas"]["FechaHora"];
         };
+        /** @description `pendientes.items[].tipo`: tarea | tarea_vencida | parto_proximo | parto_vencido | recategorizacion | documento_por_vencer | documento_vencido | consulta | toma | revision; semana = próximos 7 días (documentos: 30). `actividad` = últimos 10 eventos por fecha de carga. `variacion_mes` = nacimientos/partos/ingresos − muertes/egresos/faenas/pérdidas del mes ± movimientos de categoría de lotes anónimos; las altas de inventario no cuentan (TPA-52). */
         Inicio: {
             existencias?: components["schemas"]["Existencia"][];
             pendientes?: {
@@ -3796,6 +3827,7 @@ export interface components {
             anonimas?: number;
             variacion_mes?: number;
         };
+        /** @description Las filas por especie (razas, categorias, categorias_faena, reglas_categoria, parametros, plantillas_sanitarias) traen `especie_codigo` (BOV | BUB | null); `especie` se mantiene como alias con el mismo valor por compatibilidad. */
         Catalogos: {
             version: number;
             especies?: {
@@ -3934,6 +3966,9 @@ export interface components {
             };
             peso_promedio_kg?: components["schemas"]["Decimal"] | null;
             peso_promedio_fecha?: components["schemas"]["Fecha"] | null;
+            /** @description Aditivo TPA-35: mayor entre individuales y aplicaciones al lote anónimo */
+            retiro_carne_hasta?: string | null;
+            retiro_leche_hasta?: string | null;
             gdp_promedio_kg_dia?: components["schemas"]["Decimal"] | null;
             archivado_en?: components["schemas"]["FechaHora"] | null;
             row_version?: number;
@@ -4293,7 +4328,10 @@ export interface components {
             vencido?: boolean;
         };
         ProductoSanitario: {
-            id?: components["schemas"]["Uuid"];
+            /** @description null solo en la base sugerida */
+            id?: components["schemas"]["Uuid"] | null;
+            /** @description Solo en la base sugerida (TPA-31) */
+            codigo?: string | null;
             nombre_comercial?: string;
             principio_activo?: string | null;
             tipo?: string;
@@ -4320,6 +4358,8 @@ export interface components {
             especies?: ("BOV" | "BUB")[];
             enfermedades?: string[];
             notas?: string | null;
+            /** @description Código de la base sugerida de la que se copió (TPA-31) */
+            sugerido_codigo?: string | null;
             row_version?: number;
         };
         PlanSanitario: {
@@ -4330,6 +4370,7 @@ export interface components {
             } | null;
             items?: components["schemas"]["PlanItem"][];
         };
+        /** @description Disparadores: `fecha_fija {fecha: MM-DD}` · `ventana {desde, hasta: MM-DD}` o `{meses: [4,5]}` · `relativo {evento: nacimiento, dias | semanas[]}` (una tarea por animal) · `periodico {cada_dias, desde?: AAAA-MM-DD}` · `manual`. Repetición: `refuerzo_dias {min, max}` (tras una primera dosis de la enfermedad), `repetir_dias` (segunda ventana), `hasta: destete`. */
         PlanItem: {
             id?: components["schemas"]["Uuid"];
             plantilla_codigo?: string | null;
@@ -4353,6 +4394,13 @@ export interface components {
             } | null;
             activo?: boolean;
             editado?: boolean;
+            /** @description Nota de la plantilla (p. ej. dosis bubalina solo informativa). Aditivo TPA-33 */
+            nota?: string | null;
+            /** @description La condición de zona/especie se cumple hoy (si no, no genera tareas). Aditivo TPA-33 */
+            aplica?: boolean;
+            /** @description Ventana o fecha configurable sin fechas: no genera tareas. Aditivo TPA-33 */
+            requiere_configuracion?: boolean;
+            archivado_en?: components["schemas"]["FechaHora"] | null;
             row_version?: number;
         };
         PlanItemInput: {
@@ -4404,6 +4452,8 @@ export interface components {
             evento_id?: components["schemas"]["Uuid"] | null;
             omitida_motivo?: string | null;
             cabezas_estimadas?: number | null;
+            /** @description El usuario cambió las fechas: el generador ya no las toca. Aditivo TPA-33 */
+            reprogramada?: boolean;
             row_version?: number;
         };
         TareaInput: {
@@ -4473,6 +4523,8 @@ export interface components {
             /** @enum {string} */
             privacidad?: "fiscal" | "sanitario" | "comercial" | "general";
             titulo?: string;
+            /** @description Aditivo TPA-36 (declarado) */
+            emisor_nombre?: string | null;
             emitido_en?: components["schemas"]["Fecha"] | null;
             vence_en?: components["schemas"]["Fecha"] | null;
             /** @enum {string} */
@@ -4488,10 +4540,12 @@ export interface components {
                 id?: components["schemas"]["Uuid"];
                 etiqueta?: string;
             }[];
+            /** @description Solo en la ficha, en la respuesta de alta/versión y en sync (no en el listado). TPA-36 */
             versiones?: components["schemas"]["DocumentoVersion"][];
             verificacion_url?: string | null;
             row_version?: number;
         };
+        /** @description `privacidad` opcional (default del tipo; un tipo fiscal es siempre fiscal). `archivos` referencia SHA-256: si el archivo todavía no subió queda `pendiente` (subida diferida, TPA-44). `vence_en` default = emisión + `vence_por_defecto_dias` del tipo. Desvío TPA-36: `privacidad` deja de ser obligatoria. */
         DocumentoInput: {
             /** @description UUIDv7 del documento */
             id?: string;
@@ -4499,7 +4553,7 @@ export interface components {
             version_id?: string;
             tipo: string;
             /** @enum {string} */
-            privacidad: "fiscal" | "sanitario" | "comercial" | "general";
+            privacidad?: "fiscal" | "sanitario" | "comercial" | "general";
             titulo: string;
             emisor?: {
                 nombre?: string | null;
@@ -4547,8 +4601,10 @@ export interface components {
             version?: number | null;
             accesos?: number;
             created_at?: components["schemas"]["FechaHora"];
-            /** @description Solo en la respuesta de creación: el token no se guarda */
+            /** @description Solo en la respuesta de creación: el token no se guarda. Forma `{web}/e/{token}` (TPA-38) */
             url?: string | null;
+            /** @description Aditivo TPA-38: aviso al compartir un documento fiscal */
+            aviso?: string | null;
         };
         SubidaInput: {
             sha256: components["schemas"]["Hash"];
@@ -4749,12 +4805,17 @@ export interface components {
             neto_total?: components["schemas"]["Decimal"];
             neto_kg_vivo?: components["schemas"]["Decimal"];
         };
+        /** @description Decisión asumida (duda 4 de Claude Design): desbaste **solo en pie**; rendimiento al gancho **sobre el peso bruto** (desvío respecto de modelo-datos §9.1, que lo aplicaba sobre el neto); flete, arranque, seguro y comisión **a cargo del vendedor** en ambas modalidades; IVA informativo. Defaults por especie: `rendimiento_gancho_ref_pct`, `iva_hacienda_pct`. */
         SimulacionResultado: {
             en_pie?: components["schemas"]["SimulacionLinea"] | null;
             al_gancho?: components["schemas"]["SimulacionLinea"] | null;
             diferencia_neto?: components["schemas"]["Decimal"] | null;
             /** @enum {string|null} */
             conviene?: "en_pie" | "al_gancho" | "igual" | null;
+            /** @description Aditivo TPA-45: la fórmula aplicada, en texto ({en_pie[], al_gancho[], comun[]}). */
+            formula?: {
+                [key: string]: unknown;
+            };
         };
         Simulacion: {
             id?: components["schemas"]["Uuid"];
@@ -4804,7 +4865,12 @@ export interface components {
             huella?: components["schemas"]["Hash"];
             /** @enum {string} */
             confianza?: "declarado" | "integridad_registrada";
+            /** @description Aditivo TPA-46: animales del trato (compromiso «vendido») */
+            animal_ids?: components["schemas"]["Uuid"][];
+            /** @description Aditivo TPA-46: oferta de origen (pasa a vendida) */
+            oferta_id?: components["schemas"]["Uuid"] | null;
         };
+        /** @description `trato`: comprador, destino (catálogo), lugar_pesada, hora_pesada (HH:MM), modalidad (en_pie|al_gancho, obligatoria), desbaste_pct, tolerancias, plazo_pago_dias, flete_a_cargo (vendedor|comprador), comision_pct, intermediario. `liquidacion`: peso_bruto_kg y precio_kg obligatorios; desbaste/rendimiento/iva/flete/arranque/seguro/comision/moneda opcionales — el servidor calcula las líneas con la fórmula del simulador (TPA-45); con flete del comprador no se descuenta. 409 `comprometido` si un animal está en un contrato a futuro o ya vendido en otra operación. `motivo` obligatorio en correcciones. */
         OperacionInput: {
             /** @enum {string} */
             tipo: "venta" | "compra";
@@ -4827,6 +4893,15 @@ export interface components {
             precio_referencia_id?: components["schemas"]["Uuid"] | null;
             motivo?: string | null;
             generar_pdf?: boolean;
+            /** @description Aditivo: UUID del cliente (reintento idempotente) */
+            id?: string;
+            /** @description Aditivo TPA-46: si falta y hay `evento_raiz_id`, se toman los animales del egreso/faena */
+            animal_ids?: components["schemas"]["Uuid"][];
+            oferta_id?: components["schemas"]["Uuid"] | null;
+            lote_id?: components["schemas"]["Uuid"] | null;
+            contrato_id?: components["schemas"]["Uuid"] | null;
+            /** @description Retiro vigente / reactor → 422 requiere_confirmacion hasta confirmar */
+            confirmar_advertencias?: boolean;
         };
         PrecioReferencia: {
             id?: components["schemas"]["Uuid"];
@@ -5005,6 +5080,7 @@ export interface components {
             toma_vencimiento_horas?: number;
             motivo?: string | null;
         };
+        /** @description `huella` null en borrador (los términos se versionan al publicar). Sin `comercial.precios` (asesor) las tomas vienen sin comprador ni montos. `POST …/terminos?simular=true` → `{terminos, recorte: {liberar[], recortes[{toma_id, de, a}]}}` sin guardar; en borrador edita los términos sin versionar; publicado → versión nueva con `motivo` obligatorio y, con tomas vigentes, la economía (precio de referencia, descuento, anticipo, kg por token, moneda) queda fija (422). Publicar exige email verificado y la hacienda libre (409 `comprometido`). */
         Contrato: {
             id?: components["schemas"]["Uuid"];
             codigo_publico?: string;
@@ -5032,7 +5108,10 @@ export interface components {
             /** @enum {string} */
             confianza?: "declarado" | "integridad_registrada";
             publicado_en?: components["schemas"]["FechaHora"] | null;
+            /** @description Aditivo TPA-56: PDF de los términos en Documentos (nueva versión por cada cambio) */
+            documento_id?: components["schemas"]["Uuid"] | null;
         };
+        /** @description Sin `comercial.precios` (asesor) vienen null `comprador` y los montos. Estados: una `devuelta_parcial` sigue confirmada por los tokens que le quedan (entra en la liquidación). */
         Toma: {
             id?: components["schemas"]["Uuid"];
             contrato_id?: components["schemas"]["Uuid"];
@@ -5060,6 +5139,14 @@ export interface components {
                 created_at?: components["schemas"]["FechaHora"];
             }[];
             created_at?: components["schemas"]["FechaHora"];
+            /** @description Aditivo TPA-57 (solo en /comprador/tomas y la toma recién creada): {codigo, establecimiento, especie, categoria, fecha_entrega, estado, moneda} */
+            contrato?: {
+                [key: string]: unknown;
+            };
+            /** @description Aditivo TPA-57: la entrega con **solo la línea de liquidación de este comprador** */
+            entrega?: {
+                [key: string]: unknown;
+            } | null;
         };
         TomaInput: {
             tokens: number;
@@ -5528,6 +5615,7 @@ export interface components {
                 verificacion_url?: string;
             } | null;
         };
+        /** @description `documento.estado = reemplazado` si el enlace está fijo a una versión que ya no es la vigente (TPA-38). */
         EnlacePublico: {
             documento?: components["schemas"]["DocumentoPublico"];
             version?: number;
@@ -6100,6 +6188,25 @@ export interface operations {
             401: components["responses"]["NoAutenticado"];
             404: components["responses"]["NoEncontrado"];
             422: components["responses"]["Validacion"];
+        };
+    };
+    get_me_preferencias_notificacion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["NoAutenticado"];
         };
     };
     put_me_preferencias_notificacion: {
@@ -7812,6 +7919,8 @@ export interface operations {
             query?: {
                 archivados?: string;
                 tipo?: string;
+                /** @description BOV | BUB: productos de esa especie o sin especies declaradas (aditivo TPA-31) */
+                especie?: string;
             };
             header?: never;
             path: {
@@ -8101,7 +8210,8 @@ export interface operations {
                 cursor?: string;
                 /** @description Default 25, máx. 100 */
                 limit?: number;
-                estado?: string;
+                /** @description `abiertas` = pendientes + vencidas (aditivo TPA-33); filtros `desde`/`hasta` sobre `vence_en` */
+                estado?: "pendiente" | "vencida" | "hecha" | "omitida" | "abiertas";
                 desde?: string;
                 hasta?: string;
             };
@@ -8250,6 +8360,15 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AnimalResumen"][];
+                        /** @description Aditivo TPA-35: lotes anónimos con retiro vigente (no tienen filas por animal) */
+                        lotes?: {
+                            id?: components["schemas"]["Uuid"];
+                            nombre?: string;
+                            especie?: string;
+                            cabezas?: number;
+                            retiro_carne_hasta?: string | null;
+                            retiro_leche_hasta?: string | null;
+                        }[];
                     };
                 };
             };
@@ -8713,7 +8832,7 @@ export interface operations {
             query?: {
                 /** @description UUID */
                 establecimiento_id?: string;
-                /** @description Cursor opaco devuelto en meta.next_cursor */
+                /** @description Cursor opaco devuelto en data.cursor (pull o snapshot) */
                 cursor?: string;
                 /** @description Máx. 500 */
                 limite?: number;
@@ -9341,6 +9460,8 @@ export interface operations {
                 categoria?: string;
                 desde?: string;
                 hasta?: string;
+                /** @description Aditivo TPA-47: descripción de una serie de referencia (p. ej. «novillo overo») para comparar aunque sea de otra especie. Sin esto: la referencia elegida en la operación o la última declarada de la misma especie/categoría y **misma modalidad**. */
+                referencia?: string;
             };
             header?: never;
             path: {
@@ -11554,6 +11675,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": Record<string, never>;
+                };
+            };
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    get_public_anclajes_anclaje_recibo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                anclaje: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bytes del recibo */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
                 };
             };
             404: components["responses"]["NoEncontrado"];

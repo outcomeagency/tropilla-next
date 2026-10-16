@@ -6,8 +6,10 @@ import { Badge, Card, CardBody, CardHeader, DataList, EmptyState, FilterTabs, Kp
 import { IconAlert, IconArrowLeft, IconArrowRight, IconChart, IconFile, IconHeart, IconList, IconPlus, IconScale, IconShieldCheck, IconTag } from "@/components/icons";
 import { Photo } from "@/components/public/photo";
 import { Timeline } from "@/components/panel/hacienda/timeline";
+import { CurvaPeso, TablaPesajes } from "@/components/panel/hacienda/curva-peso";
+import { fmtGdp } from "@/lib/pesajes";
 import { requireContexto } from "@/lib/establecimiento";
-import { getAnimal, getDocumentosAnimal, getGenealogia, getMovimientosIdentificacion, getTimeline, type AnimalDetalle } from "@/lib/data/hacienda";
+import { getAnimal, getPesajesAnimal, getDocumentosAnimal, getGenealogia, getMovimientosIdentificacion, getTimeline, type AnimalDetalle } from "@/lib/data/hacienda";
 import { IdentificacionesPanel } from "@/components/panel/hacienda/identificaciones";
 import { tipoIdentLabel } from "@/lib/identificaciones";
 import { getCatalogos } from "@/lib/data/catalogos";
@@ -74,11 +76,15 @@ async function Ficha({ params, searchParams }: { params: Params; searchParams: S
   const conf = a.confianza_resumen as { eventos?: number; con_integridad_registrada?: number } | undefined;
   const claseFaena = a.clase_faena as { abreviatura?: string; clase?: string } | null | undefined;
   const retiroHasta = a.retiro_carne_hasta as string | null | undefined;
+  const puedeCargar = ctx.can("hacienda.crear") && (a.estado ?? "activo") === "activo";
 
   let contenido: ReactNode = null;
   if (tab === "resumen" || tab === "timeline" || tab === "sanidad" || tab === "reproduccion") {
     const modulo = tab === "sanidad" ? "sanidad" : tab === "reproduccion" ? "reproduccion" : undefined;
-    const tl = await getTimeline(est, id, { modulo, cursor, incluir_anulados: anulados ? "1" : undefined });
+    const [tl, pesajes] = await Promise.all([
+      getTimeline(est, id, { modulo, cursor, incluir_anulados: anulados ? "1" : undefined }),
+      tab === "resumen" ? getPesajesAnimal(est, id).catch(() => []) : Promise.resolve([]),
+    ]);
     const eventos = tab === "resumen" ? tl.data.slice(0, 5) : tl.data;
     const lista = eventos.length ? (
       <Timeline eventos={eventos} />
@@ -127,6 +133,35 @@ async function Ficha({ params, searchParams }: { params: Params; searchParams: S
               }
             />
             <CardBody>{lista}</CardBody>
+          </Card>
+          <Card className="overflow-hidden xl:col-span-2">
+            <CardHeader
+              title="Peso y ganancia diaria"
+              description={pesajes.length > 1 ? "Ganancia diaria entre cada pesaje. Los promedios del lote cuentan hasta que el animal tuvo pesaje propio." : undefined}
+              action={
+                puedeCargar ? (
+                  <Link href={`/hacienda/pesajes?animal=${id}`} className="inline-flex items-center gap-1 text-[13px] font-medium text-campo hover:underline">
+                    <IconScale size={15} /> Cargar pesaje
+                  </Link>
+                ) : undefined
+              }
+            />
+            {pesajes.length ? (
+              <div className="grid gap-0 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+                <div className="px-5 py-4">
+                  <CurvaPeso puntos={pesajes} />
+                </div>
+                <div className="border-t border-border lg:border-l lg:border-t-0">
+                  <TablaPesajes puntos={pesajes} />
+                </div>
+              </div>
+            ) : (
+              <EmptyState
+                icon={<IconScale size={24} />}
+                title="Todavía no tiene pesajes"
+                description="Con dos pesajes se calcula la ganancia diaria. Pesalo en la manga con la app o cargá el peso acá."
+              />
+            )}
           </Card>
         </div>
       );
@@ -340,7 +375,7 @@ async function Ficha({ params, searchParams }: { params: Params; searchParams: S
 
       <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard label={a.peso_fecha ? `Peso · ${fecha(a.peso_fecha)}` : "Peso"} value={a.peso_kg ? `${nf.format(Number(a.peso_kg))} kg` : "—"} icon={<IconScale size={22} />} />
-        <KpiCard label="Ganancia diaria" value={a.gdp_kg_dia ? `${String(a.gdp_kg_dia).replace(".", ",")} kg` : "—"} icon={<IconChart size={22} />} />
+        <KpiCard label="Ganancia diaria" value={a.gdp_kg_dia ? fmtGdp(Number(a.gdp_kg_dia)) : "—"} icon={<IconChart size={22} />} />
         <KpiCard label="Edad" value={edad(a.edad_meses, true) || "—"} icon={<IconTag size={22} />} />
         <KpiCard label="Eventos registrados" value={a.eventos_count != null ? String(a.eventos_count) : "—"} icon={<IconList size={22} />} />
       </div>

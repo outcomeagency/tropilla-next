@@ -371,3 +371,21 @@ derecha que dice qué se va a guardar; los formularios salen del catálogo de `f
 animales identificados (buscados por caravana/RFID/tatuaje o traídos desde la selección del listado) o sobre un lote, con conteo por
 categoría y tope de lo que hay para las bajas. Las coherencias (posterior a una baja, especie, sexo) las valida la API y se confirman con
 «Guardar igual»; los animales dados de baja ni se ofrecen. Identificación y pesaje no se duplican: viven en la ficha y en el lote (TPA-19/20/23).
+
+## TPA-23 · Pesajes y ganancia diaria · ✅ (web)
+
+**Rutas:** `/hacienda/pesajes` (pestaña «Pesajes»: sesión de pesada, GDP por lote, últimos pesajes; `?animal=` precarga uno), ficha del animal → Resumen → «Peso y ganancia diaria» (curva + tabla), promedio de lote en la ficha del lote (TPA-20).
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Sesión de pesada: un `hacienda.pesaje` individual por animal, método, desbaste | `POST …/eventos` (idempotente por fila) | 🔌 probado en el campo de prueba |
+| Aviso > 30 % en < 30 días: en vivo en la fila y `422 requiere_confirmacion` (`pesaje_atipico`) → «Guardar igual» | `POST …/eventos` | 🔌 probado (40 % en 15 días) |
+| Peso anterior por animal | `GET …/animales/identificador` (`peso_kg`, `peso_fecha`) | 🔌 |
+| Curva y GDP entre pesajes del animal (propios y heredados del lote) | `GET …/animales/{id}/eventos?tipo=hacienda.pesaje` (peso leído del `resumen`) | 🔌 |
+| GDP promedio por lote | `GET …/lotes` (`peso_promedio_kg`, `gdp_promedio_kg_dia`) | 🔌 |
+
+**Comentario del dev:** La pesada se carga como en la manga: caravana y Enter, peso y Enter, y salta a la fila siguiente; cada fila
+muestra el peso anterior con su fecha y la ganancia diaria en vivo, y marca en amarillo si difiere más de 30 % en menos de 30 días.
+Lo que la API advierte no se guarda hasta confirmarlo, y las filas ya guardadas salen de la lista (cada fila tiene su clave de
+idempotencia: reintentar no duplica). La curva de la ficha es SVG propio con tokens; los promedios de lote heredados se distinguen
+de los pesajes individuales. Pedido a la API: un endpoint de serie de pesos por animal evitaría leer el kg del `resumen`.

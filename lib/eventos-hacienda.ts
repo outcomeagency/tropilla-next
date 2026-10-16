@@ -31,6 +31,7 @@ export const TIPOS_HACIENDA: TipoHacienda[] = [
   { codigo: "hacienda.traslado", corto: "Cambio de potrero", titulo: "Traslado de potrero", ayuda: "Cambia dónde está la hacienda dentro del establecimiento.", grupo: "movimientos", sujetos: ["animales", "lote"] },
   { codigo: "hacienda.cambio_lote", corto: "Pasar animales a otro lote", titulo: "Cambio de lote", ayuda: "Pasa animales identificados a otro lote de manejo.", grupo: "movimientos", sujetos: ["animales"] },
   { codigo: "hacienda.egreso", corto: "Venta o salida del campo", titulo: "Egreso o venta", ayuda: "Hacienda que sale del campo: venta, traslado a otro campo o entrega de contrato.", grupo: "movimientos", sujetos: ["animales", "lote"] },
+  { codigo: "hacienda.pesaje", corto: "Sesión de pesada con ganancia diaria", titulo: "Pesaje", ayuda: "Peso individual con ganancia diaria; el promedio de lote se carga en la ficha del lote.", grupo: "manejo", sujetos: ["animales"], redirige: "/hacienda/pesajes" },
   { codigo: "hacienda.castracion", corto: "Sólo machos", titulo: "Castración", ayuda: "Sólo machos. Puede recategorizar (ternero → novillito).", grupo: "manejo", sujetos: ["animales"] },
   { codigo: "hacienda.denticion", corto: "Dientes a la boca", titulo: "Dentición", ayuda: "Dientes a la boca. En búfalos sugiere la categoría.", grupo: "manejo", sujetos: ["animales"] },
   { codigo: "hacienda.condicion_corporal", corto: "Escala 1-5 o 1-9", titulo: "Condición corporal", ayuda: "Escala 1-5 o 1-9, individual o promedio de lote.", grupo: "manejo", sujetos: ["animales", "lote"] },
