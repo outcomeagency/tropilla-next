@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { RootHtml } from "@/components/root-html";
 import { PanelSidebar } from "@/components/panel/sidebar";
 import { UserCard, UserCardSkeleton } from "@/components/panel/user-card";
+import { SessionGate } from "@/components/panel/session-gate";
 import { MOCK_ESTABLECIMIENTO } from "@/lib/mock";
 
 export const metadata: Metadata = {
@@ -29,7 +30,12 @@ export default function PanelLayout({ children }: { children: ReactNode }) {
         }
       />
       <main className="min-h-dvh lg:pl-[264px]">
-        <div className="mx-auto max-w-[1360px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</div>
+        <div className="mx-auto max-w-[1360px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <Suspense fallback={null}>
+            <SessionGate />
+          </Suspense>
+          {children}
+        </div>
       </main>
     </RootHtml>
   );
