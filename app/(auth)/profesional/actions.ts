@@ -17,6 +17,7 @@ export async function guardarProfesionalAction(fd: FormData) {
     zonas: { provincias: String(fd.get("provincias") ?? "").split(",").map((v) => v.trim()).filter(Boolean) },
     idiomas,
     bio: String(fd.get("bio") ?? "") || null,
+    foto_sha256: String(fd.get("foto_sha256") ?? "") || null,
     publico: fd.get("publico") === "on",
   };
   await api<One<S<"Profesional">>>("/me/profesional", { method: "PUT", body });
