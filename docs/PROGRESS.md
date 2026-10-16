@@ -749,3 +749,15 @@ botón de verificación, más la aclaración de qué prueba la integridad. Si el
 | Lectura CSV en el navegador y persistencia de crudos | Eliminadas; la carga y el original se procesan en servidor/API | Sin mock ni localStorage |
 
 **Comentario del dev:** La pantalla de revisión toma el texto original por columna directamente de cada fila de la API. Cuando una columna tiene error, la tabla muestra el valor sin normalizar y el editor lo precarga, incluso si es un valor que no existe en los catálogos. Los archivos CSV ya no se leen en el navegador y se eliminó el almacenamiento de filas crudas en `localStorage`. En importaciones anteriores cuyo `original` es `null`, las celdas en error muestran «Falta» y el editor queda vacío para completar.
+
+## TPA-23 · Pesajes y ganancia diaria · ✅ (bugfix)
+
+**Ruta:** `/hacienda/{id}` (ficha del animal, sección Resumen).
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Serie de peso ordenada, GDP y fuente | `GET /establecimientos/{e}/animales/{a}/pesajes?incluir_lote=true` | 🔌 API real |
+| Curva y tabla | Pesaje, nacimiento, destete y peso heredado del lote | 🔌 API real; marca por fuente |
+| Lectura de `resumen` de eventos | Eliminada para construir la curva | Sin mock |
+
+**Comentario del dev:** La ficha obtiene los puntos de peso del endpoint dedicado, que devuelve el peso, la fuente y la ganancia diaria calculada por la API. La curva y la tabla identifican por separado los pesos heredados del lote, los de nacimiento y los de destete. La tabla muestra la GDP informada por el endpoint y evita recalcularla con puntos que no son pesajes. No hay fallback ni datos de muestra para esta sección.
