@@ -621,3 +621,19 @@ castellano («pedí la nueva constancia y subila como versión nueva»), sin pro
 archivo, tipo (que fija la categoría de privacidad: un fiscal es fiscal siempre), datos y a qué corresponde, con resumen a la derecha.
 La ficha muestra la foto del documento o un acceso al PDF, y la historia como línea de tiempo: cada versión con motivo, autor, rol y
 huella con enlace a la verificación. Los archivos viajan server-side a la URL prefirmada; el navegador sólo recibe un redirect de 5 min.
+
+## TPA-38 · Compartir documento por enlace temporal · ✅ (web)
+
+**Rutas:** ficha `/documentos/[id]` → «Compartir por enlace»; pública `/[locale]/e/[token]` (la API arma `{web}/e/{token}`: `proxy.ts` redirige `/e/*` al idioma del navegador); `/api/enlaces/[token]/archivo/[sha]` abre el archivo revalidando el enlace.
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Crear enlace (24 h, 7 días, 30 días o hasta una fecha; fijo a una versión o siempre la vigente), mostrado una sola vez + WhatsApp | `POST …/documentos/{id}/enlaces` (`aviso` si es fiscal) | 🔌 probado |
+| Enlaces con estado, visitas y vencimiento; revocar | `GET …/enlaces`, `POST …/enlaces/{e}/revocar` | 🔌 |
+| Página pública (es/en/pt): datos, nivel de confianza, versión, estado (vigente/vencido/reemplazado), verificación; 410 → «ya no está disponible»; no indexable | `GET /public/enlaces/{token}` | 🔌 probado |
+| Abrir el archivo desde el enlace | `archivos[].url` del enlace | ⚠ la API devuelve la URL prefirmada con host interno `minio:9000` (no abre en dev); pedido para la API |
+
+**Comentario del dev:** Compartir no es publicar: el enlace vive en la ficha del documento, dura lo que el productor elige y se
+puede revocar, con el contador de visitas a la vista. El token se muestra una sola vez (la API no lo guarda) con copiar y WhatsApp,
+y si el documento es fiscal se avisa antes. El comprador ve una página sobria en su idioma con el nivel de confianza, la versión y el
+botón de verificación, más la aclaración de qué prueba la integridad. Si el enlace venció o lo revocaron lo dice sin rodeos.

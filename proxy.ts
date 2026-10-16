@@ -32,6 +32,11 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(`/${preferredLocale(request)}`, request.url));
   }
 
+  // Enlaces compartidos (TPA-38): la API arma `{web}/e/{token}`; se sirven en el idioma del navegador.
+  if (pathname.startsWith("/e/")) {
+    return NextResponse.redirect(new URL(`/${preferredLocale(request)}${pathname}`, request.url));
+  }
+
   if (pathname === "/ingresar" || pathname === "/registro") {
     return hasSession ? NextResponse.redirect(new URL("/inicio", request.url)) : NextResponse.next();
   }
@@ -49,6 +54,7 @@ export const config = {
   // Constantes literales: Next las analiza en build. Mantener sincronizado con lib/nav.ts.
   matcher: [
     "/",
+    "/e/:path*",
     "/ingresar",
     "/registro",
     "/bienvenida",

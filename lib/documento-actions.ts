@@ -6,6 +6,7 @@ import { api } from "./api";
 import { requireContexto } from "./establecimiento";
 import { estadoDeError, fdStr, isFecha, uuidv7, type EventoActionState } from "./eventos-api";
 import { crearDocumentoConArchivo, subirArchivo, validarArchivo } from "./archivos";
+import { SITE_URL } from "./site";
 
 function vinculosDe(fd: FormData) {
   const out: Array<{ tipo: string; id: string }> = [];
@@ -123,4 +124,50 @@ export async function visibilidadDocumentoAction(fd: FormData): Promise<void> {
   });
   revalidatePath("/documentos", "layout");
   redirect(`/documentos/${id}?ok=visibilidad`);
+}
+
+/* ───────────── Compartir por enlace que vence (TPA-38) ───────────── */
+
+export interface EnlaceState extends EventoActionState {
+  enlace?: { url: string; expira: string; aviso?: string | null };
+}
+
+const DURACIONES: Record<string, number> = { "1d": 1, "7d": 7, "30d": 30 };
+
+/** Crea un enlace con vencimiento (el token se muestra una sola vez: la API no lo guarda). */
+export async function crearEnlaceAction(_prev: EnlaceState, fd: FormData): Promise<EnlaceState> {
+  const ctx = await requireContexto();
+  if (!ctx.can("documentos.compartir")) return { error: "Tu rol no permite compartir documentos." };
+  const id = fdStr(fd, "id");
+  const dur = fdStr(fd, "duracion");
+  let expira: Date;
+  if (DURACIONES[dur]) expira = new Date(Date.now() + DURACIONES[dur] * 86_400_000);
+  else {
+    const f = fdStr(fd, "hasta");
+    if (!isFecha(f)) return { fields: { hasta: "Elegí hasta qué día vale." }, error: "Elegí hasta qué día vale el enlace." };
+    expira = new Date(`${f}T23:59:00-03:00`);
+    if (expira.getTime() <= Date.now()) return { fields: { hasta: "Tiene que ser una fecha futura." }, error: "La fecha tiene que ser futura." };
+    if (expira.getTime() - Date.now() > 366 * 86_400_000) return { fields: { hasta: "Hasta un año." }, error: "Un enlace puede durar hasta un año." };
+  }
+  const version = fd.get("fijar") === "on" ? Number(fdStr(fd, "version")) || null : null;
+  try {
+    const r = await api<{ data: { url?: string | null; expira_en?: string; aviso?: string | null } }>(`/establecimientos/${ctx.activa.establecimiento_id}/documentos/${id}/enlaces`, {
+      method: "POST",
+      body: { expira_en: expira.toISOString().replace(/\.\d{3}Z$/, ".000Z"), version },
+    });
+    const token = (r.data.url ?? "").split("/e/")[1] ?? "";
+    revalidatePath(`/documentos/${id}`);
+    return { ok: { mensaje: "Enlace creado." }, enlace: { url: `${SITE_URL}/e/${token}`, expira: r.data.expira_en ?? expira.toISOString(), aviso: r.data.aviso } };
+  } catch (e) {
+    return estadoDeError(e, { expira_en: "hasta" }, "No pudimos crear el enlace.");
+  }
+}
+
+export async function revocarEnlaceAction(fd: FormData): Promise<void> {
+  const ctx = await requireContexto();
+  if (!ctx.can("documentos.compartir")) throw new Error("sin_permiso");
+  const id = fdStr(fd, "id");
+  await api(`/establecimientos/${ctx.activa.establecimiento_id}/documentos/${id}/enlaces/${fdStr(fd, "enlace")}/revocar`, { method: "POST" });
+  revalidatePath(`/documentos/${id}`);
+  redirect(`/documentos/${id}?ok=revocado`);
 }
