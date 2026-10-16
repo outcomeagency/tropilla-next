@@ -116,3 +116,21 @@ tipo de comprador en chips y al menos un medio de respuesta. A un bot que cae en
 de 2,5 s se le responde «enviado» sin tocar la API (no le damos señal). Errores 422/429 de la API se muestran en
 el idioma del comprador, y la consulta lleva `idioma` para que el productor sepa en qué responder. La
 confirmación explica qué pasa después; en modo demo lo dice explícitamente en vez de simular un envío.
+
+## TPA-50 · Perfil público del establecimiento · ✅ (web)
+
+**Rutas:** `/[locale]/p/[slug]` (público, es/en/pt) · `/perfil-publico` (configuración) · `/perfil-publico/vista-previa?idioma=` (vista como comprador)
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Perfil público | `GET /public/establecimientos/{slug}` | 🧪 mock (9 perfiles; La Esperanza completo) |
+| Configuración (secciones, slug, directorio, historia, idiomas, ubicación pública, contacto visible) | `GET/PATCH …/perfil` | 🧪 mock en memoria |
+| Vista previa obligatoria | `GET …/perfil/preview`, `POST …/preview/aceptar` | 🧪 mock; «Publicar» deshabilitado hasta aceptar |
+| Publicar / despublicar | `POST …/perfil/publicar|despublicar` + `revalidateTag("perfil:<slug>")` | 🧪 mock |
+| Congelar sección derivada | `POST …/secciones/{s}/congelar|descongelar` | 🧪 mock |
+
+**Comentario del dev:** Un solo componente (`PerfilView`) arma el perfil público y la vista previa del panel: el
+productor ve exactamente lo que ve el comprador, en los tres idiomas. Sólo se pintan las secciones que trae el
+Resource público (lo privado no llega ni se oculta con CSS). Rodeo en rangos, sanidad sin datos individuales,
+trazabilidad con % de integridad registrada e insignias sólo por hechos medibles. La primera publicación exige
+aceptar la vista previa; las secciones derivadas se pueden congelar. Leyenda fija en el pie con el texto del Resource.

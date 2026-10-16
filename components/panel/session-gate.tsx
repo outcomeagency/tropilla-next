@@ -23,7 +23,7 @@ export async function SessionGate() {
     <>
       {source === "mock" && (
         <div className="mb-4">
-          <MockNotice what="La sesión y el establecimiento" />
+          <MockNotice text="Sesión de demostración: la API no está disponible y se muestran datos de ejemplo." />
         </div>
       )}
       {me.usuario.email && me.usuario.email_verificado === false && (

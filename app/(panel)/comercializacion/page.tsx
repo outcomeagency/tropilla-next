@@ -47,7 +47,7 @@ async function Ofertas({ searchParams }: { searchParams: Promise<{ estado?: stri
       />
       {todas.source === "mock" && (
         <div className="border-b border-border px-5 py-2.5">
-          <MockNotice what="Las ofertas" />
+          <MockNotice what="las ofertas" />
         </div>
       )}
       {lista.length ? (

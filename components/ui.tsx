@@ -551,11 +551,11 @@ export function Spinner({ size = 16 }: { size?: number }) {
 }
 
 /** Aviso de datos de ejemplo (adaptador lib/mock/*): siempre visible, nunca escondido. */
-export function MockNotice({ what = "Estos datos", text }: { what?: string; /** Texto completo (lo público lo traduce). */ text?: string }) {
+export function MockNotice({ what = "estos datos", text }: { what?: string; /** Texto completo (lo público lo traduce). */ text?: string }) {
   return (
     <p className="inline-flex items-center gap-1.5 rounded-[var(--radius-chip)] border border-dashed border-warning-border bg-warning-bg px-2 py-0.5 text-[12px] font-medium text-warning">
       <IconInfo size={14} className="shrink-0" />
-      {text ?? `${what} son de ejemplo: la API todavía no publica este dato.`}
+      {text ?? `Datos de ejemplo: la API todavía no publica ${what}.`}
     </p>
   );
 }
