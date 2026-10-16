@@ -13,8 +13,8 @@ import { getPortalDict } from "@/lib/i18n/portal";
 import { getContratoPublico } from "@/lib/data/comprador";
 import { categoriaNombre } from "@/lib/catalogo";
 import { especieDe } from "@/lib/types";
-import { SITE_URL } from "@/lib/site";
 import { FollowProducer } from "@/components/comprador/follow-producer";
+import { verificationPath, verificationUrl } from "@/lib/verification-url";
 
 type Params = Promise<{ locale: string; codigo: string }>;
 const LANG: Record<Locale, string> = { es: "es-AR", en: "en-US", pt: "pt-BR" };
@@ -96,10 +96,10 @@ async function Contrato({ params }: { params: Params }) {
               </section>
 
               <div className="mt-8 flex flex-wrap items-center gap-5 rounded-[var(--radius-card)] border border-border bg-surface p-5">
-                {c.verificacion_url && <Qr value={`${SITE_URL}/${locale}${c.verificacion_url}`} size={88} label={k.verify} />}
+                {c.verificacion_url && <Qr value={verificationUrl(c.verificacion_url, locale)} size={88} label={k.verify} />}
                 <div className="flex flex-col gap-2">
                   {c.verificacion_url && (
-                    <Link href={`/${locale}${c.verificacion_url}`} className="inline-flex items-center gap-1 text-[14px] font-medium text-campo hover:underline">
+                    <Link href={verificationPath(c.verificacion_url, locale)} className="inline-flex items-center gap-1 text-[14px] font-medium text-campo hover:underline">
                       {k.verify} <IconArrowRight size={15} />
                     </Link>
                   )}

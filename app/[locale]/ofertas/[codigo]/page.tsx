@@ -30,6 +30,7 @@ import { actividadNombre } from "@/lib/geo";
 import { categoriaNombre, razaNombre } from "@/lib/catalogo";
 import { especieDe } from "@/lib/types";
 import { SITE_URL } from "@/lib/site";
+import { verificationPath, verificationUrl } from "@/lib/verification-url";
 import type { S } from "@/lib/schemas";
 
 type Params = Promise<{ locale: string; codigo: string }>;
@@ -128,7 +129,8 @@ async function Oferta({ params }: { params: Params }) {
   }>;
   const cond = (c.condiciones ?? {}) as { modalidad?: string; precio?: string; lugar_carga?: string; disponible_desde?: string };
   const titulo = o.seo?.titulo ?? titulo_de(o, locale);
-  const verifUrl = o.verificacion_url ? `${SITE_URL}/${locale}${o.verificacion_url}` : null;
+  const verifPath = o.verificacion_url ? verificationPath(o.verificacion_url, locale) : null;
+  const verifUrl = o.verificacion_url ? verificationUrl(o.verificacion_url, locale) : null;
   const perfil = o.establecimiento?.slug ? await getPerfilPublico(o.establecimiento.slug, locale) : null;
   const pf = perfil?.data;
   const actividad = pf?.secciones?.actividad;
@@ -401,7 +403,7 @@ async function Oferta({ params }: { params: Params }) {
                       <div className="flex items-center gap-1 pl-[34px] sm:pl-0">
                         <TrustBadge nivel={doc.confianza ?? "declarado"} label={t.common.trust[doc.confianza ?? "declarado"]} />
                         {doc.verificacion_url && (
-                          <Link href={`/${locale}${doc.verificacion_url}`} className={buttonClass("ghost", "sm", "text-campo")}>
+                          <Link href={verificationPath(doc.verificacion_url, locale)} className={buttonClass("ghost", "sm", "text-campo")}>
                             {t.offer.verify}
                           </Link>
                         )}
@@ -456,14 +458,14 @@ async function Oferta({ params }: { params: Params }) {
               </div>
             </div>
 
-            {verifUrl && (
+            {verifUrl && verifPath && (
               <div className="flex gap-4 rounded-[var(--radius-card)] border border-border bg-surface p-5">
                 <Qr value={verifUrl} size={96} label={t.offer.qrTitle} />
                 <div className="min-w-0">
                   <h2 className="text-[15px] font-semibold text-ink">{t.offer.qrTitle}</h2>
                   <p className="mt-1 text-[12.5px] leading-snug text-muted">{t.offer.qrBody}</p>
                   <Link
-                    href={`/${locale}${o.verificacion_url}`}
+                    href={verifPath}
                     className="mt-2 inline-flex items-center gap-1 text-[13px] font-medium text-campo hover:underline"
                   >
                     {t.offer.verify} <IconArrowRight size={14} />
