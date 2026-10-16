@@ -6,15 +6,15 @@ import { uuidv7 } from "@/lib/uuid";
 import { Button, Notice, Spinner } from "@/components/ui";
 import { IconAlert } from "@/components/icons";
 
-type Action = (prev: EventoActionState, fd: FormData) => Promise<EventoActionState>;
+type Action<T extends EventoActionState = EventoActionState> = (prev: T, fd: FormData) => Promise<T>;
 
 /**
  * Estado de un formulario que llama a una Server Action del panel:
  * errores por campo, advertencias de coherencia y clave de idempotencia
  * estable entre reintentos (el mismo `id` no duplica el evento).
  */
-export function useActionForm(action: Action) {
-  const [state, formAction, pending] = useActionState(action, {} as EventoActionState);
+export function useActionForm<T extends EventoActionState = EventoActionState>(action: Action<T>) {
+  const [state, formAction, pending] = useActionState<T, FormData>(action, {} as Awaited<T>);
   // Clave nueva después de cada guardado exitoso; igual entre reintentos fallidos.
   const idem = useMemo(() => uuidv7(), [state.ok]); // eslint-disable-line react-hooks/exhaustive-deps
   const f = state.fields ?? {};
@@ -51,11 +51,11 @@ export function FormAlerts({ state, pending, confirmLabel = "Guardar igual" }: {
  * Formulario dentro de un diálogo: se cierra solo al guardar bien y, al
  * reabrir, no arrastra errores ni el «ok» anterior (estado «visto»).
  */
-export function useDialogForm(action: Action) {
+export function useDialogForm<T extends EventoActionState = EventoActionState>(action: Action<T>) {
   const form = useActionForm(action);
   const [open, setOpen] = useState(false);
-  const [visto, setVisto] = useState<EventoActionState | null>(null);
-  const vivo = form.state === visto ? ({} as EventoActionState) : form.state;
+  const [visto, setVisto] = useState<T | null>(null);
+  const vivo = form.state === visto ? ({} as T) : form.state;
   return {
     ...form,
     state: vivo,

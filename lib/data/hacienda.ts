@@ -20,6 +20,7 @@ export type Identificacion = {
   tipo: string;
   valor: string;
   entidad?: string | null;
+  tipo_registro?: string | null;
   vigente?: boolean;
   en_conflicto?: boolean;
   colocada_en?: string | null;
@@ -61,4 +62,51 @@ export function getGenealogia(est: string, id: string) {
 
 export function getDocumentosAnimal(est: string, id: string) {
   return api<Many<Record<string, unknown>>>(`${base(est)}/animales/${id}/documentos`).then((r) => r.data);
+}
+
+/** Evento de identificación con su payload y observaciones (motivo), para el historial (TPA-19). */
+export type MovimientoIdentificacion = {
+  id: string;
+  ocurrido_en: string;
+  accion: string;
+  identificacion: { tipo: string; valor: string };
+  reemplaza?: { tipo: string; valor: string } | null;
+  observaciones?: string | null;
+  autor?: string | null;
+  anulado: boolean;
+};
+
+/**
+ * Eventos `hacienda.identificacion` del animal con su detalle. El resumen del
+ * timeline no trae payload ni observaciones; son pocos por animal, así que se
+ * pide el detalle de cada uno en paralelo.
+ */
+export async function getMovimientosIdentificacion(est: string, id: string): Promise<MovimientoIdentificacion[]> {
+  const tl = await api<Many<S<"EventoResumen">>>(`${base(est)}/animales/${id}/eventos${query({ tipo: "hacienda.identificacion", limit: 50 })}`);
+  const detalles = await Promise.all(
+    tl.data
+      .filter((e) => e.id && !e.corregido)
+      .map((e) =>
+        api<One<{ evento: S<"Evento"> }>>(`${base(est)}/eventos/${e.id}`)
+          .then((r) => ({ r: r.data.evento, e }))
+          .catch(() => null),
+      ),
+  );
+  return detalles.flatMap((d) => {
+    if (!d) return [];
+    const p = (d.r.payload ?? {}) as { accion?: string; identificacion?: { tipo: string; valor: string }; reemplaza?: { tipo: string; valor: string } };
+    if (!p.identificacion) return [];
+    return [
+      {
+        id: d.r.id ?? d.e.id!,
+        ocurrido_en: d.r.ocurrido_en ?? d.e.ocurrido_en ?? "",
+        accion: p.accion ?? "colocacion",
+        identificacion: p.identificacion,
+        reemplaza: p.reemplaza ?? null,
+        observaciones: d.r.observaciones ?? null,
+        autor: d.e.autor?.nombre ?? null,
+        anulado: !!d.e.anulado,
+      },
+    ];
+  });
 }
