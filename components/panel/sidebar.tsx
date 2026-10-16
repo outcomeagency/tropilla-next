@@ -6,9 +6,7 @@ import { useState, type ComponentType, type ReactNode } from "react";
 import { Logo } from "@/components/brand";
 import { cx } from "@/components/ui";
 import {
-  IconBuilding,
   IconChart,
-  IconChevronDown,
   IconClose,
   IconCow,
   IconFile,
@@ -61,13 +59,7 @@ function NavLink({ item, active, onNavigate }: { item: NavItem; active: boolean;
  * Sidebar verde monte del panel (preview 01). En escritorio queda fija; en
  * móvil se abre como panel lateral desde la barra superior.
  */
-export function PanelSidebar({
-  establecimiento,
-  userSlot,
-}: {
-  establecimiento: { nombre: string; ubicacion: string };
-  userSlot: ReactNode;
-}) {
+export function PanelSidebar({ selectorSlot, userSlot }: { selectorSlot: ReactNode; userSlot: ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -122,19 +114,8 @@ export function PanelSidebar({
           </button>
         </div>
 
-        {/* Selector de establecimiento (multi-establecimiento llega con la API). */}
-        <button
-          type="button"
-          className="mt-6 flex w-full items-center gap-3 rounded-[10px] border border-sidebar-border px-3 py-2.5 text-left hover:bg-sidebar-hover"
-          aria-label={`Establecimiento actual: ${establecimiento.nombre}. Cambiar establecimiento`}
-        >
-          <IconBuilding size={20} className="shrink-0 text-sidebar-muted" />
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-[13.5px] font-semibold">{establecimiento.nombre}</span>
-            <span className="block truncate text-[12px] text-sidebar-muted">{establecimiento.ubicacion}</span>
-          </span>
-          <IconChevronDown size={16} className="shrink-0 text-sidebar-muted" />
-        </button>
+        {/* Selector de establecimiento (TPA-12): server component detrás de Suspense. */}
+        {selectorSlot}
 
         <nav aria-label="Panel" className="mt-5 flex-1 space-y-0.5 overflow-y-auto">
           {PANEL_NAV.map((item) => (

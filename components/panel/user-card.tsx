@@ -1,4 +1,5 @@
-import { getCurrentUser, ROL_LABEL } from "@/lib/auth";
+import { ROL_LABEL } from "@/lib/auth";
+import { getContexto } from "@/lib/establecimiento";
 import { logoutAction } from "@/lib/auth-actions";
 import { IconCloudOff, IconLogout } from "@/components/icons";
 
@@ -17,10 +18,10 @@ function initials(name: string) {
  * por eso el layout lo renderiza dentro de <Suspense>.
  */
 export async function UserCard() {
-  const current = await getCurrentUser();
-  const offline = current.status === "unavailable";
-  const nombre = offline ? "Sin conexión" : current.me.usuario.nombre;
-  const membresia = offline ? undefined : current.me.membresias[0];
+  const ctx = await getContexto();
+  const offline = !ctx;
+  const nombre = ctx ? ctx.me.usuario.nombre : "Sin conexión";
+  const membresia = ctx?.activa;
   const rol = membresia ? ROL_LABEL[membresia.rol] : "Sin establecimiento";
 
   return (

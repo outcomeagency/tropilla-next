@@ -5,7 +5,8 @@ import { RootHtml } from "@/components/root-html";
 import { PanelSidebar } from "@/components/panel/sidebar";
 import { UserCard, UserCardSkeleton } from "@/components/panel/user-card";
 import { SessionGate } from "@/components/panel/session-gate";
-import { MOCK_ESTABLECIMIENTO } from "@/lib/mock";
+import { EstablishmentSelector } from "@/components/panel/establishment-selector";
+import { EstablishmentSwitcherSkeleton } from "@/components/panel/establishment-switcher";
 
 export const metadata: Metadata = {
   title: { template: "%s · TROPILLA", default: "Panel · TROPILLA" },
@@ -22,7 +23,11 @@ export default function PanelLayout({ children }: { children: ReactNode }) {
   return (
     <RootHtml lang="es">
       <PanelSidebar
-        establecimiento={MOCK_ESTABLECIMIENTO}
+        selectorSlot={
+          <Suspense fallback={<EstablishmentSwitcherSkeleton />}>
+            <EstablishmentSelector />
+          </Suspense>
+        }
         userSlot={
           <Suspense fallback={<UserCardSkeleton />}>
             <UserCard />
