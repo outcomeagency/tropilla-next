@@ -737,3 +737,15 @@ botón de verificación, más la aclaración de qué prueba la integridad. Si el
 | CI y DoD documentado | workflow, README y AGENTS | Actualizados |
 
 **Comentario del dev:** En un checkout limpio `tsc` no encuentra los helpers globales de rutas hasta generar `.next/types`. El nuevo script `typecheck` hace esa generación y corre TypeScript en el mismo paso. CI, README y AGENTS usan ahora el mismo comando, para que local y GitHub ejecuten la misma secuencia. No agrega datos de ejemplo ni toca endpoints de producto.
+
+## TPA-21 · Carga inicial de stock por planilla · ✅ (bugfix)
+
+**Rutas:** `/hacienda/importar` (subir), `/hacienda/importar/{id}` (revisar y corregir).
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Valor exacto de cada celda original | `ImportacionFila.original` vía `GET …/importaciones/{id}/filas` | 🔌 API real; `null` en filas antiguas |
+| Celda con error y editor precargado | `original[columna]`; corrección sigue por `PATCH …/filas/{numero}` | 🔌 API real |
+| Lectura CSV en el navegador y persistencia de crudos | Eliminadas; la carga y el original se procesan en servidor/API | Sin mock ni localStorage |
+
+**Comentario del dev:** La pantalla de revisión toma el texto original por columna directamente de cada fila de la API. Cuando una columna tiene error, la tabla muestra el valor sin normalizar y el editor lo precarga, incluso si es un valor que no existe en los catálogos. Los archivos CSV ya no se leen en el navegador y se eliminó el almacenamiento de filas crudas en `localStorage`. En importaciones anteriores cuyo `original` es `null`, las celdas en error muestran «Falta» y el editor queda vacío para completar.

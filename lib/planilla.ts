@@ -1,6 +1,6 @@
 /**
- * Planilla de stock (TPA-21): columnas, lectura de CSV y armado de la fila
- * «como en la planilla» a partir de lo que la API normalizó. Corre en server y cliente.
+ * Planilla de stock (TPA-21): columnas y armado de la fila «como en la planilla»
+ * a partir de los datos normalizados y de `ImportacionFila.original`.
  */
 
 /** Columnas de la plantilla (ValidadorFila::COLUMNAS de la API), en orden. */
@@ -31,72 +31,6 @@ export const COLUMNA_LABEL: Record<Columna | "fila", string> = {
   fila: "Fila",
 };
 
-/** CSV → filas (comillas dobles, CRLF/LF). */
-export function parseCsv(text: string, sep: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let cell = "";
-  let quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (quoted) {
-      if (c === '"' && text[i + 1] === '"') {
-        cell += '"';
-        i++;
-      } else if (c === '"') quoted = false;
-      else cell += c;
-    } else if (c === '"') quoted = true;
-    else if (c === sep) {
-      row.push(cell);
-      cell = "";
-    } else if (c === "\n" || c === "\r") {
-      if (c === "\r" && text[i + 1] === "\n") i++;
-      row.push(cell);
-      rows.push(row);
-      row = [];
-      cell = "";
-    } else cell += c;
-  }
-  if (cell || row.length) {
-    row.push(cell);
-    rows.push(row);
-  }
-  return rows;
-}
-
-/** Str::slug($h, '_') de Laravel, suficiente para encabezados. */
-function slug(h: string): string {
-  return h
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
-
-/**
- * Lee el CSV igual que la API (LectorPlanilla): separador por mayoría en la
- * primera línea, sin BOM, salteando filas vacías. Fila 1 = primera fila de datos.
- */
-export function leerCsv(text: string): FilaPlanilla[] {
-  const limpio = text.replace(/^﻿/, "");
-  const primera = limpio.split("\n", 1)[0] ?? "";
-  const sep = (primera.match(/;/g)?.length ?? 0) > (primera.match(/,/g)?.length ?? 0) ? ";" : ",";
-  const [enc, ...resto] = parseCsv(limpio, sep);
-  if (!enc) return [];
-  const claves = enc.map((h) => slug(h.trim()));
-  const filas: FilaPlanilla[] = [];
-  for (const r of resto) {
-    if (!r.some((v) => v.trim() !== "")) continue;
-    const f: FilaPlanilla = {};
-    claves.forEach((k, i) => {
-      if ((COLUMNAS as readonly string[]).includes(k)) f[k as Columna] = (r[i] ?? "").trim();
-    });
-    filas.push(f);
-  }
-  return filas;
-}
-
 const TIPO_COLUMNA: Record<string, Columna> = {
   caravana_visual: "caravana",
   caravana_oficial: "caravana_oficial",
@@ -113,12 +47,16 @@ export interface Nombres {
 }
 
 /**
- * La API guarda cada fila ya normalizada (códigos e ids) y descarta los
- * valores que no pudo interpretar. Para corregir hace falta la fila «como en
- * la planilla»: se rearma desde `datos` y, para las columnas con error, se toma
- * lo que el productor escribió (`cruda`, leída del archivo en el navegador).
+ * La API guarda cada fila normalizada y también `original`, con las claves de
+ * la plantilla. Para columnas con error se conserva ese texto exacto; en filas
+ * antiguas sin `original` el editor muestra el fallback «Falta».
  */
-export function filaPlanilla(datos: Record<string, unknown>, errores: string[], n: Nombres, cruda?: FilaPlanilla): FilaPlanilla {
+export function filaPlanilla(
+  datos: Record<string, unknown>,
+  errores: string[],
+  n: Nombres,
+  original?: Partial<Record<Columna, string>> | null,
+): FilaPlanilla {
   const s = (v: unknown) => (v == null ? "" : String(v));
   const bool = (v: unknown) => (v === true ? "si" : v === false ? "no" : "");
   const f: FilaPlanilla = {
@@ -140,7 +78,7 @@ export function filaPlanilla(datos: Record<string, unknown>, errores: string[], 
   }
   for (const c of errores) {
     const col = c as Columna;
-    if ((COLUMNAS as readonly string[]).includes(col) && !f[col] && cruda?.[col]) f[col] = cruda[col];
+    if ((COLUMNAS as readonly string[]).includes(col)) f[col] = original?.[col] ?? "";
   }
   return f;
 }

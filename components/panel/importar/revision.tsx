@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useEffect, useMemo, useState, useTransition } from "react";
+import { Fragment, useMemo, useState, useTransition } from "react";
 import { cancelarImportacionAction, confirmarImportacionAction, corregirFilaAction } from "@/lib/importacion-actions";
 import { COLUMNA_LABEL, filaPlanilla, type Columna, type FilaPlanilla, type Nombres } from "@/lib/planilla";
 import type { ImportacionFila, Importacion } from "@/lib/data/importaciones";
-import { CRUDAS_PENDIENTES } from "./subir";
 import { Dialog } from "@/components/dialog";
 import { IconAlert, IconCheckCircle, IconClose, IconInfo, IconList, IconUpload } from "@/components/icons";
 import { Badge, Button, Card, Field, Input, KpiCard, Notice, Select, SpeciesChip, Spinner, cx } from "@/components/ui";
@@ -29,44 +28,6 @@ const ESTADO: Record<Clase, { label: string; tone: "success" | "warning" | "dang
 };
 
 const mensajeAdv = (a: Record<string, unknown>) => String(a.mensaje ?? a.codigo ?? "");
-
-/** Lo que escribió el productor (leído del CSV en el navegador) + correcciones hechas acá. */
-function useCrudas(id: string) {
-  const key = `tropilla_imp_${id}`;
-  const [crudas, setCrudas] = useState<Record<number, FilaPlanilla>>({});
-  useEffect(() => {
-    try {
-      let raw = localStorage.getItem(key);
-      if (!raw) {
-        const p = localStorage.getItem(CRUDAS_PENDIENTES);
-        const parsed = p ? (JSON.parse(p) as { t: number; filas: FilaPlanilla[] }) : null;
-        if (parsed && Date.now() - parsed.t < 15 * 60_000) {
-          // Sólo se guarda la planilla en revisión: se limpian las anteriores.
-          for (const k of Object.keys(localStorage)) if (k.startsWith("tropilla_imp_0")) localStorage.removeItem(k);
-          raw = JSON.stringify(Object.fromEntries(parsed.filas.map((f, i) => [i + 1, f])));
-          localStorage.setItem(key, raw);
-        }
-        localStorage.removeItem(CRUDAS_PENDIENTES);
-      }
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage sólo existe en el navegador
-      if (raw) setCrudas(JSON.parse(raw));
-    } catch {
-      /* sin localStorage: se corrige sin ver lo escrito */
-    }
-  }, [key]);
-  function guardar(numero: number, f: FilaPlanilla) {
-    setCrudas((c) => {
-      const n = { ...c, [numero]: f };
-      try {
-        localStorage.setItem(key, JSON.stringify(n));
-      } catch {
-        /* nada */
-      }
-      return n;
-    });
-  }
-  return { crudas, guardar };
-}
 
 /**
  * Previsualización de la planilla (TPA-21): resumen, filtro por estado, tabla
@@ -101,8 +62,6 @@ export function RevisionImportacion({
   const [dialogo, setDialogo] = useState<"confirmar" | "cancelar" | null>(null);
   const [errorGlobal, setErrorGlobal] = useState<string | null>(null);
   const [enviando, startEnvio] = useTransition();
-  const { crudas, guardar } = useCrudas(importacion.id);
-
   const maps: Nombres = useMemo(
     () => ({
       categoria: new Map(Object.entries(nombres.categoria)),
@@ -154,7 +113,7 @@ export function RevisionImportacion({
     const c = clase(fila);
     const errores = fila.errores ?? [];
     const campos = new Set(errores.map((e) => e.campo ?? ""));
-    const f = filaPlanilla((fila.datos ?? {}) as Record<string, unknown>, [...campos], maps, crudas[numero]);
+    const f = filaPlanilla((fila.datos ?? {}) as Record<string, unknown>, [...campos], maps, fila.original);
     const descartada = c === "descartada";
     const avisos = (fila.advertencias ?? []).map((a) => mensajeAdv(a as Record<string, unknown>));
     return {
@@ -242,7 +201,6 @@ export function RevisionImportacion({
       onCancel={() => setEditando(null)}
       onDescartar={() => void patch(numero, { accion: "descartar" }).then((r) => r && setEditando(null))}
       onSave={async (datos) => {
-        guardar(numero, datos);
         const nueva = await patch(numero, { datos });
         if (nueva && !nueva.errores?.length) setEditando(null);
       }}
@@ -346,10 +304,10 @@ export function RevisionImportacion({
                             </Badge>
                           </td>
                           <Celda err={campos.has("especie")} borde={borde}>
-                            {f.especie === "BUB" || f.especie === "BOV" ? <SpeciesChip especie={especieDe(f.especie)} /> : f.especie || ""}
+                            {!campos.has("especie") && (f.especie === "BUB" || f.especie === "BOV") ? <SpeciesChip especie={especieDe(f.especie)} /> : f.especie || ""}
                           </Celda>
                           <Celda err={campos.has("sexo")} borde={borde}>
-                            {sexoDe(f.sexo)}
+                            {campos.has("sexo") ? f.sexo : sexoDe(f.sexo)}
                           </Celda>
                           <Celda err={campos.has("categoria")} borde={borde}>
                             {f.categoria}
@@ -366,7 +324,7 @@ export function RevisionImportacion({
                             ) : null}
                           </Celda>
                           <Celda err={campos.has("fecha_nacimiento")} borde={borde}>
-                            {f.fecha_nacimiento && <span className="tabular-nums">{fechaCorta(f.fecha_nacimiento)}</span>}
+                            {f.fecha_nacimiento && <span className="tabular-nums">{campos.has("fecha_nacimiento") ? f.fecha_nacimiento : fechaCorta(f.fecha_nacimiento)}</span>}
                             {f.nacimiento_estimado === "si" && <span className="ml-1 text-[12px] text-muted">(est.)</span>}
                           </Celda>
                           <Celda err={campos.has("lote") || campos.has("potrero")} borde={borde}>
@@ -431,9 +389,9 @@ export function RevisionImportacion({
                       {accion(v)}
                     </div>
                     <p className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-[14px] text-ink">
-                      {dato(campos.has("especie"), f.especie === "BUB" ? "Bubalino" : f.especie === "BOV" ? "Bovino" : f.especie)}
+                      {dato(campos.has("especie"), !campos.has("especie") && f.especie === "BUB" ? "Bubalino" : !campos.has("especie") && f.especie === "BOV" ? "Bovino" : f.especie)}
                       <span className="text-subtle">·</span>
-                      {dato(campos.has("sexo"), sexoDe(f.sexo))}
+                      {dato(campos.has("sexo"), campos.has("sexo") ? f.sexo : sexoDe(f.sexo))}
                       <span className="text-subtle">·</span>
                       {dato(campos.has("categoria"), f.categoria)}
                       {(f.raza || campos.has("raza")) && (
@@ -445,7 +403,7 @@ export function RevisionImportacion({
                     </p>
                     <p className="mt-0.5 flex flex-wrap gap-x-2 text-[13px] text-muted">
                       {dato(identErr, ids.length ? ids.map((k) => f[k]).join(" · ") : "Sin identificación")}
-                      {(f.fecha_nacimiento || campos.has("fecha_nacimiento")) && <span>· Nac. {dato(campos.has("fecha_nacimiento"), f.fecha_nacimiento ? fechaCorta(f.fecha_nacimiento) : "")}</span>}
+                      {(f.fecha_nacimiento || campos.has("fecha_nacimiento")) && <span>· Nac. {dato(campos.has("fecha_nacimiento"), f.fecha_nacimiento ? campos.has("fecha_nacimiento") ? f.fecha_nacimiento : fechaCorta(f.fecha_nacimiento) : "")}</span>}
                       {(f.lote || f.potrero || campos.has("lote") || campos.has("potrero")) && (
                         <span>· {dato(campos.has("lote") || campos.has("potrero"), [f.lote, f.potrero].filter(Boolean).join(" · "))}</span>
                       )}
@@ -716,8 +674,9 @@ function EditorFila({
         )}
         {campo(
           "sexo",
-          <Select {...aria("sexo")} value={v.sexo === "H" || v.sexo === "M" ? v.sexo : ""} onChange={set("sexo")}>
+          <Select {...aria("sexo")} value={v.sexo ?? ""} onChange={set("sexo")}>
             <option value="">—</option>
+            {v.sexo && v.sexo !== "H" && v.sexo !== "M" && <option value={v.sexo}>«{v.sexo}» (no válido)</option>}
             <option value="H">Hembra</option>
             <option value="M">Macho</option>
           </Select>,
@@ -737,8 +696,9 @@ function EditorFila({
         {campo("fecha_nacimiento", <Input {...aria("fecha_nacimiento")} value={v.fecha_nacimiento ?? ""} onChange={set("fecha_nacimiento")} placeholder="AAAA-MM-DD" inputMode="numeric" />)}
         {campo(
           "nacimiento_estimado",
-          <Select {...aria("nacimiento_estimado")} value={v.nacimiento_estimado === "si" ? "si" : v.nacimiento_estimado ? "no" : ""} onChange={set("nacimiento_estimado")}>
+          <Select {...aria("nacimiento_estimado")} value={v.nacimiento_estimado ?? ""} onChange={set("nacimiento_estimado")}>
             <option value="">—</option>
+            {v.nacimiento_estimado && v.nacimiento_estimado !== "si" && v.nacimiento_estimado !== "no" && <option value={v.nacimiento_estimado}>«{v.nacimiento_estimado}» (no válido)</option>}
             <option value="si">Sí, estimada</option>
             <option value="no">No, exacta</option>
           </Select>,
@@ -750,8 +710,9 @@ function EditorFila({
         {campo("marca", <Input {...aria("marca")} value={v.marca ?? ""} onChange={set("marca")} />)}
         {campo(
           "denticion",
-          <Select {...aria("denticion")} value={["leche", "2", "4", "6+"].includes(v.denticion ?? "") ? v.denticion : ""} onChange={set("denticion")}>
+          <Select {...aria("denticion")} value={v.denticion ?? ""} onChange={set("denticion")}>
             <option value="">—</option>
+            {v.denticion && !["leche", "2", "4", "6+"].includes(v.denticion) && <option value={v.denticion}>«{v.denticion}» (no válida)</option>}
             <option value="leche">Leche</option>
             <option value="2">2 dientes</option>
             <option value="4">4 dientes</option>
@@ -760,8 +721,9 @@ function EditorFila({
         )}
         {campo(
           "castrado",
-          <Select {...aria("castrado")} value={v.castrado === "si" ? "si" : v.castrado ? "no" : ""} onChange={set("castrado")}>
+          <Select {...aria("castrado")} value={v.castrado ?? ""} onChange={set("castrado")}>
             <option value="">—</option>
+            {v.castrado && v.castrado !== "si" && v.castrado !== "no" && <option value={v.castrado}>«{v.castrado}» (no válido)</option>}
             <option value="si">Sí</option>
             <option value="no">No</option>
           </Select>,
