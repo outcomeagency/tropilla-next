@@ -651,3 +651,15 @@ botón de verificación, más la aclaración de qué prueba la integridad. Si el
 | Alta de organización y administración de integrantes | `POST /organizaciones` (solo staff, no expuesto como operación en el OpenAPI), `POST …/miembros` (cuerpo no documentado) | No implementado: contrato incompleto y alta restringida a staff |
 
 **Comentario del dev:** La pantalla permite encontrar organizaciones disponibles y adherirse eligiendo de forma explícita qué datos agregados se comparten. Desde cada adhesión activa se puede registrar otra versión del consentimiento o revocarla con motivo; se muestran versión, huella y cantidad de cambios del historial cuando la API los devuelve. El detalle aclara que la adhesión no publica datos en el directorio. No se usan datos de ejemplo. El OpenAPI vigente reserva la creación de organizaciones a staff y omite el cuerpo de la operación para administrar integrantes, por lo que esas acciones quedan pendientes del contrato administrativo.
+
+## TPA-58 · «Busco» y perfil de profesional · 🟦
+
+**Rutas:** `/comprador/buscos` (publicar, editar y cerrar demandas), `/comercializacion/demandas` (coincidencias del establecimiento), `/profesional` (editar perfil), `/[locale]/profesionales/[slug]` (perfil público ES/EN/PT).
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Gestionar «Busco» (especie, categoría, cantidad, zona, plazo, peso y mensaje) | `GET/POST /comprador/buscos`, `PATCH/POST …/{busco}` | 🔌 API real |
+| Coincidencias y respuestas del productor | `GET /establecimientos/{e}/demandas`, `POST …/{busco}/respuestas` | 🔌 API real |
+| Perfil profesional y publicación | `GET/PUT /me/profesional`, `GET /public/profesionales/{slug}` | 🔌 API real |
+
+**Comentario del dev:** El comprador carga especie, categorías, cantidad, zona o cualquier zona, plazo, peso objetivo y mensaje; puede decidir si muestra su nombre, editar o cerrar. La API mantiene el control de perfil comprador y verificación de email requeridos para publicar. Comercialización muestra el puntaje y los datos de cada coincidencia, con respuesta directa desde el establecimiento. El profesional declara matrícula, especialidades, provincias e idiomas, y decide si publica su perfil; la ficha pública está disponible en ES/EN/PT y aclara que esos datos son declarados. No se usan datos de ejemplo.

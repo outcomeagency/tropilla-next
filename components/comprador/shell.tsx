@@ -23,6 +23,7 @@ export function CompradorShell({ children }: { children: ReactNode }) {
             <Link href="/comprador/cuenta" className="text-muted hover:text-ink">
               Mi perfil de comprador
             </Link>
+            <Link href="/comprador/buscos" className="text-muted hover:text-ink">Mis Busco</Link>
           </nav>
           <form action={logoutAction} className="ml-auto">
             <button type="submit" className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-muted hover:text-ink">
