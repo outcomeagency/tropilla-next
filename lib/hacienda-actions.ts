@@ -124,3 +124,28 @@ export async function confirmarRecategorizacionAction(_prev: EventoActionState, 
   revalidatePath("/inicio");
   redirect(`/hacienda/recategorizacion?ok=${items.length}`);
 }
+
+/** Descartar sugerencias vigentes, individualmente o en bloque (TPA-25). */
+export async function descartarSugerenciasAction(_prev: EventoActionState, fd: FormData): Promise<EventoActionState> {
+  const ctx = await requireContexto();
+  if (!ctx.can("hacienda.crear")) return { error: "Tu rol no permite descartar sugerencias." };
+  let items: Array<{ animal_id: string; categoria: string }>;
+  try {
+    const parsed: unknown = JSON.parse(String(fd.get("items") ?? "[]"));
+    if (!Array.isArray(parsed)) throw new Error();
+    items = parsed.filter((i): i is { animal_id: string; categoria: string } =>
+      !!i && typeof i.animal_id === "string" && /^[0-9a-f-]{36}$/i.test(i.animal_id) && typeof i.categoria === "string" && /^[A-Z0-9_]{2,64}$/.test(i.categoria),
+    ).slice(0, 500);
+  } catch {
+    return { error: "No pudimos leer los animales seleccionados." };
+  }
+  if (!items.length) return { error: "Elegí al menos una sugerencia." };
+  try {
+    await api(`/establecimientos/${ctx.activa.establecimiento_id}/animales/sugerencias/descartar`, { method: "POST", body: { items } });
+  } catch (e) {
+    return estadoDeError(e, {}, "No pudimos descartar las sugerencias. Actualizá la pantalla y probá de nuevo.");
+  }
+  revalidatePath("/hacienda", "layout");
+  revalidatePath("/inicio");
+  redirect(`/hacienda/recategorizacion?descartadas=${items.length}`);
+}
