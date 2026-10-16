@@ -402,6 +402,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/establecimientos/{establecimiento}/clima": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Alertas climáticas y pronóstico de la zona
+         * @description **Ability:** `establecimiento.ver`. TPA-70. Pronóstico (Open-Meteo), lluvia observada por reanálisis (ERA5) y ENSO (NOAA CPC ONI). Si el último cálculo tiene más de 6 h se recalcula. Nunca devuelve la ubicación exacta. Es pronóstico, no certeza.
+         */
+        get: operations["get_establecimientos_establecimiento_clima"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/clima/reglas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Reglas climáticas efectivas (umbrales como datos)
+         * @description **Ability:** `establecimiento.ver`. TPA-70.
+         */
+        get: operations["get_establecimientos_establecimiento_clima_reglas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/clima/reglas/{codigo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Override por establecimiento de una regla climática
+         * @description **Ability:** `establecimiento.editar`. TPA-70. Mezcla los parámetros sobre los globales y recalcula.
+         */
+        put: operations["put_establecimientos_establecimiento_clima_reglas_codigo"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/establecimientos/{establecimiento}/existencias": {
         parameters: {
             query?: never;
@@ -3985,6 +4045,79 @@ export interface components {
             motivo?: string | null;
             created_at?: components["schemas"]["FechaHora"];
         };
+        ClimaAlerta: {
+            /** Format: uuid */
+            id?: string;
+            regla?: string;
+            /** @enum {string} */
+            tipo?: "lluvia" | "sequia" | "helada" | "calor" | "incendio" | "enso";
+            /** @enum {string} */
+            severidad?: "info" | "moderada" | "alta";
+            titulo?: string;
+            detalle?: string;
+            /** @description Puntos a revisar; no es una indicación de manejo. */
+            recomendacion?: string;
+            fuente?: string;
+            fuente_url?: string;
+            zona?: string;
+            valor?: string | null;
+            umbral?: string | null;
+            unidad?: string | null;
+            /** Format: date */
+            desde?: string;
+            /** Format: date */
+            hasta?: string;
+            horizonte_dias?: number;
+            /** Format: date-time */
+            emitida_en?: string;
+            /** Format: date-time */
+            calculada_en?: string;
+        };
+        ClimaRegla: {
+            codigo?: string;
+            tipo?: string;
+            nombre?: string;
+            severidad?: string;
+            parametros?: {
+                [key: string]: number;
+            };
+            recomendacion?: string;
+            activa?: boolean;
+            personalizada?: boolean;
+        };
+        Clima: {
+            zona?: string;
+            /** @enum {string} */
+            precision?: "establecimiento" | "departamento" | "provincia" | "sin_ubicacion";
+            /** Format: date-time */
+            calculado_en?: string;
+            aviso?: string;
+            alertas?: components["schemas"]["ClimaAlerta"][];
+            pronostico?: {
+                /** Format: date */
+                fecha?: string;
+                tmax?: number | null;
+                tmin?: number | null;
+                lluvia_mm?: number | null;
+                prob_lluvia?: number | null;
+                hr_min?: number | null;
+                viento_max?: number | null;
+            }[];
+            /** @description ventana_dias, hasta, acumulada_mm, normal_mm, anomalia_pct, anios_referencia, pronostico_mm, pronostico_dias */
+            lluvia?: Record<string, never> | null;
+            /** @description fase (el_nino|la_nina|neutral), oni, temporada, anio, obtenido_en, fuente, fuente_url */
+            enso?: Record<string, never> | null;
+            fuentes?: {
+                nombre?: string;
+                url?: string;
+                licencia?: string;
+                cadencia?: string;
+            }[];
+            errores?: {
+                fuente?: string;
+                mensaje?: string;
+            }[];
+        };
         /** @description `pendientes.items[].tipo`: tarea | tarea_vencida | parto_proximo | parto_vencido | recategorizacion | documento_por_vencer | documento_vencido | consulta | toma | revision; semana = próximos 7 días (documentos: 30). `actividad` = últimos 10 eventos por fecha de carga. `variacion_mes` = nacimientos/partos/ingresos − muertes/egresos/faenas/pérdidas del mes ± movimientos de categoría de lotes anónimos; las altas de inventario no cuentan (TPA-52). */
         Inicio: {
             existencias?: components["schemas"]["Existencia"][];
@@ -6737,6 +6870,100 @@ export interface operations {
             401: components["responses"]["NoAutenticado"];
             403: components["responses"]["Prohibido"];
             404: components["responses"]["NoEncontrado"];
+        };
+    };
+    get_establecimientos_establecimiento_clima: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Clima"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    get_establecimientos_establecimiento_clima_reglas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["ClimaRegla"][];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    put_establecimientos_establecimiento_clima_reglas_codigo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                codigo: "lluvia_extrema" | "sequia_deficit" | "helada" | "calor_estres" | "incendio" | "enso_fase";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    activa?: boolean;
+                    /** @enum {string} */
+                    severidad?: "info" | "moderada" | "alta";
+                    parametros?: {
+                        [key: string]: number;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["ClimaRegla"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
         };
     };
     get_establecimientos_establecimiento_existencias: {

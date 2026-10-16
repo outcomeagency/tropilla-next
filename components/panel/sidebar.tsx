@@ -7,6 +7,7 @@ import { Logo } from "@/components/brand";
 import { cx } from "@/components/ui";
 import {
   IconChart,
+  IconCloud,
   IconClose,
   IconCow,
   IconFile,
@@ -31,6 +32,7 @@ const NAV_ICON: Record<NavIcon, ComponentType<IconProps>> = {
   file: IconFile,
   route: IconRoute,
   chart: IconChart,
+  cloud: IconCloud,
   user: IconUser,
   settings: IconSettings,
 };

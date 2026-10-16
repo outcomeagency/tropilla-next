@@ -66,6 +66,7 @@ export const config = {
     "/sanidad/:path*",
     "/establecimiento/:path*",
     "/establecimientos/:path*",
+    "/clima/:path*",
     "/documentos/:path*",
     "/trazabilidad/:path*",
     "/comercializacion/:path*",
