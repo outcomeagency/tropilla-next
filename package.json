@@ -7,9 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "api:types": "openapi-typescript ../brain/technical/openapi-v1.yaml -o lib/api-types.ts"
+    "api:types": "openapi-typescript ../tropilla-api/docs/openapi-v1.yaml -o lib/api-types.ts"
   },
   "dependencies": {
+    "leaflet": "1.9",
     "next": "16.4.2",
     "qrcode": "^1.5.4",
     "react": "19.3.0",
@@ -18,6 +19,7 @@
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
+    "@types/leaflet": "^1.9.22",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19",

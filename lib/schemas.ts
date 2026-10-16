@@ -1,6 +1,6 @@
 /**
  * Alias legibles de los schemas del contrato (lib/api-types.ts, generado con
- * `npm run api:types` desde brain/technical/openapi-v1.yaml). No editar
+ * `npm run api:types` desde tropilla-api/docs/openapi-v1.yaml, la copia del contrato con los desvíos aditivos más nuevos). No editar
  * lib/api-types.ts a mano: regenerarlo cuando cambie el YAML.
  */
 import type { components } from "./api-types";
