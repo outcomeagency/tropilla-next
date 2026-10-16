@@ -87,14 +87,16 @@ export function ubicacionCorta(provincia?: string | null, departamento?: string 
 }
 
 export const ACTIVIDADES = [
-  { codigo: "cria", nombre: "Cría" },
-  { codigo: "recria", nombre: "Recría" },
-  { codigo: "invernada", nombre: "Invernada / engorde" },
-  { codigo: "feedlot", nombre: "Feedlot" },
-  { codigo: "cabana", nombre: "Cabaña" },
-  { codigo: "tambo", nombre: "Tambo" },
+  { codigo: "cria", nombre: "Cría", en: "Cow-calf", pt: "Cria" },
+  { codigo: "recria", nombre: "Recría", en: "Backgrounding", pt: "Recria" },
+  { codigo: "invernada", nombre: "Invernada / engorde", en: "Finishing", pt: "Engorda" },
+  { codigo: "feedlot", nombre: "Feedlot", en: "Feedlot", pt: "Confinamento" },
+  { codigo: "cabana", nombre: "Cabaña", en: "Seedstock", pt: "Cabanha" },
+  { codigo: "tambo", nombre: "Tambo", en: "Dairy", pt: "Leite" },
 ] as const;
 
-export function actividadNombre(codigo: string): string {
-  return ACTIVIDADES.find((a) => a.codigo === codigo)?.nombre ?? codigo;
+export function actividadNombre(codigo: string, locale: "es" | "en" | "pt" = "es"): string {
+  const a = ACTIVIDADES.find((x) => x.codigo === codigo);
+  if (!a) return codigo;
+  return locale === "en" ? a.en : locale === "pt" ? a.pt : a.nombre;
 }

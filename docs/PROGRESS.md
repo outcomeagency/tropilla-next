@@ -79,3 +79,25 @@ Datos cacheados con `"use cache"` + `cacheTag("directorio")` para revalidar por 
 sólo zona general (departamento + provincia), especie con chip, razas, ofertas/contratos y frescura; el orden lo
 explica la propia página («nadie paga por aparecer primero»). Metadata, canonical y alternates por idioma; la
 leyenda fija va en el pie de todo lo público. Fotos de campo de licencia libre (búfalo de agua, nunca africano).
+
+## TPA-48 · Ofertas de animales y lotes · ✅ (web)
+
+**Rutas públicas:** `/[locale]/ofertas/[codigo]` (preview 03: hero con foto, datos con nivel de confianza por dato,
+sobre el establecimiento, trazabilidad del lote, documentos con verificación, condiciones, QR, leyenda fija).
+**Rutas del panel:** `/comercializacion` (ofertas con filtros por estado), `/comercializacion/ofertas/nueva`
+(elegir lote), `/comercializacion/ofertas/[id]` (datos y qué se muestra → avisos y publicar → compartir).
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Ficha pública | `GET /public/ofertas/{codigo}` | 🧪 mock (LE0142, LE0157, EN0031, EB0012) |
+| Listado / detalle panel | `GET …/ofertas`, `GET …/ofertas/{id}` | 🧪 mock en memoria del servidor |
+| Borrador desde lote | `POST …/ofertas/desde-lote` (+ `GET …/lotes`) | 🧪 mock (5 lotes de ejemplo) |
+| Editar / avisos / publicar / estado | `PATCH …/ofertas/{id}`, `GET …/avisos`, `POST …/publicar`, `POST …/estado` | 🧪 mock; avisos: retiro vigente y pesaje > 60 d |
+| Verificación de email para publicar | `GET /auth/me` (`email_verificado`) | 🔌 (bloquea con mensaje claro) |
+
+**Comentario del dev:** La ficha pública replica la preview 03 con componentes reales: cada dato lleva su nivel
+(«Declarado» o «Balanza 10/10/2026 · Integridad registrada») y la trazabilidad del lote se arma sólo con hitos
+publicados (nada inventado). Desde el panel, la oferta nace de un lote con lo registrado precargado y de sólo
+lectura; el productor elige qué mostrar (privado por defecto) y el precio sólo aparece para quien tiene
+`comercial.precios`. Los avisos advierten sin bloquear («Publicar igual» queda registrado). Al publicar: enlace,
+QR generado en el servidor, WhatsApp prearmado y cambio de estado (reservada/vendida/retirada).
