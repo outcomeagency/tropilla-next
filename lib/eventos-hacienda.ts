@@ -148,4 +148,6 @@ export const VALORES: Record<string, string> = Object.fromEntries([
   ["inventario_inicial", "Inventario inicial"],
   ["alta_rapida", "Alta rápida"],
   ["importacion", "Planilla"],
+  ["1-5", "1 a 5"],
+  ["1-9", "1 a 9"],
 ]);
