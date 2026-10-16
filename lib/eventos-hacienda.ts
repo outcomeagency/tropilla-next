@@ -38,7 +38,7 @@ export type ModuloRegistrar = "hacienda" | "reproduccion" | "sanidad";
 export const GRUPOS_MODULO: Record<ModuloRegistrar, TipoHacienda["grupo"][]> = {
   hacienda: ["altas", "movimientos", "manejo", "bajas"],
   reproduccion: ["servicio", "diagnostico", "partos"],
-  sanidad: ["aplicaciones"],
+  sanidad: ["aplicaciones", "pruebas"],
 };
 
 export const TIPOS_HACIENDA: TipoHacienda[] = [
@@ -63,6 +63,8 @@ export const TIPOS_HACIENDA: TipoHacienda[] = [
   { codigo: "reproduccion.destete", corto: "Peso al destete, recategoriza", titulo: "Destete", ayuda: "Peso y tipo de destete de las crías (o de un lote). Recategoriza: ternera → vaquillona, bucerro → bubillito según la regla.", grupo: "partos", sujetos: ["animales", "lote"] },
   { codigo: "sanidad.vacunacion", corto: "Vacuna con su enfermedad y dosis", titulo: "Vacunación", ayuda: "Producto, enfermedad, número de dosis, vacunador y envase. Si el producto tiene retiro, los animales quedan con retiro vigente.", grupo: "aplicaciones", sujetos: ["lote", "animales", "potrero"] },
   { codigo: "sanidad.desparasitacion", corto: "Interna, externa o ambas", titulo: "Desparasitación", ayuda: "Producto, tipo y cómo se dosificó (por el peso de cada uno o por el más pesado). El retiro sale del producto.", grupo: "aplicaciones", sujetos: ["lote", "animales", "potrero"] },
+  { codigo: "sanidad.prueba_diagnostica", corto: "Tuberculina o brucelosis con resultado", titulo: "Prueba diagnóstica", ayuda: "Tuberculina (el resultado se calcula con las lecturas a 0 y 72 h) o una prueba con resultado del laboratorio. Para un rodeo entero usá la lectura de tuberculina.", grupo: "pruebas", sujetos: ["animales"] },
+  { codigo: "sanidad.analisis_laboratorio", corto: "Coprológico, IFD, MAT, serología", titulo: "Análisis de laboratorio", ayuda: "Tipo, muestra, laboratorio y resultado. Adjuntá el informe: queda en Documentos con su huella.", grupo: "pruebas", sujetos: ["animales", "lote"] },
   { codigo: "sanidad.tratamiento", corto: "Diagnóstico, producto y duración", titulo: "Tratamiento", ayuda: "Diagnóstico presuntivo, producto, dosis, días de tratamiento y veterinario. El retiro corre desde la última aplicación.", grupo: "aplicaciones", sujetos: ["animales", "lote"] },
 ];
 

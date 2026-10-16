@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Badge, Button, Card, CardHeader, EmptyState, KpiCard, PageHeader, Table, Td, Th, Tr, TrustInline } from "@/components/ui";
-import { IconAlert, IconArrowRight, IconCalendar, IconChevronRight, IconClock, IconList, IconHeart, IconPlus, IconShield, IconShieldCheck, IconSyringe } from "@/components/icons";
+import { IconAlert, IconArrowRight, IconCalendar, IconChevronRight, IconClock, IconList, IconFile, IconHeart, IconPlus, IconRuler, IconShield, IconShieldCheck, IconSyringe } from "@/components/icons";
 import { SanidadTabs } from "@/components/panel/sanidad/tabs";
 import { requireContexto } from "@/lib/establecimiento";
 import { listProductos, listReactores, listRetiros, listTareas, type Tarea } from "@/lib/data/sanidad";
@@ -27,6 +27,8 @@ const ATAJOS = [
   { tipo: "sanidad.vacunacion", titulo: "Vacunar", bajada: "Un lote, un potrero o animales sueltos", Icon: IconSyringe },
   { tipo: "sanidad.desparasitacion", titulo: "Desparasitar", bajada: "Con el producto y cómo se dosificó", Icon: IconShieldCheck },
   { tipo: "sanidad.tratamiento", titulo: "Tratar un animal", bajada: "Diagnóstico, producto y días", Icon: IconHeart },
+  { tipo: "tuberculina", href: "/sanidad/tuberculina", titulo: "Leer tuberculina", bajada: "0 h y 72 h, resultado calculado", Icon: IconRuler },
+  { tipo: "sanidad.analisis_laboratorio", titulo: "Análisis de laboratorio", bajada: "Con el informe adjunto", Icon: IconFile },
 ];
 
 async function Contenido() {
@@ -200,7 +202,7 @@ async function Contenido() {
             <ul className="divide-y divide-border">
               {ATAJOS.map((a) => (
                 <li key={a.tipo}>
-                  <Link href={`/sanidad/registrar?tipo=${a.tipo}`} className="flex items-center gap-3 px-5 py-3.5 hover:bg-surface-2">
+                  <Link href={"href" in a && a.href ? a.href : `/sanidad/registrar?tipo=${a.tipo}`} className="flex items-center gap-3 px-5 py-3.5 hover:bg-surface-2">
                     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-campo-50 text-monte">
                       <a.Icon size={20} />
                     </span>

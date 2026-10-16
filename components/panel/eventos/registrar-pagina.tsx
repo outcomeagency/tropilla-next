@@ -11,6 +11,7 @@ import { gestacionesDe } from "@/lib/gestacion";
 import type { AnimalElegido } from "@/lib/evento-actions";
 import type { ModuloRegistrar } from "@/lib/eventos-hacienda";
 import { listProductos, listTareas } from "@/lib/data/sanidad";
+import { tiposPrueba } from "@/lib/data/pruebas";
 import type { TareaOpt } from "@/components/panel/eventos/registrar";
 
 export type SP = { tipo?: string; animales?: string; lote?: string; potrero?: string; tarea?: string };
@@ -81,6 +82,7 @@ export async function RegistrarPagina({ searchParams, modulo = "hacienda" }: { s
       gestaciones={gestacionesDe(cat.parametros)}
       hoy={hoyAR(new Date())}
       potreroInicial={sp.potrero}
+      pruebas={sanidad ? tiposPrueba(cat) : undefined}
       tarea={tarea}
       enfermedades={cat.items.enfermedades ?? []}
       productos={productos
