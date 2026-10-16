@@ -551,3 +551,20 @@ potrero como sujeto: vacunar «todo lo que está en Potrero Norte» es un solo p
 declarada y retiro, editables porque manda el marbete del envase usado; abajo se lee en claro «No vender para faena hasta el
 20/11/2026». El detalle del evento ya no muestra ids crudos (producto, tarea) y explica el sujeto potrero. Para la API: el `resumen`
 de las vacunaciones del demo dice «— 0 cabezas» en las aplicadas a potrero/lote vacío.
+
+## TPA-33 · Plan sanitario desde plantillas · ✅ (web)
+
+**Rutas:** `/sanidad/plan` (aviso veterinario, año sanitario, ítems), `/sanidad` (tareas del plan: registrar, reprogramar, omitir)
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Plan con su aviso «Validá este plan con tu veterinario» y quién lo aceptó | `GET …/plan-sanitario` | 🔌 API real |
+| Plantillas (aftosa 2 campañas, rabia, tuberculina, parasitario bubalino NEA…) con condición por zona | `GET /catalogos` (`plantillas_sanitarias`) + `POST …/plan-sanitario/plantillas` (`aviso_aceptado: true`) | 🔌 probado en el campo de prueba |
+| Editar ítem (nombre, cuándo, producto, activo) / ítem propio / sacar con motivo | `PATCH/POST …/plan-sanitario/items`, `POST …/items/{id}/archivar` | 🔌 probado (aftosa 1.ª campaña 01/03–30/04) |
+| Tareas abiertas (vencidas + próximos 60 días) con registrar / reprogramar / omitir | `GET …/tareas?estado=abiertas`, `PATCH …/tareas/{id}`, `POST …/omitir` | 🔌 |
+
+**Comentario del dev:** El aviso veterinario no es letra chica: es una franja fija arriba del plan y un tilde obligatorio para armarlo
+(la API lo exige igual). Las plantillas se muestran en castellano de campo («Entre el 1 de marzo y el 30 de abril · todos los años»,
+«Sólo si: zona endémica de rabia») y vienen preelegidas según las especies del campo. El «Año sanitario» dibuja ventanas y fechas
+fijas en una grilla de 12 meses con la línea de hoy; lo que no aplica a la zona queda en beige. Las campañas de aftosa no traen
+fechas porque cambian por provincia: el plan lo dice y pide cargarlas. Las tareas se registran con un clic y se cierran solas.
