@@ -1,27 +1,14 @@
 import Link from "next/link";
-import type { ComponentType } from "react";
+import { Suspense, type ComponentType } from "react";
 import type { Metadata } from "next";
-import {
-  Avatar,
-  Button,
-  Card,
-  CardHeader,
-  KpiCard,
-  PageHeader,
-  SpeciesChip,
-  StatusBadge,
-  Table,
-  Td,
-  Th,
-  Tr,
-  TrustBadge,
-  inputClass,
-} from "@/components/ui";
+import { connection } from "next/server";
+import { Avatar, Button, Card, CardHeader, EmptyState, KpiCard, PageHeader, StatusBadge, Table, Td, Th, Tr, TrustBadge, inputClass } from "@/components/ui";
 import {
   IconArrowRight,
   IconBuffalo,
   IconCalendar,
   IconChart,
+  IconCheckCircle,
   IconChevronRight,
   IconCow,
   IconFile,
@@ -34,18 +21,12 @@ import {
   type IconProps,
 } from "@/components/icons";
 import { StockByCategory } from "@/components/panel/stock-by-category";
-import { MOCK_ACTIVIDAD, MOCK_EXISTENCIAS, MOCK_PENDIENTES, MOCK_RESUMEN, type Pendiente } from "@/lib/mock";
+import { requireContexto } from "@/lib/establecimiento";
+import { ROL_LABEL } from "@/lib/auth";
+import { getInicio, type Pendiente } from "@/lib/data/inicio";
+import { fecha, hoyAR, nf } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Inicio" };
-
-const nf = new Intl.NumberFormat("es-AR");
-
-const KPI_ICON: Record<(typeof MOCK_RESUMEN.kpis)[number]["icon"], ComponentType<IconProps>> = {
-  chart: IconChart,
-  cow: IconCow,
-  buffalo: IconBuffalo,
-  heart: IconHeart,
-};
 
 const PENDIENTE_ICON: Record<Pendiente["icon"], ComponentType<IconProps>> = {
   syringe: IconSyringe,
@@ -55,97 +36,98 @@ const PENDIENTE_ICON: Record<Pendiente["icon"], ComponentType<IconProps>> = {
   list: IconList,
 };
 
-/**
- * Inicio del panel — réplica de brain/design/previews/01-web-dashboard-inicio.jpg.
- * TODO(API): reemplazar lib/mock.ts por GET /establecimientos/{id}/resumen,
- * /existencias, /pendientes y /eventos.
- */
-export default function InicioPage() {
+function Encabezado({ subtitle }: { subtitle: string }) {
+  return (
+    <PageHeader
+      title="Inicio"
+      subtitle={subtitle}
+      actions={
+        <>
+          <form action="/hacienda" role="search" className="relative w-full sm:w-[300px]">
+            <label htmlFor="buscar-animal" className="sr-only">
+              Buscar animal por caravana, tatuaje o RFID
+            </label>
+            <IconSearch size={18} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-subtle" />
+            <input id="buscar-animal" name="q" type="search" placeholder="Caravana, tatuaje o RFID" className={`${inputClass} pl-10 text-[14px]`} />
+          </form>
+          <Button href="/hacienda" icon={<IconPlus size={18} />}>
+            Cargar evento
+          </Button>
+        </>
+      }
+    />
+  );
+}
+
+async function Tablero() {
+  const ctx = await requireContexto();
+  await connection();
+  const now = new Date();
+  const hoy = hoyAR(now);
+  const d = await getInicio(ctx.activa.establecimiento_id, hoy);
+  const dia = new Intl.DateTimeFormat("es-AR", { weekday: "long", day: "numeric", month: "long", timeZone: "America/Argentina/Buenos_Aires" }).format(now);
+  const hora = new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Argentina/Buenos_Aires" }).format(now);
+  const inicialEspecie = d.porEspecie.BUB >= d.porEspecie.BOV ? "bubalino" : "bovino";
+
   return (
     <>
-      <PageHeader
-        title="Inicio"
-        subtitle={`${MOCK_RESUMEN.fecha} · Última sincronización ${MOCK_RESUMEN.ultimaSync}`}
-        actions={
-          <>
-            <form action="/hacienda" role="search" className="relative w-full sm:w-[280px]">
-              <label htmlFor="buscar-animal" className="sr-only">
-                Buscar animal por caravana, tatuaje o RFID
-              </label>
-              <IconSearch size={18} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-subtle" />
-              <input
-                id="buscar-animal"
-                name="q"
-                type="search"
-                placeholder="Caravana, tatuaje o RFID"
-                className={`${inputClass} pl-10 text-[14px]`}
-              />
-            </form>
-            <Button href="/trazabilidad" icon={<IconPlus size={18} />}>
-              Cargar evento
-            </Button>
-          </>
-        }
-      />
+      <Encabezado subtitle={`${dia.charAt(0).toUpperCase()}${dia.slice(1)} · Datos al ${hora} · ${ctx.activa.establecimiento_nombre}`} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {MOCK_RESUMEN.kpis.map((k) => {
-          const Icon = KPI_ICON[k.icon];
-          return (
-            <KpiCard
-              key={k.id}
-              label={k.label}
-              value={typeof k.value === "number" ? nf.format(k.value) : k.value}
-              icon={<Icon size={24} />}
-              delta={k.delta}
-              deltaHint={k.hint}
-              href={k.href}
-            />
-          );
-        })}
+        <KpiCard label="cabezas en potreros" value={d.cabezasPotreros != null ? nf.format(d.cabezasPotreros) : "—"} icon={<IconChart size={24} />} href="/establecimiento" />
+        <KpiCard label="Bovinos identificados" value={nf.format(d.porEspecie.BOV)} icon={<IconCow size={24} />} href="/hacienda?especie=BOV" />
+        <KpiCard label="Bubalinos identificados" value={nf.format(d.porEspecie.BUB)} icon={<IconBuffalo size={24} />} href="/hacienda?especie=BUB" />
+        <KpiCard label={`preñadas · ${d.partos30} ${d.partos30 === 1 ? "parto" : "partos"} en 30 días`} value={nf.format(d.prenadas)} icon={<IconHeart size={24} />} href="/hacienda?estado_reproductivo=prenada" />
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[1.15fr_1fr]">
         <Card>
-          <CardHeader title="Existencias por categoría" />
-          <StockByCategory data={MOCK_EXISTENCIAS} initial="bubalino" />
+          <CardHeader
+            title="Existencias por categoría"
+            description={d.source === "api" ? undefined : "Animales identificados individualmente. Los lotes por cantidades se suman cuando la API publique existencias."}
+          />
+          <StockByCategory data={d.existencias} initial={inicialEspecie} emptyText="No hay animales identificados de esta especie." />
         </Card>
 
         <Card>
           <CardHeader
-            title="Pendientes de la semana"
+            title="Pendientes"
             action={
-              <Link href="/sanidad" className="text-[13px] font-medium text-campo hover:underline">
-                Ver agenda
+              <Link href="/hacienda" className="text-[13px] font-medium text-campo hover:underline">
+                Ver hacienda
               </Link>
             }
           />
-          <ul>
-            {MOCK_PENDIENTES.map((p) => {
-              const Icon = PENDIENTE_ICON[p.icon];
-              return (
-                <li key={p.id} className="border-b border-border last:border-b-0">
-                  <Link href={p.href} className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-2">
-                    <Icon size={22} className="shrink-0 text-monte" />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[14px] text-ink">
-                        <span className="font-semibold">{p.titulo}</span>
-                        {p.detalle && <span className="text-muted"> · {p.detalle}</span>}
+          {d.pendientes.length ? (
+            <ul>
+              {d.pendientes.map((p) => {
+                const Icon = PENDIENTE_ICON[p.icon];
+                return (
+                  <li key={p.id} className="border-b border-border last:border-b-0">
+                    <Link href={p.href} className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-2">
+                      <Icon size={22} className="shrink-0 text-monte" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[14px] text-ink">
+                          <span className="font-semibold">{p.titulo}</span>
+                          {p.detalle && <span className="text-muted"> · {p.detalle}</span>}
+                        </span>
+                        <span className="block text-[12.5px] text-muted">{p.bajada}</span>
+                        <span className="mt-1.5 block sm:hidden">
+                          <StatusBadge estado={p.estado} />
+                        </span>
                       </span>
-                      <span className="block text-[12.5px] text-muted">{p.bajada}</span>
-                      <span className="mt-1.5 block sm:hidden">
+                      <span className="hidden sm:block">
                         <StatusBadge estado={p.estado} />
                       </span>
-                    </span>
-                    <span className="hidden sm:block">
-                      <StatusBadge estado={p.estado} />
-                    </span>
-                    <IconChevronRight size={18} className="shrink-0 text-subtle" />
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+                      <IconChevronRight size={18} className="shrink-0 text-subtle" />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <EmptyState icon={<IconCheckCircle size={24} />} title="Nada pendiente por ahora" description="No hay partos próximos, retiros vigentes ni recategorizaciones sugeridas. Cuando aparezca algo, lo vas a ver acá." />
+          )}
         </Card>
       </div>
 
@@ -153,57 +135,70 @@ export default function InicioPage() {
         <CardHeader
           title="Actividad reciente"
           action={
-            <Link href="/trazabilidad" className="inline-flex items-center gap-1 text-[13px] font-medium text-campo hover:underline">
-              Ver toda la actividad <IconArrowRight size={16} />
+            <Link href="/hacienda?orden=reciente" className="inline-flex items-center gap-1 text-[13px] font-medium text-campo hover:underline">
+              Ver hacienda <IconArrowRight size={16} />
             </Link>
           }
         />
-        <Table minWidth={860}>
-          <thead>
-            <tr>
-              <Th>Fecha</Th>
-              <Th>Evento</Th>
-              <Th>Animal / lote</Th>
-              <Th>Especie</Th>
-              <Th>Cargado por</Th>
-              <Th>Estado</Th>
-              <Th>
-                <span className="sr-only">Ver</span>
-              </Th>
-            </tr>
-          </thead>
-          <tbody>
-            {MOCK_ACTIVIDAD.map((a) => (
-              <Tr key={a.id}>
-                <Td className="whitespace-nowrap tabular-nums text-muted">{a.fecha}</Td>
-                <Td className="font-medium">{a.evento}</Td>
-                <Td>{a.sujeto}</Td>
-                <Td>
-                  <SpeciesChip especie={a.especie} />
-                </Td>
-                <Td>
-                  <span className="flex items-center gap-2 whitespace-nowrap">
-                    <Avatar name={a.autor} size={26} />
-                    {a.autor}
-                  </span>
-                </Td>
-                <Td>
-                  <TrustBadge nivel={a.confianza} />
-                </Td>
-                <Td className="w-10 text-right">
-                  <Link
-                    href="/trazabilidad"
-                    aria-label={`Ver ${a.evento} de ${a.sujeto}`}
-                    className="inline-grid h-8 w-8 place-items-center rounded-[var(--radius-control)] text-subtle hover:bg-surface-2 hover:text-ink"
-                  >
-                    <IconChevronRight size={18} />
-                  </Link>
-                </Td>
-              </Tr>
-            ))}
-          </tbody>
-        </Table>
+        {d.actividad.length ? (
+          <Table minWidth={820}>
+            <thead>
+              <tr>
+                <Th>Fecha</Th>
+                <Th>Evento</Th>
+                <Th>Detalle</Th>
+                <Th>Cargado por</Th>
+                <Th>Estado</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {d.actividad.map((a) => (
+                <Tr key={a.id}>
+                  <Td className="whitespace-nowrap tabular-nums text-muted">{fecha(a.ocurrido_en)}</Td>
+                  <Td className="font-medium">{a.tipo_nombre ?? a.tipo}</Td>
+                  <Td className="text-muted">{a.resumen}</Td>
+                  <Td>
+                    {a.autor?.nombre && (
+                      <span className="flex items-center gap-2 whitespace-nowrap">
+                        <Avatar name={a.autor.nombre} size={26} />
+                        <span>
+                          {a.autor.nombre}
+                          {a.autor.rol && <span className="block text-[12px] text-muted">{ROL_LABEL[a.autor.rol as keyof typeof ROL_LABEL] ?? a.autor.rol}</span>}
+                        </span>
+                      </span>
+                    )}
+                  </Td>
+                  <Td>
+                    <TrustBadge nivel={a.confianza ?? "declarado"} />
+                  </Td>
+                </Tr>
+              ))}
+            </tbody>
+          </Table>
+        ) : (
+          <EmptyState icon={<IconList size={24} />} title="Todavía no hay actividad" description="Los eventos que se carguen en el campo o desde la web aparecen acá con su autor." />
+        )}
       </Card>
     </>
+  );
+}
+
+/** Inicio del panel (TPA-52) — estructura de la preview 01 con datos reales. */
+export default function InicioPage() {
+  return (
+    <Suspense
+      fallback={
+        <>
+          <Encabezado subtitle="Cargando datos del establecimiento…" />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-hidden="true">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="h-[104px] rounded-[var(--radius-card)] border border-border bg-surface" />
+            ))}
+          </div>
+        </>
+      }
+    >
+      <Tablero />
+    </Suspense>
   );
 }

@@ -21,7 +21,15 @@ const nf = new Intl.NumberFormat("es-AR");
 const pf = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 /** Existencias por categoría con pestañas por especie: barra apilada + tabla (preview 01). */
-export function StockByCategory({ data, initial = "bubalino" }: { data: Record<Especie, StockRow[]>; initial?: Especie }) {
+export function StockByCategory({
+  data,
+  initial = "bubalino",
+  emptyText = "No hay animales de esta especie.",
+}: {
+  data: Record<Especie, StockRow[]>;
+  initial?: Especie;
+  emptyText?: string;
+}) {
   const [especie, setEspecie] = useState<Especie>(initial);
   const baseId = useId();
   const rows = data[especie];
@@ -53,47 +61,61 @@ export function StockByCategory({ data, initial = "bubalino" }: { data: Record<E
       </div>
 
       <div id={`${baseId}-panel`} role="tabpanel" aria-labelledby={`${baseId}-tab-${especie}`}>
-        <div className="mt-4 flex h-7 w-full overflow-hidden rounded-[6px]" aria-hidden="true">
-          {rows.map((r, i) => (
-            <div
-              key={r.categoria}
-              className={cx(SERIES_BG[i % SERIES_BG.length], i > 0 && "border-l-2 border-surface")}
-              style={{ width: `${(r.cabezas / total) * 100}%` }}
-            />
-          ))}
-        </div>
+        {total === 0 ? (
+          <p className="py-8 text-center text-[14px] text-muted">{emptyText}</p>
+        ) : (
+          <>
+            <div className="mt-4 flex h-7 w-full overflow-hidden rounded-[6px]" aria-hidden="true">
+              {rows.map((r, i) => (
+                <div
+                  key={r.categoria}
+                  className={cx(SERIES_BG[i % SERIES_BG.length], i > 0 && "border-l-2 border-surface")}
+                  style={{ width: `${(r.cabezas / total) * 100}%` }}
+                />
+              ))}
+            </div>
 
-        <table className="mt-3 w-full text-left text-[14px]">
-          <caption className="sr-only">Existencias de {especie} por categoría: {nf.format(total)} cabezas</caption>
-          <thead>
-            <tr className="text-[12px] text-muted">
-              <th scope="col" className="py-2 font-medium">Categoría</th>
-              <th scope="col" className="py-2 text-right font-medium">Cabezas</th>
-              <th scope="col" className="py-2 text-right font-medium">% del total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r, i) => (
-              <tr key={r.categoria} className="border-t border-border">
-                <td className="py-2.5">
-                  <span className="flex items-center gap-2.5">
-                    <span className={cx("h-2.5 w-2.5 rounded-full", SERIES_BG[i % SERIES_BG.length])} aria-hidden="true" />
-                    {r.categoria}
-                  </span>
-                </td>
-                <td className="py-2.5 text-right tabular-nums">{nf.format(r.cabezas)}</td>
-                <td className="py-2.5 text-right tabular-nums text-muted">{pf.format((r.cabezas / total) * 100)}%</td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr className="border-t border-border-strong font-semibold">
-              <td className="py-2.5">Total</td>
-              <td className="py-2.5 text-right tabular-nums">{nf.format(total)}</td>
-              <td className="py-2.5 text-right tabular-nums text-muted">100,0%</td>
-            </tr>
-          </tfoot>
-        </table>
+            <table className="mt-3 w-full text-left text-[14px]">
+              <caption className="sr-only">
+                Existencias de {especie} por categoría: {nf.format(total)} cabezas
+              </caption>
+              <thead>
+                <tr className="text-[12px] text-muted">
+                  <th scope="col" className="py-2 font-medium">
+                    Categoría
+                  </th>
+                  <th scope="col" className="py-2 text-right font-medium">
+                    Cabezas
+                  </th>
+                  <th scope="col" className="py-2 text-right font-medium">
+                    % del total
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, i) => (
+                  <tr key={r.categoria} className="border-t border-border">
+                    <td className="py-2.5">
+                      <span className="flex items-center gap-2.5">
+                        <span className={cx("h-2.5 w-2.5 rounded-full", SERIES_BG[i % SERIES_BG.length])} aria-hidden="true" />
+                        {r.categoria}
+                      </span>
+                    </td>
+                    <td className="py-2.5 text-right tabular-nums">{nf.format(r.cabezas)}</td>
+                    <td className="py-2.5 text-right tabular-nums text-muted">{pf.format((r.cabezas / total) * 100)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-border-strong font-semibold">
+                  <td className="py-2.5">Total</td>
+                  <td className="py-2.5 text-right tabular-nums">{nf.format(total)}</td>
+                  <td className="py-2.5 text-right tabular-nums text-muted">100,0%</td>
+                </tr>
+              </tfoot>
+            </table>
+          </>
+        )}
       </div>
     </div>
   );

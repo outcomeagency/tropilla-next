@@ -185,3 +185,21 @@ módulo, autor y rol, fecha y nivel de confianza; las correcciones («Corregido 
 anulaciones (tachadas) se muestran, nunca se esconden. Resumen con datos de la proyección (nacimiento estimado,
 origen, dentición, CC, lote/potrero, clase de faena Res. 470/2012, señas). Sanidad muestra el retiro vigente con
 fecha; Reproducción, FPP con su fuente (tacto/servicio). Foto: placeholder sobrio hasta que la app suba fotos.
+
+## TPA-52 · Inicio con existencias, pendientes y actividad · ✅ (web)
+
+**Ruta:** `/inicio` (estructura de la preview 01)
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Todo el inicio | `GET …/inicio` | se usa si existe (hoy 404) |
+| KPIs: cabezas en potreros, bovinos/bubalinos identificados, preñadas y partos en 30 días | `GET …/potreros` (ocupación) + `GET …/animales` | 🔌 compuesto con datos reales |
+| Existencias por categoría | `GET …/animales` (identificados) → `…/inicio.existencias` cuando exista | 🔌 parcial: no incluye lotes anónimos (se aclara en pantalla) |
+| Pendientes: partos vencidos/próximos, retiro vigente, recategorizaciones | derivados de `GET …/animales` | 🔌 |
+| Actividad reciente con autor y rol | `GET …/eventos?limit=8` | 🔌 |
+
+**Comentario del dev:** Mientras `/inicio` no exista, el tablero se compone sólo con endpoints reales y no inventa
+nada: sin deltas «vs. mes anterior» (no hay dato), y la tarjeta de existencias aclara que cuenta animales
+identificados. Cada KPI y pendiente lleva al listado de Hacienda ya filtrado. Se eliminó la maqueta `lib/mock.ts`.
+Siguiendo las decisiones de Claude Design, no aparece «Renovar en SENASA» (no hay integración) y los pendientes de
+documentos van a decir «Pedí la nueva constancia» cuando la API los publique.
