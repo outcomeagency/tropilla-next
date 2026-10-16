@@ -1252,7 +1252,8 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /** Archivar reproductor externo sin borrar su historial */
+        delete: operations["delete_establecimientos_establecimiento_reproductores_externos_reproductor"];
         options?: never;
         head?: never;
         /** Corregir reproductor externo con versionado append-only */
@@ -8238,6 +8239,30 @@ export interface operations {
             401: components["responses"]["NoAutenticado"];
             403: components["responses"]["Prohibido"];
             422: components["responses"]["Validacion"];
+        };
+    };
+    delete_establecimientos_establecimiento_reproductores_externos_reproductor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                reproductor: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Archivado; se conserva el historial y se publica en sync */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
         };
     };
     patch_establecimientos_establecimiento_reproductores_externos_reproductor: {

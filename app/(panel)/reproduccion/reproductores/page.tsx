@@ -18,6 +18,15 @@ async function guardar(form: FormData) {
   revalidatePath("/reproduccion/reproductores");
 }
 
+async function archivar(form: FormData) {
+  "use server";
+  const ctx = await requireContexto();
+  const est = ctx.activa.establecimiento_id;
+  const id = String(form.get("id") ?? "");
+  await api(`/establecimientos/${est}/reproductores-externos/${id}`, { method: "DELETE" });
+  revalidatePath("/reproduccion/reproductores");
+}
+
 async function ReproductoresContenido() {
   await connection();
   const ctx = await requireContexto();
@@ -38,7 +47,7 @@ async function ReproductoresContenido() {
       <input required name="nombre" defaultValue={r.nombre} aria-label="Nombre" className="rounded-lg border border-border bg-base px-3 py-2" /><input name="rp" defaultValue={r.rp ?? ""} aria-label="RP" placeholder="RP" className="rounded-lg border border-border bg-base px-3 py-2" />
       <input name="registro_genealogico" defaultValue={r.registro_genealogico ?? ""} aria-label="Registro genealógico" placeholder="Registro genealógico" className="rounded-lg border border-border bg-base px-3 py-2" /><input name="raza" defaultValue={r.raza ?? ""} aria-label="Raza" placeholder="Raza" className="rounded-lg border border-border bg-base px-3 py-2" />
       <input type="hidden" name="especie_codigo" value={r.especie_codigo} /><input name="centro" defaultValue={r.centro ?? ""} aria-label="Centro" placeholder="Centro" className="rounded-lg border border-border bg-base px-3 py-2" /><button className="rounded-lg border border-border px-4 py-2 font-semibold">Guardar cambios</button>
-    </form></CardBody></Card>)}</div>
+    </form><form action={archivar} className="mt-2"><input type="hidden" name="id" value={r.id} /><button className="rounded-lg border border-border px-4 py-2 text-sm text-muted">Archivar reproductor</button></form></CardBody></Card>)}</div>
   </>;
 }
 

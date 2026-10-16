@@ -11,6 +11,7 @@ import { gestacionesDe } from "@/lib/gestacion";
 import type { AnimalElegido } from "@/lib/evento-actions";
 import type { ModuloRegistrar } from "@/lib/eventos-hacienda";
 import { listProductos, listRetiros, listTareas } from "@/lib/data/sanidad";
+import { api } from "@/lib/api";
 import { tiposPrueba } from "@/lib/data/pruebas";
 import type { TareaOpt } from "@/components/panel/eventos/registrar";
 
@@ -38,6 +39,9 @@ export async function RegistrarPagina({ searchParams, modulo = "hacienda" }: { s
     sanidad && sp.tarea ? listTareas(est, { estado: "abiertas", limit: 100 }).then((r) => r.data).catch(() => []) : Promise.resolve([]),
     modulo === "hacienda" ? listRetiros(est).catch(() => ({ data: [], lotes: [] })) : Promise.resolve({ data: [], lotes: [] }),
   ]);
+  const reproductoresExternos = modulo === "reproduccion" || modulo === "hacienda"
+    ? await api<{ data: Array<{ id: string; nombre: string; rp?: string | null; registro_genealogico?: string | null; especie_codigo: string }> }>(`/establecimientos/${est}/reproductores-externos`).then((r) => r.data).catch(() => [])
+    : [];
   const retiroLote = new Map((retiros.lotes ?? []).map((l) => [l.id ?? "", l.retiro_carne_hasta ?? null]));
   const t = tareas.find((x) => x.id === sp.tarea);
   const alcance = (t?.alcance ?? {}) as { lote_ids?: string[]; potrero_ids?: string[]; potrero_id?: string; lote_id?: string };
@@ -103,7 +107,7 @@ export async function RegistrarPagina({ searchParams, modulo = "hacienda" }: { s
           enfermedades: x.enfermedades ?? [],
           especies: x.especies ?? [],
         }))}
+      reproductoresExternos={reproductoresExternos}
     />
   );
 }
-
