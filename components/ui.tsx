@@ -217,8 +217,9 @@ const ESPECIE: Record<Especie, { label: string; className: string; Icon: Compone
 };
 
 /** Chip de especie: la especie siempre visible (búfalo ≠ vaca). */
-export function SpeciesChip({ especie, withIcon = false }: { especie: Especie; withIcon?: boolean }) {
-  const { label, className, Icon } = ESPECIE[especie];
+export function SpeciesChip({ especie, withIcon = false, label: labelOverride }: { especie: Especie; withIcon?: boolean; label?: string }) {
+  const { className, Icon } = ESPECIE[especie];
+  const label = labelOverride ?? ESPECIE[especie].label;
   return (
     <span
       className={cx(
@@ -538,11 +539,11 @@ export function Spinner({ size = 16 }: { size?: number }) {
 }
 
 /** Aviso de datos de ejemplo (adaptador lib/mock/*): siempre visible, nunca escondido. */
-export function MockNotice({ what = "Estos datos" }: { what?: string }) {
+export function MockNotice({ what = "Estos datos", text }: { what?: string; /** Texto completo (lo público lo traduce). */ text?: string }) {
   return (
     <p className="inline-flex items-center gap-1.5 rounded-[var(--radius-chip)] border border-dashed border-warning-border bg-warning-bg px-2 py-0.5 text-[12px] font-medium text-warning">
       <IconInfo size={14} className="shrink-0" />
-      {what} son de ejemplo: la API todavía no publica este dato.
+      {text ?? `${what} son de ejemplo: la API todavía no publica este dato.`}
     </p>
   );
 }

@@ -1,20 +1,53 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/public/site-header";
-import { Logo } from "@/components/brand";
-import { Badge, Card, EmptyState, SpeciesChip, TrustBadge, buttonClass, inputClass } from "@/components/ui";
-import { IconArrowRight, IconBuffalo, IconInfo, IconPin, IconSearch } from "@/components/icons";
-import { getDictionary, hasLocale } from "@/lib/i18n";
+import { SiteFooter } from "@/components/public/site-footer";
+import { ProducerCard } from "@/components/public/producer-card";
+import { Photo } from "@/components/public/photo";
+import { Card, EmptyState, MockNotice, TrustBadge, buttonClass, inputClass } from "@/components/ui";
+import { IconArrowRight, IconPin, IconSearch } from "@/components/icons";
+import { getDictionary, hasLocale, type Locale } from "@/lib/i18n";
+import { getPortalDict } from "@/lib/i18n/portal";
+import { getDirectorio } from "@/lib/data/portal";
+import { PHOTOS } from "@/lib/photos";
 
 /**
  * Home del portal público (placeholder). Patrón de la landing de Pya'e +
  * preview 03: una sola idea en el hero, Montserrat sólo en titulares, sin
  * maquetas falsas. El directorio real llega con la API (/portal/productores).
  */
+async function Destacados({ locale }: { locale: Locale }) {
+  const p = getPortalDict(locale);
+  const { data, source } = await getDirectorio({}, locale);
+  if (!data.length) {
+    return (
+      <Card className="mt-6">
+        <EmptyState icon={<IconSearch size={24} />} title={p.directory.emptyTitle} description={p.directory.emptyBody} />
+      </Card>
+    );
+  }
+  return (
+    <>
+      {source === "mock" && (
+        <div className="mt-4">
+          <MockNotice text={p.common.sampleData} />
+        </div>
+      )}
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {data.slice(0, 3).map((it) => (
+          <ProducerCard key={it.slug} p={it} locale={locale} t={p} />
+        ))}
+      </div>
+    </>
+  );
+}
+
 export default async function PortalHome({ params }: PageProps<"/[locale]">) {
   const { locale } = await params;
   if (!hasLocale(locale)) notFound();
   const t = getDictionary(locale);
+  const p = getPortalDict(locale);
 
   return (
     <>
@@ -31,7 +64,7 @@ export default async function PortalHome({ params }: PageProps<"/[locale]">) {
               </h1>
               <p className="mt-5 max-w-[44ch] text-[17px] leading-relaxed text-muted">{t.hero.lead}</p>
 
-              <form action={`/${locale}#directorio`} role="search" className="mt-8 flex max-w-[560px] flex-col gap-2 sm:flex-row">
+              <form action={`/${locale}/directorio`} role="search" className="mt-8 flex max-w-[560px] flex-col gap-2 sm:flex-row">
                 <label htmlFor="portal-q" className="sr-only">
                   {t.hero.searchLabel}
                 </label>
@@ -44,88 +77,40 @@ export default async function PortalHome({ params }: PageProps<"/[locale]">) {
                 </button>
               </form>
               <p className="mt-4 text-[14px] text-muted">
-                <Link href="/ingresar" className="inline-flex items-center gap-1 font-medium text-campo hover:underline">
+                <Link href="/registro" className="inline-flex items-center gap-1 font-medium text-campo hover:underline">
                   {t.hero.secondaryCta} <IconArrowRight size={16} />
                 </Link>
               </p>
             </div>
 
-            {/* Ejemplo de ficha con los componentes reales (no es una captura). */}
-            <Card className="overflow-hidden">
-              <div className="flex items-center justify-between border-b border-border bg-crema px-5 py-3">
-                <Badge tone="neutral" icon={<IconInfo size={14} />}>
-                  {t.sample.label}
-                </Badge>
-                <span className="flex items-center gap-1 text-[12.5px] text-muted">
-                  <IconPin size={14} /> {t.sample.place}
-                </span>
-              </div>
-              <div className="px-5 py-5">
-                <div className="flex items-start gap-3">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[10px] bg-campo-50 text-monte">
-                    <IconBuffalo size={26} />
-                  </span>
-                  <div>
-                    <h2 className="font-display text-[22px] font-bold leading-tight tracking-[-0.02em] text-ink">{t.sample.title}</h2>
-                    <p className="mt-1 text-[13.5px] text-muted">{t.sample.meta}</p>
-                  </div>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <SpeciesChip especie="bubalino" />
-                  <Badge tone="neutral" icon={<IconInfo size={14} />}>
-                    Mediterráneo
-                  </Badge>
-                </div>
-                <dl className="mt-5 divide-y divide-border rounded-[10px] border border-border">
-                  <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-                    <dt className="sr-only">{t.sample.headsLabel}</dt>
-                    <dd className="text-[17px] font-bold tabular-nums text-ink">
-                      30 <span className="text-[13px] font-medium text-muted">{t.sample.headsLabel}</span>
-                    </dd>
-                    <dd>
-                      <TrustBadge nivel="declarado" label={t.trust.levels.declarado} />
-                    </dd>
-                  </div>
-                  <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-                    <dt className="sr-only">{t.sample.weightLabel}</dt>
-                    <dd className="text-[17px] font-bold tabular-nums text-ink">
-                      468 <span className="text-[13px] font-medium text-muted">{t.sample.weightLabel}</span>
-                    </dd>
-                    <dd>
-                      <TrustBadge nivel="integridad_registrada" detail={t.sample.weightDetail} label={t.trust.levels.integridad_registrada} />
-                    </dd>
-                  </div>
-                  <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-                    <dt className="sr-only">{t.sample.healthLabel}</dt>
-                    <dd className="text-[15px] text-ink">
-                      {t.sample.healthLabel}: <span className="font-semibold">{t.sample.healthValue}</span>
-                    </dd>
-                    <dd>
-                      <TrustBadge nivel="integridad_registrada" label={t.trust.levels.integridad_registrada} />
-                    </dd>
-                  </div>
-                </dl>
-              </div>
-            </Card>
+            {/* Foto real de campo (addendum: grilla 6/5, recorte 5:4, radio 16). */}
+            <figure>
+              <Photo
+                src={PHOTOS.bufalosPastizal.src}
+                alt={PHOTOS.bufalosPastizal.alt}
+                sizes="(min-width:1024px) 520px, 100vw"
+                className="aspect-[5/4] rounded-[16px] border border-border"
+                preload
+              />
+              <figcaption className="mt-2.5 flex items-center gap-1.5 text-[12.5px] text-muted">
+                <IconPin size={14} /> {t.sample.place}
+              </figcaption>
+            </figure>
           </div>
         </section>
 
-        {/* Directorio (vacío hasta que haya productores publicados) */}
+        {/* Directorio: productores actualizados recientemente */}
         <section id="directorio" className="scroll-mt-20 bg-base">
           <div className="mx-auto max-w-[1320px] px-[clamp(16px,4vw,40px)] py-[clamp(40px,6vw,72px)]">
-            <h2 className="text-[24px] font-semibold tracking-[-0.01em] text-ink">{t.nav.directory}</h2>
-            <Card className="mt-5">
-              <EmptyState
-                icon={<IconSearch size={24} />}
-                title={t.empty.title}
-                description={t.empty.body}
-                action={
-                  <a href="#como-funciona" className={buttonClass("outline", "md")}>
-                    {t.how.title}
-                  </a>
-                }
-              />
-            </Card>
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <h2 className="font-display text-[clamp(26px,3vw,36px)] font-bold tracking-[-0.02em] text-ink">{p.directory.title}</h2>
+              <Link href={`/${locale}/directorio`} className="inline-flex items-center gap-1 text-[14px] font-medium text-campo hover:underline">
+                {p.directory.emptyWiden} <IconArrowRight size={16} />
+              </Link>
+            </div>
+            <Suspense fallback={<div className="mt-6 h-[380px]" aria-hidden="true" />}>
+              <Destacados locale={locale} />
+            </Suspense>
           </div>
         </section>
 
@@ -168,7 +153,7 @@ export default async function PortalHome({ params }: PageProps<"/[locale]">) {
               <p className="mt-2 text-[16px] text-sidebar-muted">{t.producers.body}</p>
             </div>
             <Link
-              href="/ingresar"
+              href="/registro"
               className="inline-flex h-11 shrink-0 items-center rounded-[var(--radius-control)] bg-crema px-5 text-sm font-semibold text-monte hover:bg-surface"
             >
               {t.producers.cta}
@@ -177,15 +162,7 @@ export default async function PortalHome({ params }: PageProps<"/[locale]">) {
         </section>
       </main>
 
-      <footer className="border-t border-border bg-surface">
-        <div className="mx-auto max-w-[1320px] px-[clamp(16px,4vw,40px)] py-8">
-          <p className="rounded-[10px] border border-border bg-base px-4 py-3 text-[13px] text-muted">{t.footer.legend}</p>
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-            <Logo height={24} />
-            <p className="text-[12.5px] text-muted">{t.footer.rights}</p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter locale={locale} dict={t} />
     </>
   );
 }

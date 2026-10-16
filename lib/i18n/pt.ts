@@ -61,7 +61,7 @@ export const pt: Dictionary = {
   producers: {
     title: "Tem rebanho? Mostre como ele merece.",
     body: "Organize seu rebanho, sanidade e documentos, e publique só o que você escolher, em espanhol, inglês e português.",
-    cta: "Entrar no painel",
+    cta: "Criar a conta do meu campo",
   },
   empty: {
     title: "O diretório abre em breve",

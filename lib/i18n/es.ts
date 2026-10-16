@@ -60,7 +60,7 @@ export const es = {
   producers: {
     title: "¿Tenés hacienda? Mostrala como se merece.",
     body: "Ordená tu rodeo, tu sanidad y tus documentos, y publicá sólo lo que vos elijas, en español, inglés y portugués.",
-    cta: "Ingresar al panel",
+    cta: "Crear la cuenta de mi campo",
   },
   empty: {
     title: "El directorio abre pronto",
