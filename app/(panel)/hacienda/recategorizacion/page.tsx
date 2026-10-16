@@ -94,19 +94,20 @@ async function Contenido() {
 }
 
 /** Recategorización sugerida con confirmación en bloque (TPA-25). */
-async function Ok({ searchParams }: { searchParams: Promise<{ ok?: string }> }) {
-  const n = Number((await searchParams).ok ?? 0);
-  if (!n) return null;
+async function Ok({ searchParams }: { searchParams: Promise<{ ok?: string; descartadas?: string }> }) {
+  const params = await searchParams;
+  const n = Number(params.ok ?? 0);
+  const d = Number(params.descartadas ?? 0);
+  if (!n && !d) return null;
   return (
     <div className="mb-4">
-      <Notice tone="success" title={n === 1 ? "Recategorización confirmada." : `${n} recategorizaciones confirmadas.`}>
-        La categoría nueva ya se ve en Hacienda y en las existencias; cada cambio quedó en la historia del animal.
-      </Notice>
+      {n > 0 && <Notice tone="success" title={n === 1 ? "Recategorización confirmada." : `${n} recategorizaciones confirmadas.`}>La categoría nueva ya se ve en Hacienda y en las existencias; cada cambio quedó en la historia del animal.</Notice>}
+      {d > 0 && <Notice tone="success" title={d === 1 ? "Sugerencia descartada." : `${d} sugerencias descartadas.`}>Ya no aparecen para esos animales. Una categoría nueva sugerida más adelante va a volver a mostrarse.</Notice>}
     </div>
   );
 }
 
-export default function RecategorizacionPage(props: { searchParams: Promise<{ ok?: string }> }) {
+export default function RecategorizacionPage(props: { searchParams: Promise<{ ok?: string; descartadas?: string }> }) {
   return (
     <>
       <Link href="/hacienda" className="mb-3 inline-flex items-center gap-1 text-[13px] font-medium text-muted hover:text-ink">
@@ -114,7 +115,7 @@ export default function RecategorizacionPage(props: { searchParams: Promise<{ ok
       </Link>
       <PageHeader
         title="Recategorización sugerida"
-        subtitle="Animales que cumplen una regla de su especie. Revisá, destildá lo que no corresponda y confirmá en bloque: cada cambio queda como evento."
+        subtitle="Animales que cumplen una regla de su especie. Revisá y confirmá el cambio, o descartá sugerencias que no correspondan. También aparecen crías de más de 7 meses sin destete."
       />
       <Suspense fallback={null}>
         <Ok searchParams={props.searchParams} />

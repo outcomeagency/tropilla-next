@@ -761,3 +761,15 @@ botón de verificación, más la aclaración de qué prueba la integridad. Si el
 | Lectura de `resumen` de eventos | Eliminada para construir la curva | Sin mock |
 
 **Comentario del dev:** La ficha obtiene los puntos de peso del endpoint dedicado, que devuelve el peso, la fuente y la ganancia diaria calculada por la API. La curva y la tabla identifican por separado los pesos heredados del lote, los de nacimiento y los de destete. La tabla muestra la GDP informada por el endpoint y evita recalcularla con puntos que no son pesajes. No hay fallback ni datos de muestra para esta sección.
+
+## TPA-25 · Recategorización sugerida · ✅ (bugfix)
+
+**Ruta:** `/hacienda/recategorizacion`.
+
+| Pieza | Endpoint/dato | Estado |
+|---|---|---|
+| Confirmar categorías sugeridas | `POST /establecimientos/{e}/animales/recategorizar` | 🔌 API real existente |
+| Descartar sugerencias seleccionadas | `POST /establecimientos/{e}/animales/sugerencias/descartar` | 🔌 API real; individual y en bloque, con confirmación |
+| Sugerencia vigente descartada | `Animal.categorias_descartadas` y proyección de la API | 🔌 Sin persistencia local ni mock |
+
+**Comentario del dev:** Cada sugerencia se puede descartar por separado o junto con las seleccionadas, después de confirmar en un diálogo que explica qué va a pasar. Se envían el animal y la categoría sugerida vigente; si cambió desde que se abrió la pantalla, la API puede rechazar el conjunto sin aplicar una parte. Después del descarte, la lista se vuelve a cargar y la API deja de mostrar esa categoría para ese animal. La pantalla aclara que también se sugieren crías de más de 7 meses sin destete; no se usan datos de ejemplo.
