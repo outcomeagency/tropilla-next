@@ -63,3 +63,19 @@ cantidades o entrar vacío. Zonas sanitarias: defaults razonables para Corriente
 módulo (una ficha de un campo no existe en otro). Con más de 5 campos aparece un buscador (asesores con muchos
 clientes). `getContexto()` es la puerta única del panel: sesión, campo activo y abilities para mostrar u ocultar
 acciones sin re-implementar la matriz de permisos.
+
+## TPA-54 · Directorio público con buscador · ✅
+
+**Rutas:** `/[locale]/directorio` (es/en/pt), portada `/[locale]` con productores destacados, `/sitemap.xml`, `/robots.txt`
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Búsqueda y filtros (provincia, especie, raza, categoría, con oferta, con contrato) | `GET /public/directorio` | 🧪 mock (9 productores ficticios, zonas reales) hasta que la API lo publique |
+| Sitemap con hreflang | `GET /public/sitemap` | 🧪 → con mock sólo se publican portada y directorio (nunca URLs de ejemplo) |
+| Nombres de categorías y razas es/en/pt | `lib/catalogo.ts` | estático hasta `/catalogos` con nombres traducidos |
+
+**Comentario del dev:** Filtros en la URL (compartibles, indexables, funcionan sin JS; con JS se aplican al cambiar).
+Datos cacheados con `"use cache"` + `cacheTag("directorio")` para revalidar por tag al publicar. Las tarjetas muestran
+sólo zona general (departamento + provincia), especie con chip, razas, ofertas/contratos y frescura; el orden lo
+explica la propia página («nadie paga por aparecer primero»). Metadata, canonical y alternates por idioma; la
+leyenda fija va en el pie de todo lo público. Fotos de campo de licencia libre (búfalo de agua, nunca africano).

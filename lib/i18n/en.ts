@@ -61,7 +61,7 @@ export const en: Dictionary = {
   producers: {
     title: "Raising livestock? Present it the way it deserves.",
     body: "Organize your herd, animal health and documents, and publish only what you choose, in Spanish, English and Portuguese.",
-    cta: "Go to the dashboard",
+    cta: "Create my farm account",
   },
   empty: {
     title: "The directory opens soon",
