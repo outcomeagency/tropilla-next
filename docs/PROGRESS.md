@@ -203,3 +203,8 @@ nada: sin deltas «vs. mes anterior» (no hay dato), y la tarjeta de existencias
 identificados. Cada KPI y pendiente lleva al listado de Hacienda ya filtrado. Se eliminó la maqueta `lib/mock.ts`.
 Siguiendo las decisiones de Claude Design, no aparece «Renovar en SENASA» (no hay integración) y los pendientes de
 documentos van a decir «Pedí la nueva constancia» cuando la API los publique.
+
+### Ajustes por decisiones de Claude Design (brain/design/claude-design.md)
+- **Duda 12** (TPA-48): la ficha pública ya no dice «Sanidad al día» (es una conclusión no verificada); muestra «Vacunas cargadas: aftosa, rabia…» en es/en/pt.
+- **Duda 21** (TPA-48): la columna y el contador de consultas sólo se ven con `consultas.ver` (el encargado no ve consultas que pueden traer precios).
+- **Duda 24** (TPA-54): el directorio vacío ofrece «Publicar un Busco» y «Seguir esta zona».

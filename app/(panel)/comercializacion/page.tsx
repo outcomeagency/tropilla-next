@@ -19,7 +19,12 @@ const ESTADOS = [
   { v: "vendida", l: "Vendidas" },
 ];
 
-const fmt = new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "short", year: "numeric", timeZone: "America/Argentina/Buenos_Aires" });
+const fmt = new Intl.DateTimeFormat("es-AR", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "America/Argentina/Buenos_Aires",
+});
 
 async function Ofertas({ searchParams }: { searchParams: Promise<{ estado?: string }> }) {
   const ctx = await requireContexto();
@@ -27,6 +32,8 @@ async function Ofertas({ searchParams }: { searchParams: Promise<{ estado?: stri
   const todas = await listOfertas(ctx.activa.establecimiento_id);
   const lista = todas.data.filter((o) => !estado || o.estado === estado);
   const puede = ctx.can("ofertas.gestionar");
+  // Las consultas pueden traer precios: el encargado no las ve (Claude Design, duda 21).
+  const verConsultas = ctx.can("consultas.ver");
 
   return (
     <Card>
@@ -58,7 +65,7 @@ async function Ofertas({ searchParams }: { searchParams: Promise<{ estado?: stri
               <Th>Especie</Th>
               <Th numeric>Cabezas</Th>
               <Th>Estado</Th>
-              <Th numeric>Consultas</Th>
+              {verConsultas && <Th numeric>Consultas</Th>}
               <Th>Publicada</Th>
               <Th>
                 <span className="sr-only">Abrir</span>
@@ -81,12 +88,14 @@ async function Ofertas({ searchParams }: { searchParams: Promise<{ estado?: stri
                 <Td>
                   <EstadoOfertaBadge estado={o.estado} />
                 </Td>
-                <Td numeric>
-                  <span className="inline-flex items-center gap-1">
-                    {!!o.consultas_count && <IconMessage size={15} className="text-muted" />}
-                    {o.consultas_count ?? 0}
-                  </span>
-                </Td>
+                {verConsultas && (
+                  <Td numeric>
+                    <span className="inline-flex items-center gap-1">
+                      {!!o.consultas_count && <IconMessage size={15} className="text-muted" />}
+                      {o.consultas_count ?? 0}
+                    </span>
+                  </Td>
+                )}
                 <Td className="whitespace-nowrap text-muted">{o.publicada_en ? fmt.format(new Date(o.publicada_en)) : "—"}</Td>
                 <Td className="w-10 text-right">
                   <Link
@@ -106,7 +115,13 @@ async function Ofertas({ searchParams }: { searchParams: Promise<{ estado?: stri
           icon={<IconTag size={24} />}
           title={estado ? "No hay ofertas en este estado" : "Todavía no publicaste ninguna oferta"}
           description="Elegí un lote y TROPILLA precarga especie, categoría, cantidad, peso con su fecha y sanidad. Vos decidís qué se muestra; los datos privados nunca se publican."
-          action={puede ? <Button href="/comercializacion/ofertas/nueva" icon={<IconPlus size={18} />}>Publicar una oferta</Button> : undefined}
+          action={
+            puede ? (
+              <Button href="/comercializacion/ofertas/nueva" icon={<IconPlus size={18} />}>
+                Publicar una oferta
+              </Button>
+            ) : undefined
+          }
         />
       )}
     </Card>
