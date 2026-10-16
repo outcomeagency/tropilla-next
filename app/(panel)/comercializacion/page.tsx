@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Button, Card, CardHeader, EmptyState, FilterTabs, MockNotice, PageHeader, SpeciesChip, Table, Td, Th, Tr } from "@/components/ui";
 import { IconChevronRight, IconMessage, IconPlus, IconTag } from "@/components/icons";
 import { EstadoOfertaBadge } from "@/components/panel/ofertas/estado";
+import { ComercialTabs } from "@/components/panel/comercial-tabs";
 import { requireContexto } from "@/lib/establecimiento";
 import { listOfertas } from "@/lib/data/ofertas";
 import { categoriaNombre } from "@/lib/catalogo";
@@ -134,13 +135,14 @@ export default function ComercializacionPage(props: { searchParams: Promise<{ es
     <>
       <PageHeader
         title="Comercialización"
-        subtitle="Ofertas publicadas, consultas de compradores y estado de cada lote en venta."
+        subtitle="Ofertas publicadas y contratos a futuro de tus lotes."
         actions={
           <Button href="/comercializacion/ofertas/nueva" icon={<IconPlus size={18} />}>
             Publicar oferta
           </Button>
         }
       />
+      <ComercialTabs actual="ofertas" />
       <Suspense fallback={<div className="h-[320px] rounded-[var(--radius-card)] border border-border bg-surface" />}>
         <Ofertas searchParams={props.searchParams} />
       </Suspense>

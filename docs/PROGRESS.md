@@ -226,3 +226,23 @@ la columna del rol propio; quien no gestiona usuarios ve sólo la matriz y qué 
 el enlace una única vez (la API no guarda el token) con «Mandar por WhatsApp». El invitado sin cuenta se registra o
 ingresa con `next` y vuelve a aceptar; al aceptar, ese campo queda activo. Dueño y uno mismo no se pueden editar
 desde la tabla. Las pruebas contra el demo se revirtieron (membresía e invitación revocadas).
+
+## TPA-56 · Contrato a futuro con token (productor) · ✅ (web)
+
+**Rutas:** `/comercializacion/contratos` (Mi apalancamiento), `/comercializacion/contratos/nuevo?lote=` (calculadora), `/comercializacion/contratos/[id]` (tomas, versiones, mortalidad, entrega, cancelar)
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Lotes para tokenizar | `GET …/lotes` | 🔌 API real (apareció durante la noche) |
+| Calcular / crear / publicar | `POST …/contratos/calcular`, `POST …/contratos`, `POST …/publicar` | 🧪 mock en memoria; cálculo en vivo en `lib/contratos-calc.ts` |
+| Tomas y «recibí» | `GET …/contratos/{id}`, `POST …/tomas/{t}/confirmar-pago` | 🧪 |
+| Mortalidad → versión nueva con recorte prorrata y anticipo a devolver | `POST …/contratos/{id}/terminos` | 🧪 (probado: 45 tokens tomados → 33; 30→22 y 15→11 con devolución) |
+| Entrega y liquidación (± tolerancia, «a resolver») | `POST …/entrega` | 🧪 |
+| Mi apalancamiento | `GET …/apalancamiento` | 🧪 calculado desde los contratos |
+| Cancelar con motivo | `POST …/cancelar` | 🧪 |
+
+**Comentario del dev:** La calculadora muestra la fórmula completa (cab × peso × rinde → kg al gancho → tokens de
+100 kg con redondeo hacia abajo; el resto queda del productor) como pidió Claude Design (dudas 4 y 5). Precios y
+anticipos sólo con `comercial.precios`; el resto del equipo ve tokens y fechas. Cada versión de términos queda con
+su huella y enlace a verificación; nada se borra (la toma liberada sigue visible). Al ofertar o tokenizar un lote real
+mientras la API no tenga esos módulos, el borrador se arma con los datos del lote real.

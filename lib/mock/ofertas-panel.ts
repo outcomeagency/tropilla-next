@@ -74,8 +74,8 @@ export function mockGuardarOferta(est: string, oferta: Oferta): Oferta {
 
 /** Avisos previos a publicar: retiro vigente, documento vencido, pesaje > 60 días (reactores: nunca en el mock). */
 export function mockAvisos(oferta: Oferta, hoy = new Date("2026-10-16T12:00:00Z")): Array<{ codigo: string; mensaje: string; corregir?: string }> {
-  const lote = MOCK_LOTES.find((l) => l.id === oferta.lote_id);
-  if (!lote) return [];
+  const pre = (oferta.precarga ?? {}) as { peso_fecha?: string };
+  const lote = MOCK_LOTES.find((l) => l.id === oferta.lote_id) ?? { extra: { retiroHasta: undefined as string | undefined }, peso_promedio_fecha: pre.peso_fecha };
   const out: Array<{ codigo: string; mensaje: string; corregir?: string }> = [];
   if (lote.extra.retiroHasta && new Date(lote.extra.retiroHasta) > hoy) {
     out.push({
