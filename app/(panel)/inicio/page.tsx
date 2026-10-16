@@ -21,9 +21,11 @@ import {
   type IconProps,
 } from "@/components/icons";
 import { StockByCategory } from "@/components/panel/stock-by-category";
+import { ClimaInicio } from "@/components/panel/clima/clima-inicio";
 import { requireContexto } from "@/lib/establecimiento";
 import { ROL_LABEL } from "@/lib/auth";
 import { getInicio, type Pendiente } from "@/lib/data/inicio";
+import { getClima } from "@/lib/data/clima";
 import { fecha, hoyAR, nf } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Inicio" };
@@ -64,6 +66,8 @@ async function Tablero() {
   await connection();
   const now = new Date();
   const hoy = hoyAR(now);
+  // Precarga (React cache): el pronóstico se pide en paralelo con el inicio, sin cascada.
+  void getClima(ctx.activa.establecimiento_id);
   const d = await getInicio(ctx.activa.establecimiento_id, hoy);
   const dia = new Intl.DateTimeFormat("es-AR", { weekday: "long", day: "numeric", month: "long", timeZone: "America/Argentina/Buenos_Aires" }).format(now);
   const hora = new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Argentina/Buenos_Aires" }).format(now);
@@ -79,6 +83,11 @@ async function Tablero() {
         <KpiCard label="Bubalinos identificados" value={nf.format(d.porEspecie.BUB)} icon={<IconBuffalo size={24} />} href="/hacienda?especie=BUB" />
         <KpiCard label={`preñadas · ${d.partos30} ${d.partos30 === 1 ? "parto" : "partos"} en 30 días`} value={nf.format(d.prenadas)} icon={<IconHeart size={24} />} href="/reproduccion" />
       </div>
+
+      {/* Clima en su propio Suspense (TPA-70): las fuentes externas pueden tardar y no deben frenar el tablero. */}
+      <Suspense fallback={<div className="mt-4 h-[140px] rounded-[var(--radius-card)] border border-border bg-surface" aria-hidden="true" />}>
+        <ClimaInicio est={ctx.activa.establecimiento_id} />
+      </Suspense>
 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[1.15fr_1fr]">
         <Card>

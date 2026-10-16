@@ -777,3 +777,15 @@ botón de verificación, más la aclaración de qué prueba la integridad. Si el
 ### TPA-76 · Ficha completa del establecimiento · ✅
 
 **Comentario del dev:** El panel usa formularios por dominio para sanidad/RENSPA, polígono (GeoJSON/KML), potreros y aguadas, suelos/pasturas/carga, infraestructura, personal, marcas y señales, clima, logística y certificaciones; cada bloque publica solo tras optar por visibilidad. La ficha pública `/es/p/{slug}` muestra los campos autorizados: vencimientos y plan sanitario se publican solo si se opta, y nunca se envían identificadores registrales ni observaciones libres. El perímetro se carga explícitamente y se valida en la API; no se infiere del punto de GPS. Verificado con typecheck, ESLint y build de producción Next.
+El editor incluye bloques JSON de ficha y configuración de visibilidad por bloque; los datos no publicados permanecen privados en API. Es un editor de transición: falta reemplazarlo por formularios por dominio y mostrar datos en la ficha de lectura; también falta la vista offline de Flutter. Verificado: API types regenerados desde OpenAPI, `next typegen`, `tsc --noEmit` y ESLint. La ficha extensa usa como base el contexto de investigación SENASA/negocio; el clima incluye fuente y fecha para integrar TPA-70.
+
+### TPA-70 · Alertas climáticas y riesgo por establecimiento (en curso)
+
+**Rutas:** `/clima` (nueva, en sidebar y `proxy.ts`) y tarjeta «Alertas climáticas» en `/inicio`.
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Alertas vigentes, pronóstico 16 días, lluvia acumulada vs. normal, ENSO y fuentes | `GET /establecimientos/{id}/clima` | 🔌 |
+| Reglas y umbrales (activar/desactivar, solo dueño/admin) | `GET …/clima/reglas`, `PUT …/clima/reglas/{codigo}` | 🔌 |
+
+**Comentario del dev:** La tarjeta del inicio va en su propio `<Suspense>` y el pedido se precarga con `React.cache` en paralelo con `/inicio` (la API puede recalcular contra fuentes externas). Cada alerta muestra severidad (ícono + texto), período, zona, horizonte, umbral/valor, hora de los datos y enlace a la fuente; el texto aclara que es pronóstico, no certeza, y que la recomendación es «para revisar», no una indicación de manejo. Si el endpoint no existe la tarjeta no aparece y la página explica el estado (sin mock). Verificado: api types regenerados, typegen + tsc, ESLint y `next build`.

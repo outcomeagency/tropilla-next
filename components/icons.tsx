@@ -313,6 +313,14 @@ export const IconAnchor = (p: IconProps) => (
   </Icon>
 );
 
+/** Nube con lluvia (clima y alertas climáticas). */
+export const IconCloud = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M7 16.5a4 4 0 0 1-.6-7.95A5.5 5.5 0 0 1 17 9.5h.5a3.5 3.5 0 0 1 .5 6.97" />
+    <path d="M9 19l-.8 1.5M13 19l-.8 1.5M17 19l-.8 1.5" />
+  </Icon>
+);
+
 export const IconCloudOff = (p: IconProps) => (
   <Icon {...p}>
     <path d="M3 3l18 18" />
