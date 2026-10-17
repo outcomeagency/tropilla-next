@@ -13,6 +13,7 @@ export type NavIcon =
   | "chart"
   | "cloud"
   | "leaf"
+  | "truck"
   | "user"
   | "settings";
 
@@ -33,6 +34,7 @@ export const PANEL_NAV: NavItem[] = [
   { href: "/documentos", label: "Documentos", icon: "file" },
   { href: "/trazabilidad", label: "Trazabilidad", icon: "route" },
   { href: "/comercializacion", label: "Comercialización", icon: "chart" },
+  { href: "/fletes", label: "Fletes", icon: "truck" },
   { href: "/perfil-publico", label: "Perfil público", icon: "user" },
   { href: "/organizaciones", label: "Organizaciones", icon: "user" },
 ];

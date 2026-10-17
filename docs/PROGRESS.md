@@ -873,3 +873,18 @@ El editor incluye bloques JSON de ficha y configuración de visibilidad por bloq
 | Selección y opt-in del productor | `PATCH /establecimientos/{id}/perfil` | 🔌 API real |
 
 **Comentario del dev:** La vista pública agregó tarjetas de toros y vientres con sus medidas registradas, centro y registro declarado, más la genealogía ramificada; el árbol contiene su propio scroll para no ensanchar la página en móvil. Composición permite elegir rangos o cantidades exactas y presenta categorías por especie y razas. Los indicadores muestran fuente y fecha, y solo calculan preñez cuando hay un tacto con animales evaluados; el plan sanitario respeta ambos opt-in. La galería reutiliza fotos públicas del perfil y animales seleccionados; no hay datos mock. Todos los rótulos agregados y «Ficha del establecimiento» están traducidos en es/en/pt. Verificado: `api:types`, `next typegen`, `tsc`, ESLint y build; Chrome headless revisado a 1440 y 390 px contra la API aislada.
+
+### TPA-73 · Matching de camiones jaula · ✅
+
+**Rutas:** `/fletes` (nuevo ítem «Fletes» en el menú; también en `proxy.ts`), `/fletes/nuevo`, `/fletes/[id]`; mesa del concierge solo para staff: `/fletes/concierge`, `/fletes/concierge/pedidos/[id]`, `/fletes/concierge/transportistas`, `/fletes/concierge/transportistas/[id]`.
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Catálogos, corredor, avisos y consentimiento | `GET …/fletes/opciones` | 🔌 |
+| Pedido con consentimiento, listado y detalle | `POST|GET …/fletes/pedidos`, `GET …/fletes/pedidos/{p}` | 🔌 |
+| Aceptar (ver contacto) / rechazar con motivo | `POST …/propuestas/{pr}/aceptar|rechazar` | 🔌 |
+| Resultado, checklist del viaje, cancelar | `POST …/resultado`, `PUT …/checklist/{item}`, `POST …/cancelar` | 🔌 |
+| Mesa: métricas, cola, sugerencias, proponer, retirar, resultado | `/fletes/concierge/resumen|pedidos|…` | 🔌 |
+| Transportistas, verificación de documentos, disponibilidad | `/fletes/concierge/transportistas…`, `/disponibilidades…` | 🔌 |
+
+**Comentario del dev:** El productor pide el flete por departamento de carga, provincia y localidad de destino, ventana de fechas y carga, con un consentimiento que explica qué se comparte y con quién. Cada propuesta muestra transportista, camión, fecha, tarifa estimada, criterios de compatibilidad y la documentación verificada a mano; el contacto aparece recién al aceptar. El checklist del viaje arranca por el DT-e, que TROPILLA no emite. La mesa del concierge (staff) junta la cola de pedidos, KPIs del piloto (mediana hasta la primera propuesta, tasa de acuerdo, costo por km), sugerencias ordenadas con su porqué y la verificación documental con método y vencimiento. Todo real contra la API; capturas revisadas en 1440 y 390 px con datos de prueba locales.
