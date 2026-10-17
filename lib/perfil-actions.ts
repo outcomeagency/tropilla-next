@@ -56,7 +56,11 @@ export async function guardarPerfilAction(_prev: PerfilFormState, fd: FormData):
   const body: S<"PerfilInput"> = {
     slug,
     en_directorio: fd.get("en_directorio") === "on",
-    secciones: Object.fromEntries(SECCIONES.map(({ k }) => [k, { ...prevSecciones[k], activa: fd.get(`sec_${k}`) === "on" }])),
+    secciones: Object.fromEntries(SECCIONES.map(({ k }) => [k, {
+      ...prevSecciones[k], activa: fd.get(`sec_${k}`) === "on",
+      ...(k === "reproductores" ? { ids: fd.getAll("reproductores").map(String).filter((v) => /^(interno|externo):[0-9a-f-]{36}$/i.test(v)).map((v) => { const [tipo, id] = v.split(":"); return { tipo, id }; }) } : {}),
+      ...(k === "composicion" ? { modo: fd.get("composicion_modo") === "exacto" ? "exacto" : "rango" } : {}),
+    }])),
     textos,
     idiomas,
     contacto_visible: {

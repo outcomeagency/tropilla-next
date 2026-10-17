@@ -851,3 +851,17 @@ El editor incluye bloques JSON de ficha y configuración de visibilidad por bloq
 **Rutas:** `/comercializacion/contrapartes`, detalle `/comercializacion/contrapartes/[id]`, formulario de cheque puntual (banco, número y cuenta opcional). Badges del estado de CUIT en contratos, consultas y demanda.
 
 **Comentario del dev:** El detalle presenta señales con fuente/fecha, estado de cobertura y resumen del proveedor IA o fallback; el texto aclara que informa señales y no bloquea. “Sin datos” no se traduce en “sin deudas”. El cheque consulta BCRA mediante la API y avisa cuando la fuente no devuelve datos; el número de cuenta queda enmascarado por el servidor. No hay altas de reclamos ni fecha oficial de creación del CUIT disponible en la integración actual. Build, typecheck y lint aprobados; tipos OpenAPI generados desde api-80.
+
+### TPA-78 · Perfil público con reproductores, genealogía e historia del rodeo · ✅
+
+**Rutas:** `/{locale}/p/{slug}` (es/en/pt), con fichas desplegables y árbol de genealogía horizontal con scroll propio.
+
+| Pieza | Fuente | Estado |
+|---|---|---|
+| Reproductores y pedigrí hasta cinco generaciones | `GET /public/establecimientos/{slug}/reproductores` | 🔌 API real |
+| Composición por especie/categoría/raza | `GET …/composicion` | 🔌 API real |
+| Preñez, partos, antigüedad y plan sanitario opt-in | `GET …/indicadores` | 🔌 API real |
+| Galería del campo y reproductores publicados | `GET …/galeria` | 🔌 API real |
+| Selección y opt-in del productor | `PATCH /establecimientos/{id}/perfil` | 🔌 API real |
+
+**Comentario del dev:** La vista pública agregó tarjetas de toros y vientres con sus medidas registradas, centro y registro declarado, más la genealogía ramificada; el árbol contiene su propio scroll para no ensanchar la página en móvil. Composición permite elegir rangos o cantidades exactas y presenta categorías por especie y razas. Los indicadores muestran fuente y fecha, y solo calculan preñez cuando hay un tacto con animales evaluados; el plan sanitario respeta ambos opt-in. La galería reutiliza fotos públicas del perfil y animales seleccionados; no hay datos mock. Todos los rótulos agregados y «Ficha del establecimiento» están traducidos en es/en/pt. Verificado: `api:types`, `next typegen`, `tsc`, ESLint y build; Chrome headless revisado a 1440 y 390 px contra la API aislada.

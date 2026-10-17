@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Badge, Progress, SpeciesChip, TrustBadge, buttonClass } from "@/components/ui";
 import { IconArrowRight, IconBuffalo, IconCheckCircle, IconClock, IconCow, IconFile, IconMessage, IconPin, IconShieldCheck, IconStar } from "@/components/icons";
 import { Photo } from "@/components/public/photo";
+import { ReproductoresPublicos, type PublicReproductor } from "@/components/public/reproductores-publicos";
 import { actividadNombre, departamentoNombre, provinciaNombre } from "@/lib/geo";
 import { categoriaNombre, razaNombre } from "@/lib/catalogo";
 import { especieDe } from "@/lib/types";
@@ -33,6 +34,15 @@ function enfermedadNombre(codigo: string | undefined, locale: Locale): string {
   return ENFERMEDADES[codigo]?.[locale] ?? codigo.charAt(0).toUpperCase() + codigo.slice(1).replace(/_/g, " ");
 }
 
+const FICHA_LABELS: Record<string, Record<Locale, string>> = {
+  potreros_aguadas: { es: "Potreros y aguadas", en: "Paddocks and water", pt: "Pastos e bebedouros" }, suelo_pasturas: { es: "Suelos y pasturas", en: "Soils and pastures", pt: "Solos e pastagens" }, capacidad_carga: { es: "Capacidad de carga", en: "Stocking capacity", pt: "Capacidade de suporte" }, infraestructura: { es: "Infraestructura", en: "Infrastructure", pt: "Infraestrutura" }, clima: { es: "Clima", en: "Climate", pt: "Clima" }, logistica: { es: "Logística", en: "Logistics", pt: "Logística" }, certificaciones: { es: "Programas declarados", en: "Declared programs", pt: "Programas declarados" },
+  potreros: { es: "Potreros", en: "Paddocks", pt: "Pastos" }, aguadas: { es: "Aguadas", en: "Water points", pt: "Bebedouros" }, rotacion: { es: "Rotación", en: "Rotation", pt: "Rotação" }, fuentes_agua: { es: "Fuentes de agua", en: "Water sources", pt: "Fontes de água" }, suelos: { es: "Suelos", en: "Soils", pt: "Solos" }, pasturas: { es: "Pasturas", en: "Pastures", pt: "Pastagens" }, ambientes: { es: "Ambientes", en: "Land types", pt: "Ambientes" }, carga_ug_ha: { es: "Carga UG/ha", en: "LSU/ha", pt: "UA/ha" }, periodo: { es: "Período", en: "Period", pt: "Período" }, criterio: { es: "Criterio", en: "Method", pt: "Critério" }, manga: { es: "Manga", en: "Cattle chute", pt: "Brete" }, balanza: { es: "Balanza", en: "Scale", pt: "Balança" }, alambrados: { es: "Alambrados", en: "Fencing", pt: "Cercas" }, energia: { es: "Energía", en: "Power", pt: "Energia" }, precipitacion_media_mm: { es: "Precipitación media (mm)", en: "Average rainfall (mm)", pt: "Precipitação média (mm)" }, temperatura_media_c: { es: "Temperatura media (°C)", en: "Average temperature (°C)", pt: "Temperatura média (°C)" }, fuente: { es: "Fuente", en: "Source", pt: "Fonte" }, fecha: { es: "Fecha", en: "Date", pt: "Data" }, distancia_ruta_km: { es: "Distancia a ruta (km)", en: "Distance to road (km)", pt: "Distância da rodovia (km)" }, distancia_puerto_km: { es: "Distancia al puerto (km)", en: "Distance to port (km)", pt: "Distância ao porto (km)" }, accesos: { es: "Accesos", en: "Access", pt: "Acessos" }, carga: { es: "Carga", en: "Loading", pt: "Carga" }, nombre: { es: "Nombre", en: "Name", pt: "Nome" }, emisor: { es: "Emisor", en: "Issuer", pt: "Emissor" }, vence: { es: "Vence", en: "Expires", pt: "Vence" }, alcance: { es: "Alcance", en: "Scope", pt: "Abrangência" }, equipo: { es: "Equipo", en: "Team", pt: "Equipe" }, marca: { es: "Marca", en: "Brand", pt: "Marca" }, senal: { es: "Señal", en: "Branding mark", pt: "Sinal" }, registro: { es: "Registro", en: "Registry", pt: "Registro" }, manejo: { es: "Manejo", en: "Management", pt: "Manejo" }, vacunaciones_actualizadas: { es: "Vacunaciones", en: "Vaccinations", pt: "Vacinações" }, plan_sanitario: { es: "Plan sanitario", en: "Health plan", pt: "Plano sanitário" }, renspa_vencimiento: { es: "Vencimiento de registro sanitario", en: "Health registration expiry", pt: "Vencimento do registro sanitário" }, senasa_vencimiento: { es: "Vencimiento sanitario", en: "Health expiry", pt: "Vencimento sanitário" },
+};
+
+function fichaNombre(codigo: string, locale: Locale): string {
+  return FICHA_LABELS[codigo]?.[locale] ?? codigo.replaceAll("_", " ");
+}
+
 function Seccion({ id, title, lead, children }: { id: string; title: string; lead?: string; children: ReactNode }) {
   return (
     <section aria-labelledby={id} className="border-t border-border pt-8 first:border-t-0 first:pt-0">
@@ -55,10 +65,6 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
   const portada = sec.portada;
   const act = sec.actividad;
   const ficha = sec.ficha_establecimiento ?? {};
-  const fichaTitulos: Record<string, string> = {
-    potreros_aguadas: "Potreros y aguadas", suelo_pasturas: "Suelos y pasturas", capacidad_carga: "Capacidad de carga",
-    infraestructura: "Infraestructura", clima: "Clima", logistica: "Logística", certificaciones: "Programas declarados",
-  };
   const zona = [portada?.zona?.localidad || departamentoNombre(portada?.zona?.departamento), provinciaNombre(portada?.zona?.provincia)]
     .filter(Boolean)
     .join(", ");
@@ -69,6 +75,12 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
   const actualizado = p.actualizado_en
     ? new Intl.DateTimeFormat(LANG[locale], { day: "numeric", month: "long", year: "numeric", timeZone: "America/Argentina/Buenos_Aires" }).format(new Date(p.actualizado_en))
     : null;
+  const ampliada = sec as unknown as {
+    reproductores?: PublicReproductor[] | null;
+    composicion?: { por_especie?: Array<{ especie?: string; nombre?: string; rango?: string; cabezas?: number; categorias?: Array<{ nombre?: string; rango?: string; cabezas?: number }> }>; razas?: Array<{ especie?: string; raza?: string; cantidad?: number | null }> } | null;
+    indicadores?: { prenez_ultimo_tacto?: { porcentaje: number; evaluados: number; fecha: string; fuente: string } | null; partos_por_temporada?: Array<{ temporada: number; partos: number; fuente: string; fecha: string }>; anios_en_tropilla?: number; antiguedad_fuente?: { fuente: string; fecha: string }; plan_sanitario?: { texto?: string; fuente?: string; fecha?: string } | null } | null;
+    galeria?: { fotos?: Array<{ sha256: string; url: string; alt: string | null; ancho: number | null; alto: number | null }> } | null;
+  };
 
   return (
     <>
@@ -101,7 +113,7 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
               <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5">
                 {p.insignias.map((i) => (
                   <li key={i} className="flex items-center gap-1.5 text-[13.5px] text-ink">
-                    <IconStar size={15} className="text-tierra" /> {t.insignias[i] ?? i}
+                    <IconStar size={15} className="text-tierra" /> {t.insignias[i === "historial_12_meses" ? "historial_12m" : i] ?? i}
                   </li>
                 ))}
               </ul>
@@ -169,11 +181,11 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
           </Seccion>
         )}
 
-        {Object.keys(ficha).length > 0 && <Seccion id="ficha-establecimiento" title="Ficha del establecimiento" lead="Datos declarados por el establecimiento.">
+        {Object.keys(ficha).length > 0 && <Seccion id="ficha-establecimiento" title={t.profile.establishmentSheet} lead={t.profile.declaredData}>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{Object.entries(ficha).map(([bloque, valores]) => <div key={bloque} className="rounded-[var(--radius-card)] border border-border bg-surface p-4">
-            <h3 className="font-semibold text-ink">{fichaTitulos[bloque] ?? bloque}</h3>
+            <h3 className="font-semibold text-ink">{fichaNombre(bloque, locale)}</h3>
             <dl className="mt-3 space-y-2">{Object.entries(valores).map(([clave, valor]) => <div key={clave} className="flex justify-between gap-3 text-sm">
-              <dt className="text-muted">{clave.replaceAll("_", " ")}</dt><dd className="text-right font-medium text-ink">{String(valor)}</dd>
+              <dt className="text-muted">{fichaNombre(clave, locale)}</dt><dd className="text-right font-medium text-ink">{String(valor)}</dd>
             </div>)}</dl>
           </div>)}</div>
         </Seccion>}
@@ -219,6 +231,34 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
             </div>
           </Seccion>
         )}
+
+        {ampliada.reproductores && <Seccion id="reproductores" title={t.profile.breeders} lead={t.profile.breedersLead}>
+          <ReproductoresPublicos items={ampliada.reproductores} locale={locale} t={t} />
+        </Seccion>}
+
+        {ampliada.composicion && <Seccion id="composicion-rodeo" title={t.profile.composition}>
+          {(ampliada.composicion.por_especie?.length || ampliada.composicion.razas?.length) ? <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {(ampliada.composicion.por_especie ?? []).map((e) => <article key={e.especie} className="rounded-[var(--radius-card)] border border-border bg-surface p-4">
+              <p className="text-[14px] font-semibold text-ink">{e.nombre ?? (e.especie ? t.common.species[e.especie as "BOV" | "BUB"] : "")}</p>
+              <p className="mt-1 text-[22px] font-bold tabular-nums text-ink">{e.rango ?? nf.format(e.cabezas ?? 0)} <span className="text-[13px] font-normal text-muted">{t.profile.heads}</span></p>
+              {!!e.categorias?.length && <ul className="mt-3 divide-y divide-border border-t border-border">{e.categorias.map((c, i) => <li key={`${c.nombre}-${i}`} className="flex justify-between gap-3 py-2 text-[12.5px]"><span className="text-muted">{c.nombre}</span><span className="tabular-nums text-ink">{c.rango ?? (c.cabezas != null ? nf.format(c.cabezas) : "")}</span></li>)}</ul>}
+            </article>)}
+            {!!ampliada.composicion.razas?.length && <article className="rounded-[var(--radius-card)] border border-border bg-surface p-4"><h3 className="text-[14px] font-semibold text-ink">{t.profile.breeds}</h3><ul className="mt-3 space-y-2">{ampliada.composicion.razas.map((r, i) => <li key={`${r.especie}-${r.raza}-${i}`} className="flex justify-between gap-3 text-[13px]"><span className="text-muted">{razaNombre(r.raza ?? "")}</span>{r.cantidad != null && <span className="tabular-nums text-ink">{nf.format(r.cantidad)}</span>}</li>)}</ul></article>}
+          </div> : <p className="text-[14px] text-muted">{t.profile.noComposition}</p>}
+        </Seccion>}
+
+        {ampliada.indicadores && <Seccion id="indicadores-rodeo" title={t.profile.indicators}>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {ampliada.indicadores.prenez_ultimo_tacto && <article className="rounded-[var(--radius-card)] border border-border bg-surface p-5"><p className="text-[13px] text-muted">{t.profile.pregnancy}</p><p className="mt-1 text-[30px] font-bold tabular-nums text-ink">{pct(ampliada.indicadores.prenez_ultimo_tacto.porcentaje)} %</p><p className="mt-1 text-[12px] text-muted">{ampliada.indicadores.prenez_ultimo_tacto.evaluados} · {t.profile.source}: {ampliada.indicadores.prenez_ultimo_tacto.fuente}</p><p className="mt-1 text-[12px] text-muted">{t.profile.date}: {ampliada.indicadores.prenez_ultimo_tacto.fecha}</p></article>}
+            {(ampliada.indicadores.partos_por_temporada ?? []).map((v) => <article key={v.temporada} className="rounded-[var(--radius-card)] border border-border bg-surface p-5"><p className="text-[13px] text-muted">{t.profile.calvingsSeason} · {v.temporada}</p><p className="mt-1 text-[30px] font-bold tabular-nums text-ink">{nf.format(v.partos)}</p><p className="mt-1 text-[12px] text-muted">{t.profile.source}: {v.fuente} · {t.profile.date}: {v.fecha}</p></article>)}
+            {ampliada.indicadores.anios_en_tropilla != null && <article className="rounded-[var(--radius-card)] border border-border bg-surface p-5"><p className="text-[13px] text-muted">{t.profile.yearsOnPlatform}</p><p className="mt-1 text-[30px] font-bold tabular-nums text-ink">{nf.format(ampliada.indicadores.anios_en_tropilla)}</p><p className="mt-1 text-[12px] text-muted">{t.profile.source}: {ampliada.indicadores.antiguedad_fuente?.fuente ?? "TROPILLA"} · {t.profile.date}: {ampliada.indicadores.antiguedad_fuente?.fecha}</p></article>}
+            {ampliada.indicadores.plan_sanitario && <article className="rounded-[var(--radius-card)] border border-border bg-surface p-5"><p className="text-[13px] text-muted">{t.profile.health}</p><p className="mt-1 text-[14px] text-ink">{ampliada.indicadores.plan_sanitario.texto}</p><p className="mt-1 text-[12px] text-muted">{t.profile.source}: {ampliada.indicadores.plan_sanitario.fuente} · {t.profile.date}: {ampliada.indicadores.plan_sanitario.fecha}</p></article>}
+          </div>
+        </Seccion>}
+
+        {!!ampliada.galeria?.fotos?.length && <Seccion id="galeria" title={t.profile.gallerySection}>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">{ampliada.galeria.fotos.map((f, i) => <Photo key={f.sha256} src={f} alt={f.alt ?? ""} sizes="(min-width:1024px) 25vw, (min-width:640px) 33vw, 50vw" className={`aspect-[4/3] rounded-lg border border-border ${i === 0 ? "col-span-2 row-span-2 aspect-square sm:col-span-1 sm:row-span-1 sm:aspect-[4/3]" : ""}`} />)}</div>
+        </Seccion>}
 
         {(sec.sanidad || sec.trazabilidad) && (
           <div className="grid gap-8 border-t border-border pt-8 lg:grid-cols-2">

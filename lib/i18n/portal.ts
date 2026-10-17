@@ -26,6 +26,10 @@ const es = {
   } as Record<string, string>,
   profile: {
     about: "El establecimiento",
+    establishmentSheet: "Ficha del establecimiento", declaredData: "Datos declarados por el establecimiento.",
+    breeders: "Reproductores destacados", breedersLead: "Animales elegidos por el productor, con genealogía declarada.",
+    composition: "Composición del rodeo", indicators: "Indicadores del rodeo", gallerySection: "Fotos del establecimiento y los animales", noComposition: "No hay datos de composición disponibles.",
+    pedigree: "Genealogía", generation: "Generación", born: "Nacimiento", weight: "Último peso", bodyCondition: "Condición corporal", calvings: "Partos", offspring: "Crías registradas", center: "Centro declarado", registry: "Registro declarado", declared: "Declarado", source: "Fuente", date: "Fecha", pregnancy: "Preñez en el último tacto", calvingsSeason: "Partos por temporada", yearsOnPlatform: "Años usando TROPILLA", male: "Macho", female: "Hembra", external: "Externo", internal: "Del rodeo", noBreeders: "Todavía no hay reproductores publicados.", noIndicators: "No hay datos suficientes para mostrar este indicador.",
     associations: "Asociaciones",
     activity: "Actividad",
     breeds: "Razas",
@@ -320,6 +324,10 @@ const en: PortalDict = {
   },
   profile: {
     about: "The farm",
+    establishmentSheet: "Farm details", declaredData: "Information declared by the farm.",
+    breeders: "Featured breeding stock", breedersLead: "Animals selected by the producer, with declared pedigree.",
+    composition: "Herd composition", indicators: "Herd indicators", gallerySection: "Farm and animal photos", noComposition: "No herd composition data is available.",
+    pedigree: "Pedigree", generation: "Generation", born: "Date of birth", weight: "Latest weight", bodyCondition: "Body condition", calvings: "Calvings", offspring: "Recorded offspring", center: "Declared center", registry: "Declared registry", declared: "Declared", source: "Source", date: "Date", pregnancy: "Pregnancy rate at latest check", calvingsSeason: "Calvings by season", yearsOnPlatform: "Years using TROPILLA", male: "Male", female: "Female", external: "External", internal: "From the herd", noBreeders: "No breeding animals have been published yet.", noIndicators: "There is not enough data to show this indicator.",
     associations: "Associations",
     activity: "Activity",
     breeds: "Breeds",
@@ -612,6 +620,10 @@ const pt: PortalDict = {
   },
   profile: {
     about: "O estabelecimento",
+    establishmentSheet: "Ficha do estabelecimento", declaredData: "Dados declarados pelo estabelecimento.",
+    breeders: "Reprodutores em destaque", breedersLead: "Animais escolhidos pelo produtor, com genealogia declarada.",
+    composition: "Composição do rebanho", indicators: "Indicadores do rebanho", gallerySection: "Fotos do estabelecimento e dos animais", noComposition: "Não há dados de composição disponíveis.",
+    pedigree: "Genealogia", generation: "Geração", born: "Nascimento", weight: "Último peso", bodyCondition: "Condição corporal", calvings: "Partos", offspring: "Filhotes registrados", center: "Centro declarado", registry: "Registro declarado", declared: "Declarado", source: "Fonte", date: "Data", pregnancy: "Prenhez no último diagnóstico", calvingsSeason: "Partos por temporada", yearsOnPlatform: "Anos usando TROPILLA", male: "Macho", female: "Fêmea", external: "Externo", internal: "Do rebanho", noBreeders: "Ainda não há reprodutores publicados.", noIndicators: "Não há dados suficientes para mostrar este indicador.",
     associations: "Associações",
     activity: "Atividade",
     breeds: "Raças",
