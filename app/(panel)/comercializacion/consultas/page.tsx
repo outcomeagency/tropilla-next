@@ -143,6 +143,7 @@ async function Bandeja({ searchParams }: { searchParams: Promise<SP> }) {
                   </Badge>
                 )}
                 <Badge tone={ESTADO_BADGE[sel.estado ?? "nueva"].tone}>{ESTADO_BADGE[sel.estado ?? "nueva"].l}</Badge>
+                <Badge tone={sel.validacion_cuit_estado === "validado" ? "success" : sel.validacion_cuit_estado === "inconsistente" ? "warning" : "info"}>{sel.validacion_cuit_estado === "validado" ? "CUIT validado" : sel.validacion_cuit_estado === "inconsistente" ? "Datos inconsistentes" : "Validación pendiente"}</Badge>
               </div>
             </div>
           </div>
@@ -167,7 +168,7 @@ async function Bandeja({ searchParams }: { searchParams: Promise<SP> }) {
             />
             <AccionesConsulta key={`${sel.id}${sel.estado}`} id={sel.id ?? ""} estado={sel.estado ?? "nueva"} whatsapp={sel.whatsapp_url} mailto={sel.mailto_url} telefono={sel.telefono} puede={ctx.can("consultas.gestionar")} />
             <p className="text-[12.5px] leading-snug text-muted">
-              La respuesta sale de tu WhatsApp o tu correo, con un saludo ya escrito en el idioma del comprador. Precios y condiciones los acordás vos: TROPILLA no intermedia.
+              Esta consulta pública no está vinculada a un perfil comprador y no incluye CUIT validado. La respuesta sale de tu WhatsApp o tu correo, con un saludo ya escrito en el idioma del comprador. Precios y condiciones los acordás vos: TROPILLA no intermedia.
             </p>
           </div>
         </Card>

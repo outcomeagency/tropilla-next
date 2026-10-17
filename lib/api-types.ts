@@ -201,7 +201,7 @@ export interface paths {
         get: operations["get_me_comprador"];
         /**
          * Crear/editar perfil de comprador (cuenta liviana)
-         * @description TPA-57
+         * @description TPA-57/79. Requiere CUIT con dígito verificador, razón social declarada y consentimiento explícito. Guarda CUIT cifrado; consulta BCRA y devuelve estado, fuente y fecha.
          */
         put: operations["put_me_comprador"];
         post?: never;
@@ -565,6 +565,46 @@ export interface paths {
          * @description **Ability:** `contrapartes.consultar`. TPA-72. Requiere finalidad y consentimiento; si el CUIT es de persona humana, `titular_autorizo: true`. Consulta BCRA Central de Deudores (pública); ARCA queda `no_configurada`. Sin score ni bloqueo. Tope diario por establecimiento (429 `demasiados_intentos`).
          */
         post: operations["post_establecimientos_establecimiento_contrapartes_consultas"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/contrapartes/cheques/bancos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Bancos disponibles para verificar cheques denunciados
+         * @description **Ability:** `contrapartes.consultar`. Lista de entidades devuelta por la API pública de Cheques Denunciados del BCRA; se cachea 24 h.
+         */
+        get: operations["get_establecimientos_establecimiento_contrapartes_cheques_bancos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/contrapartes/cheques/verificar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Verificar si un cheque fue denunciado ante el BCRA
+         * @description **Ability:** `contrapartes.consultar`. Consulta BCRA por código de banco y número; si se envía cuenta, exige coincidencia exacta. Cada consulta queda auditada y su detalle se depura según retención.
+         */
+        post: operations["post_establecimientos_establecimiento_contrapartes_cheques_verificar"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4557,6 +4597,28 @@ export interface components {
             pais: string;
             idiomas?: ("es" | "en" | "pt")[];
             volumen_habitual?: string | null;
+            validacion_cuit?: {
+                /** @enum {string} */
+                estado: "validado" | "pendiente" | "inconsistente";
+                razon_social_informada: string | null;
+                fuente: string | null;
+                /** Format: date-time */
+                validado_en: string | null;
+            };
+        };
+        CompradorInput: {
+            empresa: string;
+            /** @enum {string} */
+            tipo: "frigorifico" | "exportador" | "gastronomico" | "institucion" | "productor" | "otro";
+            pais: string;
+            idiomas?: ("es" | "en" | "pt")[];
+            volumen_habitual?: string | null;
+            /** @description CUIT con dígito verificador; la API lo almacena cifrado */
+            cuit: string;
+            /** @description Razón social declarada, cotejada con la denominación de la fuente pública */
+            razon_social: string;
+            /** @constant */
+            consentimiento_cuit: true;
         };
         Profesional: {
             slug: string;
@@ -4921,6 +4983,33 @@ export interface components {
             lectura: string[];
             avisos: string[];
             senales_desactivadas: string[];
+            semaforo: {
+                /** @enum {string} */
+                nivel: "verde" | "amarillo" | "rojo";
+                /** @description False si la fuente BCRA no entregó información utilizable; no equivale a ausencia de deudas */
+                completo: boolean;
+                reglas_version: number;
+                senales: {
+                    id: string;
+                    codigo: string;
+                    /** @enum {string} */
+                    severidad: "informativa" | "amarillo" | "rojo";
+                    descripcion: string;
+                    valor: number | null;
+                    umbral?: number;
+                    version_regla?: number;
+                    fuente: string;
+                    /** Format: date-time */
+                    fecha: string | null;
+                }[];
+                resumen: {
+                    texto: string;
+                    /** @enum {string} */
+                    proveedor: "google" | "anthropic" | "fake" | "fallback";
+                    senales_ids: string[];
+                };
+                cobertura: string[];
+            };
         };
         /** @description TPA-72. En el listado no vienen consentimiento, informe ni checklist. */
         ConsultaContraparte: {
@@ -7143,6 +7232,8 @@ export interface components {
             email?: string | null;
             telefono?: string | null;
             tipo_comprador?: string | null;
+            /** @enum {string} */
+            validacion_cuit_estado?: "validado" | "pendiente" | "inconsistente";
             volumen?: string | null;
             mensaje?: string;
             /** @enum {string} */
@@ -7235,6 +7326,8 @@ export interface components {
                 id?: components["schemas"]["Uuid"];
                 nombre?: string;
                 empresa?: string | null;
+                /** @enum {string|null} */
+                validacion_cuit_estado?: "validado" | "pendiente" | "inconsistente" | null;
             } | null;
             tokens?: number;
             tokens_vigentes?: number;
@@ -7330,7 +7423,12 @@ export interface components {
             mensaje?: string | null;
             mostrar_nombre?: boolean;
             comprador?: {
-                [key: string]: unknown;
+                tipo?: string | null;
+                pais?: string | null;
+                nombre?: string | null;
+                empresa?: string | null;
+                /** @enum {string|null} */
+                validacion_cuit_estado?: "validado" | "pendiente" | "inconsistente" | null;
             } | null;
             /** @enum {string} */
             estado?: "abierta" | "cerrada" | "vencida";
@@ -8215,7 +8313,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Comprador"];
+                "application/json": components["schemas"]["CompradorInput"];
             };
         };
         responses: {
@@ -8936,6 +9034,88 @@ export interface operations {
             404: components["responses"]["NoEncontrado"];
             422: components["responses"]["Validacion"];
             429: components["responses"]["DemasiadosIntentos"];
+        };
+    };
+    get_establecimientos_establecimiento_contrapartes_cheques_bancos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Lista del BCRA */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            [key: string]: unknown;
+                        }[];
+                        fuente: string;
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            /** @description La fuente pública del BCRA no respondió (code: fuente_no_disponible) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    post_establecimientos_establecimiento_contrapartes_cheques_verificar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    banco_codigo: number;
+                    numero: number;
+                    cuenta?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Resultado y fuente con fecha de consulta */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            422: components["responses"]["Validacion"];
+            /** @description La fuente pública del BCRA no respondió (code: fuente_no_disponible) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
         };
     };
     get_establecimientos_establecimiento_contrapartes_consultas_consulta: {

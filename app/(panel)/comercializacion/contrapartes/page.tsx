@@ -5,6 +5,7 @@ import { Badge, Button, Card, CardHeader, EmptyState, Notice, PageHeader, Table,
 import { IconCheckCircle, IconExternal, IconInfo, IconLock, IconSearch } from "@/components/icons";
 import { ComercialTabs } from "@/components/panel/comercial-tabs";
 import { ConsultaForm } from "@/components/panel/contrapartes/consulta-form";
+import { ChequeForm } from "@/components/panel/contrapartes/cheque-form";
 import { requireContexto } from "@/lib/establecimiento";
 import { api, ApiError } from "@/lib/api";
 import type { Many, One, S } from "@/lib/schemas";
@@ -22,10 +23,13 @@ async function Contenido() {
     );
   }
   const est = ctx.activa.establecimiento_id;
-  // Ambos pedidos en paralelo; el listado no bloquea si falla.
+  // Las lecturas independientes arrancan juntas; los bancos y el listado toleran fallas por separado.
   const consultasP = api<Many<S<"ConsultaContraparte">>>(`/establecimientos/${est}/contrapartes/consultas?limit=25`)
     .then((r) => r.data)
     .catch(() => [] as S<"ConsultaContraparte">[]);
+  const bancosP = api<{data: {codigoEntidad: number; denominacion: string}[]}>(`/establecimientos/${est}/contrapartes/cheques/bancos`)
+    .then((r) => r.data)
+    .catch(() => [] as {codigoEntidad: number; denominacion: string}[]);
   let info: S<"ContraparteFuentes">;
   try {
     info = (await api<One<S<"ContraparteFuentes">>>(`/establecimientos/${est}/contrapartes/fuentes`)).data;
@@ -42,7 +46,7 @@ async function Contenido() {
       </Card>
     );
   }
-  const consultas = await consultasP;
+  const [consultas, bancos] = await Promise.all([consultasP, bancosP]);
   const agotado = info.consultas_hoy >= info.max_consultas_dia;
 
   return (
@@ -86,6 +90,11 @@ async function Contenido() {
           </ul>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader title="Verificar un cheque puntual" description="Consulta la base de cheques denunciados del BCRA. El resultado no confirma autenticidad ni solvencia." />
+        {bancos.length ? <ChequeForm bancos={bancos} /> : <div className="px-5 pb-5 text-[13px] text-muted">El listado de bancos del BCRA no está disponible ahora. Podés reintentar más tarde.</div>}
+      </Card>
 
       <Card>
         <CardHeader title="Consultas registradas" description="Quién consultó, cuándo y para qué. Vencida la retención se borra el detalle y queda este registro." />

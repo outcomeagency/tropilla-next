@@ -13,21 +13,27 @@ export interface CompradorState {
 
 const TIPOS = ["frigorifico", "exportador", "gastronomico", "institucion", "productor", "otro"] as const;
 
-/** Cuenta liviana de comprador (empresa, país, tipo). */
+/** Alta/edición de comprador: CUIT y consentimiento obligatorios (TPA-79). */
 export async function guardarCompradorAction(_prev: CompradorState, fd: FormData): Promise<CompradorState> {
   const me = await getSesionOpcional();
   if (!me) redirect("/ingresar?next=/comprador/cuenta");
-  const body: S<"Comprador"> = {
+  const body: S<"CompradorInput"> = {
     empresa: String(fd.get("empresa") ?? "").trim(),
-    tipo: String(fd.get("tipo") ?? "") as S<"Comprador">["tipo"],
+    tipo: String(fd.get("tipo") ?? "") as S<"CompradorInput">["tipo"],
     pais: String(fd.get("pais") ?? "").trim(),
     volumen_habitual: String(fd.get("volumen") ?? "").trim() || null,
     idiomas: ["es"],
+    cuit: String(fd.get("cuit") ?? "").trim(),
+    razon_social: String(fd.get("razon_social") ?? "").trim(),
+    consentimiento_cuit: true,
   };
   const fields: Record<string, string> = {};
   if (body.empresa.length < 2) fields.empresa = "Escribí el nombre de la empresa (o el tuyo si comprás como persona).";
   if (!TIPOS.includes(body.tipo)) fields.tipo = "Elegí qué tipo de comprador sos.";
   if (!body.pais) fields.pais = "Elegí el país.";
+  if (!/^\d{2}-?\d{8}-?\d$/.test(body.cuit)) fields.cuit = "Ingresá un CUIT de 11 dígitos; la API confirma el dígito verificador.";
+  if (body.razon_social.length < 2) fields.razon_social = "Escribí la razón social declarada.";
+  if (fd.get("consentimiento_cuit") !== "true") fields.consentimiento_cuit = "Necesitamos tu consentimiento para consultar el CUIT.";
   if (Object.keys(fields).length) return { fields };
   try {
     await api("/me/comprador", { method: "PUT", body });

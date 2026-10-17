@@ -19,6 +19,17 @@ export function PerfilCompradorForm({ next, inicial }: { next: string; inicial?:
       <Field label="Empresa" htmlFor="empresa" error={f.empresa} hint="O tu nombre, si comprás como persona.">
         <Input id="empresa" name="empresa" defaultValue={inicial?.empresa} placeholder="Frigorífico Las Marías" {...fieldAria("empresa", f.empresa, true)} />
       </Field>
+      <Field label="CUIT" htmlFor="cuit" error={f.cuit} hint="Privado. Lo ciframos y consultamos la Central de Deudores del BCRA.">
+        <Input id="cuit" name="cuit" inputMode="numeric" autoComplete="off" placeholder="30-71234567-8" {...fieldAria("cuit", f.cuit, true)} />
+      </Field>
+      <Field label="Razón social informada por el BCRA" htmlFor="razon_social" error={f.razon_social} hint="Escribila como figura en la constancia o documentación comercial.">
+        <Input id="razon_social" name="razon_social" placeholder="Frigorífico Las Marías S.A." {...fieldAria("razon_social", f.razon_social, true)} />
+      </Field>
+      <label className="flex items-start gap-2 text-[13px] leading-5 text-muted">
+        <input name="consentimiento_cuit" type="checkbox" value="true" required className="mt-1" />
+        <span>Autorizo a TROPILLA a consultar el CUIT en fuentes públicas disponibles y guardar la fuente, la fecha y el estado de la consulta.</span>
+      </label>
+      {f.consentimiento_cuit && <p className="text-[12.5px] font-medium text-danger">{f.consentimiento_cuit}</p>}
       <fieldset>
         <legend className="mb-2 text-[13px] font-semibold text-ink">Tipo de comprador</legend>
         <div className="flex flex-wrap gap-2">

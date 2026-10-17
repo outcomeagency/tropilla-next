@@ -840,3 +840,14 @@ El editor incluye bloques JSON de ficha y configuración de visibilidad por bloq
 | Exportar CSV/PDF · anular con motivo | `GET …/exportar`, `POST …/anular` | 🔌 |
 
 **Comentario del dev:** El detalle separa visualmente la «Conciliación de la venta» (badge «Cálculo de TROPILLA», KPIs de reses/faltantes/kg/rinde, avisos, tabla de animales con estado ícono + texto e importes esperado vs liquidado) del «Dato del frigorífico» (romaneo res por res, tropa, liquidación como la emitió la contraparte y los adjuntos). Sin venta vinculada, los animales encontrados por caravana figuran como «Asociado», no «Conciliado». El formulario es controlado: el reintento con advertencias («Registrar igual») no pierde filas y el original se sube una sola vez (`documento_id` vuelve en el estado). La lectura asistida de foto/PDF del romaneo existe en la API (familia `resultado_faena`) pero la revisión campo a campo vive en la app; en la web se carga a mano o por planilla. Sin mock. Verificado: types regenerados, typegen + tsc, ESLint, `next build`, capturas 1440/390 y flujo completo en Chrome headless contra una API aislada (planilla CSV → 3 reses leídas → registro → detalle; export CSV y PDF real por Gotenberg).
+### TPA-79 · Validación de CUIT de compradores al registrarse · ✅
+
+**Rutas:** `/comprador/cuenta`; Server Action conectado a `PUT /api/v1/me/comprador`. El formulario requiere CUIT, razón social y consentimiento. Los estados y la razón social informada se muestran al productor en ofertas, consultas y coincidencias sin exponer el CUIT.
+
+**Comentario del dev:** La validación de dígito verificador corre en servidor y la API guarda el CUIT cifrado; el cliente transmite consentimiento explícito. La pantalla deja claro si el cotejo está pendiente o hay inconsistencia y evita lenguaje de certificación. La respuesta de la API se tipó desde el OpenAPI generado contra el worktree api-80. No hay alta de comprador en Flutter, por lo que esta parte queda solo en web/API. El semáforo usa endpoints reales; en tests y desarrollo sin API se mantiene el fallback normal de la app.
+
+### TPA-80 · Semáforo antifraude de contrapartes con IA · 🟦 parcial
+
+**Rutas:** `/comercializacion/contrapartes`, detalle `/comercializacion/contrapartes/[id]`, formulario de cheque puntual (banco, número y cuenta opcional). Badges del estado de CUIT en contratos, consultas y demanda.
+
+**Comentario del dev:** El detalle presenta señales con fuente/fecha, estado de cobertura y resumen del proveedor IA o fallback; el texto aclara que informa señales y no bloquea. “Sin datos” no se traduce en “sin deudas”. El cheque consulta BCRA mediante la API y avisa cuando la fuente no devuelve datos; el número de cuenta queda enmascarado por el servidor. No hay altas de reclamos ni fecha oficial de creación del CUIT disponible en la integración actual. Build, typecheck y lint aprobados; tipos OpenAPI generados desde api-80.

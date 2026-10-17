@@ -87,6 +87,22 @@ async function Contenido({ params }: { params: Promise<{ id: string }> }) {
               {i.avisos[0]} Verificá que la denominación coincida con tu contraparte.
             </Notice>
 
+            {i.semaforo && <Card>
+              <CardHeader title="Semáforo de señales" description="Informa indicios disponibles y no recomienda ni bloquea una operación." />
+              <CardBody className="space-y-3">
+                <Badge tone={i.semaforo.nivel === "rojo" ? "danger" : i.semaforo.nivel === "amarillo" ? "warning" : "success"}>
+                  {i.semaforo.nivel === "rojo" ? "Señales para revisar" : i.semaforo.nivel === "amarillo" ? "Algunas señales para revisar" : "Sin señales destacadas en estas fuentes"}
+                </Badge>
+                {!i.semaforo.completo && <p className="text-[13px] text-muted">La consulta está incompleta porque BCRA no entregó información utilizable. Esto no indica ausencia de deudas.</p>}
+                <p className="text-[14px] text-ink">{i.semaforo.resumen.texto}</p>
+                {i.semaforo.senales.map((s) => <div key={s.id} className="rounded-[8px] border border-border bg-surface-2 p-3 text-[13px]">
+                  <p className="font-medium text-ink">{s.descripcion}</p>
+                  <p className="mt-1 text-muted">{s.fuente} · {fechaHora(s.fecha)}</p>
+                </div>)}
+                <p className="text-[12px] text-muted">Reglas v{i.semaforo.reglas_version} · resumen {(["google", "anthropic"].includes(i.semaforo.resumen.proveedor) ? "asistido por IA" : "automático, sin IA")}. Un resultado sin registros no significa que no haya deudas.</p>
+              </CardBody>
+            </Card>}
+
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {i.fuentes.map((f) => {
                 const st = ESTADO_FUENTE[f.estado] ?? ESTADO_FUENTE.error;
