@@ -10,6 +10,7 @@ import { especieDe } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
 import type { PortalDict } from "@/lib/i18n/portal";
 import type { S } from "@/lib/schemas";
+import { verificationPath } from "@/lib/verification-url";
 
 const LANG: Record<Locale, string> = { es: "es-AR", en: "en-US", pt: "pt-BR" };
 type Codigo = { codigo?: string; nombre?: string };
@@ -336,7 +337,7 @@ export function PerfilView({ p, locale, t, contacto }: { p: S<"PerfilPublico">; 
                   <div className="flex items-center gap-1 pl-[34px] sm:pl-0">
                     <TrustBadge nivel={d.confianza ?? "declarado"} label={t.common.trust[d.confianza ?? "declarado"]} />
                     {d.verificacion_url && (
-                      <Link href={`/${locale}${d.verificacion_url}`} className={buttonClass("ghost", "sm", "text-campo")}>
+                      <Link href={verificationPath(d.verificacion_url, locale)} className={buttonClass("ghost", "sm", "text-campo")}>
                         {t.offer.verify}
                       </Link>
                     )}
