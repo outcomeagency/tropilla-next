@@ -6,6 +6,7 @@ import { verificarArchivoAction, type FileVerifyResult } from "@/lib/verify-acti
 import { IconAlert, IconCheckCircle, IconUpload } from "@/components/icons";
 import { Notice, Spinner, buttonClass, cx } from "@/components/ui";
 import type { Locale } from "@/lib/i18n";
+import { verificationPath } from "@/lib/verification-url";
 
 type Dict = {
   fileTitle: string;
@@ -121,7 +122,7 @@ export function FileVerify({ locale, t }: { locale: Locale; t: Dict }) {
                   <p className="text-[16px] font-semibold text-success">{t.match}</p>
                   {doc && <p className="mt-0.5 text-[14px] text-ink">{res.data.mensaje ?? doc.titulo}</p>}
                   {doc?.verificacion_url && (
-                    <Link href={`/${locale}${doc.verificacion_url}`} className="mt-2 inline-block text-[14px] font-medium text-campo hover:underline">
+                    <Link href={verificationPath(doc.verificacion_url, locale)} className="mt-2 inline-block text-[14px] font-medium text-campo hover:underline">
                       {t.seeRecord}
                     </Link>
                   )}

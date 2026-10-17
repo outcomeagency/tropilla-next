@@ -874,6 +874,8 @@ El editor incluye bloques JSON de ficha y configuración de visibilidad por bloq
 
 **Comentario del dev:** La vista pública agregó tarjetas de toros y vientres con sus medidas registradas, centro y registro declarado, más la genealogía ramificada; el árbol contiene su propio scroll para no ensanchar la página en móvil. Composición permite elegir rangos o cantidades exactas y presenta categorías por especie y razas. Los indicadores muestran fuente y fecha, y solo calculan preñez cuando hay un tacto con animales evaluados; el plan sanitario respeta ambos opt-in. La galería reutiliza fotos públicas del perfil y animales seleccionados; no hay datos mock. Todos los rótulos agregados y «Ficha del establecimiento» están traducidos en es/en/pt. Verificado: `api:types`, `next typegen`, `tsc`, ESLint y build; Chrome headless revisado a 1440 y 390 px contra la API aislada.
 
+**Bugfix TPA-78 (2026-10-17):** el enlace «Verificar» de documentos en el perfil público y en la verificación de archivos concatenaba el locale con la URL absoluta de la API (`/eshttps://…/v/…`) y no abría; ahora usa `verificationPath`. El árbol de genealogía muestra cada ancestro con su rol (padre/madre, i18n es/en/pt), línea de color por sexo, RP · raza · año y conectores entre generaciones; la genealogía del primer reproductor se abre desplegada.
+
 ### TPA-73 · Matching de camiones jaula · ✅
 
 **Rutas:** `/fletes` (nuevo ítem «Fletes» en el menú; también en `proxy.ts`), `/fletes/nuevo`, `/fletes/[id]`; mesa del concierge solo para staff: `/fletes/concierge`, `/fletes/concierge/pedidos/[id]`, `/fletes/concierge/transportistas`, `/fletes/concierge/transportistas/[id]`.
