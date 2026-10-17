@@ -908,3 +908,10 @@ El editor incluye bloques JSON de ficha y configuración de visibilidad por bloq
 **Real vs mock:** listado, rubros, perfiles, estado CUIT y leads usan API real; no hay fallback de mock. Los 24 perfiles demo son sintéticos y están etiquetados.
 
 **Comentario del dev:** El directorio filtra por rubro y provincia, distingue perfiles demo y etiqueta cualquier publicación patrocinada. La ficha traduce presentación/rubros, informa zona amplia e idiomas y permite pedir presupuesto con el establecimiento elegido; la Server Action verifica que el establecimiento pertenezca a la cuenta antes de enviar el lead. La cuenta de proveedor recoge CUIT (sin mostrarlo al editar), cotejo BCRA, rubros, provincias e idiomas y textos es/en/pt. El pedido no incluye CUIT, coordenada exacta ni datos del rodeo; la API avisa al proveedor y entrega una bandeja privada. Verificado: tipos desde OpenAPI, typegen + tsc, lint y build.
+
+### TPA-83 · Tokenización de hacienda: prototipo de visión · ✅
+
+**Ruta:** `/{locale}/financiamiento` (es/en/pt). **Documento:** `docs/financiamiento-tokenizado.md`.
+**Real vs mock:** métricas del caso ilustrativo son datos ficticios estáticos, marcados como demo; no se consulta una API financiera ni se ejecutan movimientos.
+
+**Comentario del dev:** La pantalla presenta la visión como “Próximamente” y muestra conteos ganaderos de ejemplo sin valuaciones, montos, emisión o retornos. Aclara que la evidencia de integridad registra cambios, no prueba la veracidad del dato declarado. El documento deja como pendientes el encuadre CNV vigente, la estructura legal, la custodia, los derechos de cada parte y la protección de datos. La navegación y textos están disponibles en español, inglés y portugués. Verificado junto al DoD de Next: `next typegen`, tsc, lint y build.

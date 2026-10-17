@@ -9,6 +9,7 @@ export const es = {
     directory: "Directorio",
     offers: "Ofertas",
     providers: "Proveedores",
+    financing: "Visión de financiamiento",
     producers: "Para productores",
     login: "Ingresar",
     language: "Idioma",
