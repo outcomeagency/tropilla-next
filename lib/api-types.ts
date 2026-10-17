@@ -487,6 +487,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/establecimientos/{establecimiento}/clima/escenarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Escenarios climáticos y plan orientativo
+         * @description **Ability:** `clima.ver`. TPA-81. Consulta asíncrona con caché; fuentes NASA POWER, MODIS/ORNL y NOAA CPC. ENSO no representa probabilidad local. No reemplaza decisión productiva ni asesoramiento profesional.
+         */
+        get: operations["get_establecimientos_establecimiento_clima_escenarios"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/establecimientos/{establecimiento}/clima/reglas": {
         parameters: {
             query?: never;
@@ -5389,6 +5409,27 @@ export interface components {
                 mensaje?: string;
             }[];
         };
+        EscenariosClimaticos: {
+            id: components["schemas"]["Uuid"];
+            zona: string;
+            emitido_en: components["schemas"]["FechaHora"];
+            horizonte_meses: number[];
+            escenarios: {
+                [key: string]: unknown;
+            }[];
+            plan_respuesta: {
+                accion: string;
+                href: string;
+                relacion: string;
+                orientacion?: string;
+            }[];
+            resumen: string;
+            proveedor_ia: string;
+            fuentes: {
+                [key: string]: unknown;
+            };
+            aviso: string;
+        };
         /** @description `pendientes.items[].tipo`: tarea | tarea_vencida | parto_proximo | parto_vencido | recategorizacion | documento_por_vencer | documento_vencido | consulta | toma | revision; semana = próximos 7 días (documentos: 30). `actividad` = últimos 10 eventos por fecha de carga. `variacion_mes` = nacimientos/partos/ingresos − muertes/egresos/faenas/pérdidas del mes ± movimientos de categoría de lotes anónimos; las altas de inventario no cuentan (TPA-52). */
         Inicio: {
             existencias?: components["schemas"]["Existencia"][];
@@ -9123,6 +9164,47 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["Clima"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    get_establecimientos_establecimiento_clima_escenarios: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Último análisis disponible */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EscenariosClimaticos"];
+                        meta: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description El cálculo está en cola */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
                     };
                 };
             };
