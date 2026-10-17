@@ -1881,6 +1881,230 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/establecimientos/{establecimiento}/sanidad/oficial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Brucelosis y TBC del establecimiento (estatus, plan, positivos, vencimientos)
+         * @description **Ability:** `sanidad.ver`. TPA-66. Privado. Estatus vigente e historial por enfermedad, plan de saneamiento activo, último protocolo, reactores de esa enfermedad y vencimientos dentro de `horizonte_dias` (estatus, resultado para movimiento, próximo muestreo y acciones del plan; incluye los ya vencidos). `aviso`: es una transcripción o declaración, no la condición oficial (SENASA/SIGSA).
+         */
+        get: operations["get_establecimientos_establecimiento_sanidad_oficial"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/sanidad/oficial/resumen-veterinario": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Resumen para el veterinario (PDF o CSV)
+         * @description **Ability:** `sanidad.ver`. TPA-66. Estatus, plan, positivos, protocolos de los últimos `meses` con resultado por animal y vencimientos. PDF por Gotenberg (503 `servicio_no_disponible` si no responde) o CSV `;` UTF-8 con BOM, una fila por resultado. Se genera a pedido, no se guarda. Aclara que no reemplaza SIGSA.
+         */
+        get: operations["get_establecimientos_establecimiento_sanidad_oficial_resumen_veterinario"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/sanidad/protocolos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Protocolos de brucelosis/TBC
+         * @description **Ability:** `sanidad.ver`. TPA-66. Más recientes primero (fecha de muestreo). Sin `resultados` (ver el detalle).
+         */
+        get: operations["get_establecimientos_establecimiento_sanidad_protocolos"];
+        put?: never;
+        /**
+         * Registrar protocolo con resultado por animal
+         * @description **Ability:** `sanidad.crear`. TPA-66. Idempotente por `id` (200 si ya existía). Cada fila lleva `animal_id` o `identificacion` (se asocia sola si coincide con una identificación vigente, tolerante a ceros; si no, queda en el protocolo sin pasar a una ficha). Las filas asociadas generan `sanidad.prueba_diagnostica` (agrupadas por resultado en tandas de 1000; con lecturas en mm, una por animal); positivo → reactor. `transcripcion_revisada` exige `documento_id` (el original, no fiscal). `vence_el` por defecto: brucelosis + motivo `movimiento` = muestreo + parámetro `brucelosis_seronegatividad_validez_dias` (60). Advertencias que piden `confirmar_advertencias` (422 `requiere_confirmacion`): `animal_no_asociado`, `marca_reactor`, `fecha_futura`, `resultado_antes_del_muestreo`, `protocolo_vencido`, `muestreo_incompleto`. Un registrado no se edita: se anula.
+         */
+        post: operations["post_establecimientos_establecimiento_sanidad_protocolos"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/sanidad/protocolos/{protocolo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Protocolo con resultados por animal
+         * @description **Ability:** `sanidad.ver`. TPA-66.
+         */
+        get: operations["get_establecimientos_establecimiento_sanidad_protocolos_protocolo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/sanidad/protocolos/{protocolo}/anular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Anular protocolo
+         * @description **Ability:** `sanidad.corregir`. TPA-66. Anula sus eventos (versión de anulación de cada uno; el proyector recalcula reactores). 409 `en_uso` si respalda el estatus vigente. Idempotente.
+         */
+        post: operations["post_establecimientos_establecimiento_sanidad_protocolos_protocolo_anular"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/sanidad/estatus": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Registrar estatus sanitario (certificado y vigencia)
+         * @description **Ability:** `sanidad.crear`. TPA-66. Uno vigente por enfermedad: el nuevo reemplaza al anterior (queda `reemplazado` en el historial). `transcripcion_revisada` exige `documento_id`. Idempotente por `id`.
+         */
+        post: operations["post_establecimientos_establecimiento_sanidad_estatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/sanidad/estatus/{estatus}/anular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Anular estatus cargado por error
+         * @description **Ability:** `sanidad.corregir`. TPA-66. Si era el vigente, vuelve a quedar vigente el que había reemplazado.
+         */
+        post: operations["post_establecimientos_establecimiento_sanidad_estatus_estatus_anular"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/sanidad/saneamiento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Crear plan de saneamiento
+         * @description **Ability:** `sanidad.crear`. TPA-66. Uno activo por enfermedad (409 `plan_activo`).
+         */
+        post: operations["post_establecimientos_establecimiento_sanidad_saneamiento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/sanidad/saneamiento/{plan}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Editar o cerrar plan de saneamiento
+         * @description **Ability:** `sanidad.crear`. TPA-66. `row_version` obligatorio (409 `conflicto_row_version`). `estado` `cumplido`/`anulado` lo cierra (`cerrado_el` = hoy si no viene); cerrado → 409 `estado_invalido`. `enfermedad` no se cambia.
+         */
+        patch: operations["patch_establecimientos_establecimiento_sanidad_saneamiento_plan"];
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/animales/{animal}/pruebas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Resultados del animal en protocolos vigentes
+         * @description **Ability:** `sanidad.ver`. TPA-66. Más recientes primero.
+         */
+        get: operations["get_establecimientos_establecimiento_animales_animal_pruebas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/sanidad/libro-tratamientos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Libro de tratamientos de TROPILLA (buscable)
+         * @description **Ability:** `sanidad.ver`. TPA-65. Tratamientos, desparasitaciones e inspecciones de garrapata (observaciones clínicas con el signo «inspección de garrapata») vigentes, de la más reciente a la más vieja. `q` busca en el payload, las observaciones, el responsable y el nombre del lote. `documentos`: documentos fuente vinculados (con `documentos.ver`; fiscales solo con `documentos.fiscal`). `transcripto`: vino de la lectura asistida de un documento. `aviso`: no reemplaza al libro rubricado (Res. 666/2011) ni al FIDHA. Privado.
+         */
+        get: operations["get_establecimientos_establecimiento_sanidad_libro_tratamientos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/establecimientos/{establecimiento}/documentos": {
         parameters: {
             query?: never;
@@ -2088,7 +2312,7 @@ export interface paths {
         head?: never;
         /**
          * Revisar campos (correcto / editado / no legible / no aplica)
-         * @description **Ability:** `documentos.crear`. Solo en `para_revisar` (si no, 409 `estado_invalido`). Cada decisión queda en el historial (quién, cuándo, valor anterior y nuevo). `editado` exige `valor` válido para el `tipo` del campo (fecha YYYY-MM-DD, entero ≥ 0, booleano, una de `opciones`, texto ≤ 500). `agregar_fila` suma una fila vacía que el modelo no vio (grupos de `presentacion.agregables`: `vacunas` | `categorias` en el acta, `detalle` en DT-e y guía). Tipos `lote` y `evento` = UUID de un lote / movimiento del establecimiento (sus `opciones` se calculan al leer; la pertenencia se verifica en las advertencias y al confirmar). Las advertencias se recalculan. `row_version` opcional (409 `conflicto_row_version`).
+         * @description **Ability:** `documentos.crear`. Solo en `para_revisar` (si no, 409 `estado_invalido`). Cada decisión queda en el historial (quién, cuándo, valor anterior y nuevo). `editado` exige `valor` válido para el `tipo` del campo (fecha YYYY-MM-DD, entero ≥ 0, booleano, una de `opciones`, texto ≤ 500). `agregar_fila` suma una fila vacía que el modelo no vio (grupos de `presentacion.agregables`: `vacunas` | `categorias` en el acta, `detalle` en DT-e y guía, `animales` en el protocolo sanitario, `tratamientos` en el libro). Tipo `decimal` (lecturas en mm, TPA-66): hasta un decimal, coma o punto. Tipos `lote` y `evento` = UUID de un lote / movimiento del establecimiento (sus `opciones` se calculan al leer; la pertenencia se verifica en las advertencias y al confirmar). Campo **dudoso** (TPA-65: leído con `confianza` < 0,6, típico del manuscrito): en un pedido de varios campos, `correcto` no lo acepta y sigue `pendiente` (sugerencia bloqueada); se confirma de a uno, se corrige o se marca. Las advertencias se recalculan. `row_version` opcional (409 `conflicto_row_version`).
          */
         patch: operations["patch_establecimientos_establecimiento_borradores_borrador_campos"];
         trace?: never;
@@ -2104,7 +2328,7 @@ export interface paths {
         put?: never;
         /**
          * Confirmar: registra los eventos y versiona el documento
-         * @description **Ability:** `documentos.crear` + la del tipo de evento (`sanidad.crear` / `hacienda.crear`); vincular a un movimiento existente exige poder versionar el documento (`documentos.versionar`). Única forma de que un borrador modifique datos. Exige todos los campos revisados (422 `revision_incompleta`) y, si hay advertencias, `confirmar_advertencias: true` (422 `requiere_confirmacion` con `advertencias`). Acta de vacunación (TPA-62): un `sanidad.vacunacion` por vacuna (aftosa / brucelosis) con fecha, producto, serie, vencimiento, vacunador y campaña; sujetos = animales activos de las categorías con vacunados (tandas de 1000) y lotes anónimos con esas categorías (422 `regla_bloqueante` si no hay); alcance `cero` no crea eventos. DT-e y guía provincial (TPA-64): según el grupo `movimiento`, `vincular` relaciona el documento con el ingreso/egreso ya cargado (sin eventos nuevos; queda en `eventos_vinculados`) o `registrar` crea un `hacienda.egreso` (conteo del lote anónimo o animales por caravana) o `hacienda.ingreso` (conteo a un lote anónimo) con `dte_numero`, contraparte declarada y `documento_ids`. Las advertencias bloqueantes de la familia (p. ej. `caravana_desconocida`, `lote_sin_elegir`, `categoria_otra_especie`) dan 422 `regla_bloqueante` aunque se confirmen. Las páginas originales van como `adjuntos` y el documento recibe una versión `correccion_metadatos` vinculada a los eventos (si el rol puede versionarlo). Todo o nada; idempotente (reconfirmar devuelve el mismo resultado).
+         * @description **Ability:** `documentos.crear` + la del tipo de evento (`sanidad.crear` / `hacienda.crear`); vincular a un movimiento existente exige poder versionar el documento (`documentos.versionar`). Única forma de que un borrador modifique datos. Exige todos los campos revisados (422 `revision_incompleta`) y, si hay advertencias, `confirmar_advertencias: true` (422 `requiere_confirmacion` con `advertencias`). Acta de vacunación (TPA-62): un `sanidad.vacunacion` por vacuna (aftosa / brucelosis) con fecha, producto, serie, vencimiento, vacunador y campaña; sujetos = animales activos de las categorías con vacunados (tandas de 1000) y lotes anónimos con esas categorías (422 `regla_bloqueante` si no hay); alcance `cero` no crea eventos. DT-e y guía provincial (TPA-64): según el grupo `movimiento`, `vincular` relaciona el documento con el ingreso/egreso ya cargado (sin eventos nuevos; queda en `eventos_vinculados`) o `registrar` crea un `hacienda.egreso` (conteo del lote anónimo o animales por caravana) o `hacienda.ingreso` (conteo a un lote anónimo) con `dte_numero`, contraparte declarada y `documento_ids`. Las advertencias bloqueantes de la familia (p. ej. `caravana_desconocida`, `lote_sin_elegir`, `categoria_otra_especie`) dan 422 `regla_bloqueante` aunque se confirmen. Las páginas originales van como `adjuntos` y el documento recibe una versión `correccion_metadatos` vinculada a los eventos (si el rol puede versionarlo). Resultado de faena (TPA-67, requiere `comercial.precios`): no crea eventos; registra el resultado (`origen: transcripcion_revisada`, `borrador_id`) en `…/faena/resultados` con las mismas advertencias del POST. Todo o nada; idempotente (reconfirmar devuelve el mismo resultado).
          */
         post: operations["post_establecimientos_establecimiento_borradores_borrador_confirmar"];
         delete?: never;
@@ -2612,6 +2836,114 @@ export interface paths {
          * @description **Ability:** `comercial.precios` (modelo-datos.md §13).
          */
         post: operations["post_establecimientos_establecimiento_operaciones_operacion_anulaciones"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/faena/resultados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Resultados de faena (romaneos) del establecimiento
+         * @description **Ability:** `comercial.precios` (dueño/admin). TPA-67. Privado: no viaja por sync ni a lo público. Orden: fecha de faena descendente. Sin `reses` ni `conciliacion` (están en el detalle).
+         */
+        get: operations["get_establecimientos_establecimiento_faena_resultados"];
+        put?: never;
+        /**
+         * Registrar el resultado de faena de una tropa (una fila por res)
+         * @description **Ability:** `comercial.precios` (dueño/admin). TPA-67. Privado: no viaja por sync ni a lo público. Idempotente por `id` (reintento → 200 con el mismo resultado; id de otro establecimiento → 409 `id_reutilizado`). Cada res se asocia a un animal por `animal_id` o por su RFID/caravana (incluye vendidos/dados de baja). Las reses son **append-only** (se corrige anulando y volviendo a cargar). No crea eventos ni toca pesos vivos. `origen` ≠ `declarado` exige `documento_id` (el romaneo original). Advertencias (422 `requiere_confirmacion` salvo `confirmar_advertencias: true`): `res_sin_asociar`, `animal_fuera_de_la_venta`, `cabezas_distintas`, `medias_no_suman`, `peso_atipico` (fuera de 60–450 kg), `fecha_futura`, `faena_antes_de_la_venta`. Garrón o animal repetido → 422 de validación.
+         */
+        post: operations["post_establecimientos_establecimiento_faena_resultados"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/faena/planilla": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Leer la planilla digital del frigorífico (CSV/XLSX) para revisar
+         * @description **Ability:** `comercial.precios` (dueño/admin). TPA-67. Privado: no viaja por sync ni a lo público. No guarda nada: devuelve las reses normalizadas (coma decimal, `media_a + media_b` si falta el peso) y errores por fila (número de fila de la planilla, con encabezado = 1) para revisar antes del POST de resultados con `origen: importado`. Encabezados tolerantes (garrón/correlativo, RFID/caravana, media A/B, kg, tipificación…).
+         */
+        post: operations["post_establecimientos_establecimiento_faena_planilla"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/faena/resultados/{resultado}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Resultado de faena con reses y conciliación
+         * @description **Ability:** `comercial.precios` (dueño/admin). TPA-67. Privado: no viaja por sync ni a lo público. `oficial` = dato del frigorífico tal como figura; `conciliacion` = cálculo de TROPILLA (se recalcula al leer, no se guarda).
+         */
+        get: operations["get_establecimientos_establecimiento_faena_resultados_resultado"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Vincular venta/egreso, cargar la liquidación y adjuntar liquidación/factura
+         * @description **Ability:** `comercial.precios` (dueño/admin). TPA-67. Privado: no viaja por sync ni a lo público. Solo los campos enviados; `row_version` obligatorio (409 si cambió). Auditado (antes/después). Venta y egreso son excluyentes. Las reses no se editan. Anulado → 409 `estado_invalido`.
+         */
+        patch: operations["patch_establecimientos_establecimiento_faena_resultados_resultado"];
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/faena/resultados/{resultado}/anular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Anular el resultado con motivo (queda en el historial)
+         * @description **Ability:** `comercial.precios` (dueño/admin). TPA-67. Privado: no viaja por sync ni a lo público. Idempotente. Para corregir reses: anular y volver a cargar.
+         */
+        post: operations["post_establecimientos_establecimiento_faena_resultados_resultado_anular"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/faena/resultados/{resultado}/exportar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exportar la conciliación (PDF o CSV)
+         * @description **Ability:** `comercial.precios` (dueño/admin). TPA-67. Privado: no viaja por sync ni a lo público. CSV `;` UTF-8 con BOM: una fila por res y por animal faltante; las columnas `tropilla_*` son cálculo propio, el resto es del frigorífico; al final una fila de resumen. PDF por Gotenberg (503 `servicio_no_disponible` si no responde). Se genera a pedido, no se guarda.
+         */
+        get: operations["get_establecimientos_establecimiento_faena_resultados_resultado_exportar"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5691,11 +6023,46 @@ export interface components {
             /** @enum {string} */
             confianza?: "declarado" | "integridad_registrada";
         };
+        /** @description Fila del libro de tratamientos de TROPILLA (TPA-65); una por evento vigente. */
+        LibroTratamientoFila: {
+            id: components["schemas"]["Uuid"];
+            evento_raiz_id: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            tipo: "tratamiento" | "desparasitacion" | "inspeccion";
+            /** Format: date */
+            fecha: string;
+            sujeto: {
+                tipo?: string;
+                lote_id?: string | null;
+                lote_nombre?: string | null;
+                animales?: number;
+            };
+            diagnostico?: string | null;
+            producto?: string | null;
+            principio_activo?: string | null;
+            dosis?: string | null;
+            duracion_dias?: number | null;
+            responsable?: string | null;
+            retiro_carne_dias?: number | null;
+            retiro_leche_dias?: number | null;
+            inspeccion?: {
+                /** @enum {string|null} */
+                resultado?: "negativo" | "positivo" | "rechazada" | null;
+                descripcion?: string | null;
+            } | null;
+            observaciones?: string | null;
+            transcripto: boolean;
+            documentos: {
+                id?: components["schemas"]["Uuid"];
+                titulo?: string;
+                tipo?: string;
+            }[];
+        };
         BorradorInput: {
             id: components["schemas"]["Uuid"];
             documento_id: components["schemas"]["Uuid"];
             /** @enum {string} */
-            familia: "acta_vacunacion" | "dte" | "guia_provincial";
+            familia: "acta_vacunacion" | "dte" | "guia_provincial" | "protocolo_sanitario" | "libro_tratamientos" | "fidha" | "resultado_faena";
         };
         BorradorCamposInput: {
             campos: {
@@ -5709,7 +6076,7 @@ export interface components {
                 /** @description Obligatorio con `editado`; tipo según el campo (string | integer | boolean | null) */
                 valor?: unknown;
             }[];
-            /** @description Grupo de `presentacion.agregables` (vacunas, categorias, detalle) */
+            /** @description Grupo de `presentacion.agregables` (vacunas, categorias, detalle, animales) */
             agregar_fila?: string | null;
             row_version?: number | null;
         };
@@ -5738,13 +6105,460 @@ export interface components {
             /** @enum {string} */
             estado: "pendiente" | "correcto" | "editado" | "no_legible" | "no_aplica";
         };
-        /** @description Borrador de documento desde foto (TPA-61/62). Estados: `esperando_archivos` → `en_cola` → `extrayendo` → `para_revisar` | `fallido` → `confirmado` | `descartado`. Esquemas versionados: `acta_vacunacion.711_2025/1` (Acta Única, Res. 711/2025) y `acta_vacunacion.879_2002/1` (acta histórica). Advertencias (nunca se autocorrige): `vacunados_mayor_existentes`, `totales_no_cierran`, `existencias_distintas`, `renspa_distinto`, `renspa_formato`, `fecha_faltante`, `fecha_futura`, `firma_no_detectada`, `calidad_imagen`, `formulario_no_reconocido`, `categoria_otra_especie` (bloquea la confirmación). `aviso`: transcripción asistida, no es presentación oficial. TPA-64: `dte.356_2008/1` (DT-e de SIGSA), `dte.dta_historico/1` (DTA en papel), `guia_provincial.dut_chaco/1` (DUT Chaco) y `guia_provincial.generica/1` (otras provincias, `variante_no_verificada`). Campos propios `movimiento_sentido` (egreso/ingreso, sugerido por RENSPA), `movimiento_registro` (vincular/registrar, sugerido si hay un movimiento con el mismo N.º de DT-e), `movimiento_evento_id`, `movimiento_lote_id`, `movimiento_caravanas`. Advertencias: `totales_no_cierran`, `cantidades_no_concilian`, `dte_no_coincide`, `dte_faltante`, `sentido_no_coincide`, `renspa_ajeno`, `vigencia_invalida`, `documento_anulado`, `conteo_insuficiente`; bloqueantes: `movimiento_sin_definir`, `sentido_sin_definir`, `movimiento_sin_elegir`, `movimiento_inexistente`, `lote_sin_elegir`, `lote_no_anonimo`, `lote_otra_especie`, `caravana_desconocida`, `detalle_sin_categoria`. */
+        /** @description Resultado de un animal tal como figura en el original (TPA-66). `animal_id` null = identificación que no coincidió con un animal de TROPILLA. */
+        ProtocoloResultado: {
+            orden?: number;
+            /** Format: uuid */
+            animal_id?: string | null;
+            identificacion?: string | null;
+            animal?: {
+                identificacion_principal?: string | null;
+                especie?: string | null;
+                categoria?: string | null;
+                estado?: string | null;
+            } | null;
+            categoria_codigo?: string | null;
+            muestra?: string | null;
+            /** @enum {string} */
+            resultado?: "negativo" | "sospechoso" | "positivo" | "no_concluyente" | "no_apto";
+            lectura_0h_mm?: string | null;
+            lectura_72h_mm?: string | null;
+            observaciones?: string | null;
+            /** Format: uuid */
+            evento_id?: string | null;
+        };
+        /** @description Protocolo de muestreo/prueba de brucelosis o TBC (TPA-66): DOES, recertificación, saneamiento, precondición de movimiento, rutina. `origen`: `transcripcion_revisada` (con el original en `documento_id`, revisado por una persona) o `declarado` (carga sin respaldo). Nunca es la condición oficial. `vigencia`: vigente | por_vencer | vencido | sin_vencimiento | anulado (aviso con el parámetro `sanidad_oficial_aviso_dias`). */
+        ProtocoloSanitario: {
+            id?: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            enfermedad?: "brucelosis" | "tuberculosis";
+            /** @description Código de tipos_prueba */
+            prueba?: string;
+            prueba_nombre?: string;
+            /** @enum {string} */
+            motivo?: "does" | "recertificacion" | "saneamiento" | "movimiento" | "rutina" | "otro";
+            /** @enum {string|null} */
+            modalidad?: "total" | "muestreo" | null;
+            stock_base?: number | null;
+            fecha_muestreo?: components["schemas"]["Fecha"];
+            /** Format: date */
+            fecha_resultado?: string | null;
+            laboratorio?: string | null;
+            protocolo_numero?: string | null;
+            veterinario?: {
+                nombre?: string | null;
+                matricula?: string | null;
+            };
+            /** Format: date */
+            vence_el?: string | null;
+            /** @enum {string} */
+            vigencia?: "vigente" | "por_vencer" | "vencido" | "sin_vencimiento" | "anulado";
+            /** @enum {string} */
+            origen?: "declarado" | "transcripcion_revisada";
+            origen_leyenda?: string;
+            /** Format: uuid */
+            documento_id?: string | null;
+            /** Format: uuid */
+            borrador_id?: string | null;
+            /** @enum {string} */
+            estado?: "vigente" | "anulado";
+            observaciones?: string | null;
+            resumen?: {
+                total?: number;
+                asociados?: number;
+                negativo?: number;
+                sospechoso?: number;
+                positivo?: number;
+                no_concluyente?: number;
+                no_apto?: number;
+            };
+            evento_ids?: components["schemas"]["Uuid"][];
+            /** @description Solo en detalle/alta */
+            resultados?: components["schemas"]["ProtocoloResultado"][];
+            creado_por?: components["schemas"]["Uuid"];
+            created_at?: components["schemas"]["FechaHora"];
+            anulado_en?: string | null;
+            anulado_motivo?: string | null;
+        };
+        ProtocoloSanitarioInput: {
+            id?: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            enfermedad: "brucelosis" | "tuberculosis";
+            /** @description brucelosis_bpa | brucelosis_fpa | brucelosis_sat | brucelosis_2me | brucelosis_elisa | brucelosis_fc | tuberculina_* */
+            prueba_codigo: string;
+            /** @enum {string} */
+            motivo: "does" | "recertificacion" | "saneamiento" | "movimiento" | "rutina" | "otro";
+            /** @enum {string|null} */
+            modalidad?: "total" | "muestreo" | null;
+            stock_base?: number | null;
+            fecha_muestreo: components["schemas"]["Fecha"];
+            /** Format: date */
+            fecha_resultado?: string | null;
+            laboratorio?: string | null;
+            protocolo_numero?: string | null;
+            veterinario_nombre?: string | null;
+            veterinario_matricula?: string | null;
+            /** Format: date */
+            vence_el?: string | null;
+            /** @enum {string} */
+            origen: "declarado" | "transcripcion_revisada";
+            /** Format: uuid */
+            documento_id?: string | null;
+            observaciones?: string | null;
+            confirmar_advertencias?: boolean;
+            resultados: {
+                /** Format: uuid */
+                animal_id?: string | null;
+                identificacion?: string | null;
+                categoria_codigo?: string | null;
+                muestra?: string | null;
+                /** @enum {string} */
+                resultado: "negativo" | "sospechoso" | "positivo" | "no_concluyente" | "no_apto";
+                lectura_0h_mm?: string | null;
+                lectura_72h_mm?: string | null;
+                observaciones?: string | null;
+            }[];
+        };
+        /** @description Condición del establecimiento por enfermedad según el certificado transcripto o lo declarado (TPA-66). La condición oficial la certifica SENASA. */
+        EstatusSanitario: {
+            id?: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            enfermedad?: "brucelosis" | "tuberculosis";
+            /** @enum {string} */
+            estatus?: "libre" | "en_saneamiento" | "en_certificacion" | "sin_estatus" | "suspendido";
+            /** @enum {string} */
+            origen?: "declarado" | "transcripcion_revisada";
+            origen_leyenda?: string;
+            certificado_numero?: string | null;
+            autoridad?: string | null;
+            /** Format: date */
+            emitido_el?: string | null;
+            vigente_desde?: components["schemas"]["Fecha"];
+            /** Format: date */
+            vence_el?: string | null;
+            /** @enum {string} */
+            vigencia?: "vigente" | "por_vencer" | "vencido" | "sin_vencimiento" | "reemplazado" | "anulado";
+            dias_para_vencer?: number | null;
+            /** Format: uuid */
+            protocolo_id?: string | null;
+            /** Format: uuid */
+            documento_id?: string | null;
+            observaciones?: string | null;
+            /** @enum {string} */
+            estado?: "vigente" | "reemplazado" | "anulado";
+            /** Format: uuid */
+            reemplazado_por?: string | null;
+            creado_por?: components["schemas"]["Uuid"];
+            created_at?: components["schemas"]["FechaHora"];
+            anulado_en?: string | null;
+            anulado_motivo?: string | null;
+        };
+        EstatusSanitarioInput: {
+            id?: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            enfermedad: "brucelosis" | "tuberculosis";
+            /** @enum {string} */
+            estatus: "libre" | "en_saneamiento" | "en_certificacion" | "sin_estatus" | "suspendido";
+            /** @enum {string} */
+            origen: "declarado" | "transcripcion_revisada";
+            certificado_numero?: string | null;
+            autoridad?: string | null;
+            /** Format: date */
+            emitido_el?: string | null;
+            vigente_desde: components["schemas"]["Fecha"];
+            /**
+             * Format: date
+             * @description >= vigente_desde
+             */
+            vence_el?: string | null;
+            /** Format: uuid */
+            protocolo_id?: string | null;
+            /** Format: uuid */
+            documento_id?: string | null;
+            observaciones?: string | null;
+        };
+        AccionSaneamiento: {
+            descripcion: string;
+            responsable?: string | null;
+            /** Format: date */
+            fecha_objetivo?: string | null;
+            /** Format: date */
+            hecha_el?: string | null;
+            /** @description Solo en respuestas */
+            vencida?: boolean;
+        };
+        PlanSaneamiento: {
+            id?: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            enfermedad?: "brucelosis" | "tuberculosis";
+            /** @enum {string} */
+            estado?: "activo" | "cumplido" | "anulado";
+            inicio?: components["schemas"]["Fecha"];
+            /** Format: date */
+            proximo_muestreo?: string | null;
+            veterinario?: {
+                nombre?: string | null;
+                matricula?: string | null;
+            };
+            /** Format: uuid */
+            protocolo_id?: string | null;
+            /** Format: uuid */
+            documento_id?: string | null;
+            observaciones?: string | null;
+            acciones?: components["schemas"]["AccionSaneamiento"][];
+            acciones_pendientes?: number;
+            /** Format: date */
+            cerrado_el?: string | null;
+            row_version?: number;
+            creado_por?: components["schemas"]["Uuid"];
+            created_at?: components["schemas"]["FechaHora"];
+            updated_at?: components["schemas"]["FechaHora"];
+        };
+        /** @description POST: `enfermedad` e `inicio` obligatorios; `estado`, `cerrado_el` y `row_version` prohibidos. PATCH: `row_version` obligatorio; `enfermedad` prohibido. */
+        PlanSaneamientoInput: {
+            id?: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            enfermedad?: "brucelosis" | "tuberculosis";
+            inicio?: components["schemas"]["Fecha"];
+            /** Format: date */
+            proximo_muestreo?: string | null;
+            veterinario_nombre?: string | null;
+            veterinario_matricula?: string | null;
+            /** Format: uuid */
+            protocolo_id?: string | null;
+            /** Format: uuid */
+            documento_id?: string | null;
+            observaciones?: string | null;
+            acciones?: components["schemas"]["AccionSaneamiento"][];
+            /** @enum {string} */
+            estado?: "activo" | "cumplido" | "anulado";
+            /** Format: date */
+            cerrado_el?: string | null;
+            row_version?: number;
+        };
+        VencimientoSanitario: {
+            /** @enum {string} */
+            tipo?: "estatus" | "protocolo" | "muestreo" | "accion";
+            /** @enum {string} */
+            enfermedad?: "brucelosis" | "tuberculosis";
+            fecha?: components["schemas"]["Fecha"];
+            /** @description Negativo si ya venció */
+            dias?: number;
+            /** @enum {string} */
+            vigencia?: "vigente" | "por_vencer" | "vencido";
+            titulo?: string;
+            ref_id?: components["schemas"]["Uuid"];
+        };
+        CondicionSanitaria: {
+            enfermedades?: {
+                /** @enum {string} */
+                enfermedad?: "brucelosis" | "tuberculosis";
+                estatus?: components["schemas"]["EstatusSanitario"] | null;
+                historial?: components["schemas"]["EstatusSanitario"][];
+                plan_saneamiento?: components["schemas"]["PlanSaneamiento"] | null;
+                ultimo_protocolo?: components["schemas"]["ProtocoloSanitario"] | null;
+                positivos?: {
+                    animal_id?: components["schemas"]["Uuid"];
+                    identificacion?: string | null;
+                    especie?: string;
+                    categoria?: string | null;
+                    /** Format: date */
+                    desde?: string | null;
+                    prueba?: string;
+                }[];
+            }[];
+            vencimientos?: components["schemas"]["VencimientoSanitario"][];
+            aviso?: string;
+            calculado_al?: components["schemas"]["Fecha"];
+        };
+        PruebaAnimal: components["schemas"]["ProtocoloResultado"] & {
+            protocolo_id?: components["schemas"]["Uuid"];
+            enfermedad?: string;
+            prueba?: string;
+            prueba_nombre?: string;
+            motivo?: string;
+            fecha_muestreo?: components["schemas"]["Fecha"];
+            /** Format: date */
+            fecha_resultado?: string | null;
+            laboratorio?: string | null;
+            protocolo_numero?: string | null;
+            /** Format: date */
+            vence_el?: string | null;
+            origen?: string;
+            origen_leyenda?: string;
+        };
+        /** @description Una res del romaneo. Kg con coma o punto, hasta 1 decimal canónico. `peso_kg` o las dos medias. */
+        ResFaenaInput: {
+            garron: string;
+            /** @description RFID o caravana como figura */
+            identificacion?: string | null;
+            /** @description Si falta se busca por `identificacion` */
+            animal_id?: components["schemas"]["Uuid"] | null;
+            media_a_kg?: string | null;
+            media_b_kg?: string | null;
+            peso_kg?: string | null;
+            categoria?: string | null;
+            tipificacion?: string | null;
+            decomiso?: string | null;
+            observaciones?: string | null;
+        };
+        /** @description Liquidación tal como la emitió el frigorífico o consignataria (dato de la contraparte; el neto se conserva aunque no cierre). */
+        LiquidacionFaena: {
+            numero?: string | null;
+            /** Format: date */
+            fecha?: string | null;
+            emisor?: string | null;
+            kg?: components["schemas"]["Decimal"] | null;
+            precio_kg?: components["schemas"]["Decimal"] | null;
+            bruto?: components["schemas"]["Decimal"] | null;
+            deducciones?: {
+                concepto: string;
+                importe: components["schemas"]["Decimal"];
+            }[];
+            neto?: components["schemas"]["Decimal"] | null;
+            /**
+             * @default ARS
+             * @enum {string}
+             */
+            moneda: "ARS" | "USD";
+        };
+        ResultadoFaenaPatch: {
+            /** @description Venta registrada del establecimiento */
+            operacion_id?: components["schemas"]["Uuid"] | null;
+            /** @description Raíz del `hacienda.egreso` (excluyente con la venta) */
+            egreso_evento_id?: components["schemas"]["Uuid"] | null;
+            liquidacion?: components["schemas"]["LiquidacionFaena"] | null;
+            liquidacion_documento_id?: components["schemas"]["Uuid"] | null;
+            factura_documento_id?: components["schemas"]["Uuid"] | null;
+            observaciones?: string | null;
+            row_version: number;
+        };
+        ResultadoFaenaInput: {
+            id?: components["schemas"]["Uuid"];
+            frigorifico: string;
+            frigorifico_cuit?: string | null;
+            faenador_numero?: string | null;
+            fecha_faena: components["schemas"]["Fecha"];
+            tropa_numero?: string | null;
+            romaneo_numero?: string | null;
+            dte_numero?: string | null;
+            cabezas_declaradas?: number | null;
+            tipificador?: string | null;
+            /**
+             * @description `importado` (planilla digital) y `transcripcion_revisada` exigen `documento_id`
+             * @enum {string}
+             */
+            origen: "declarado" | "importado" | "transcripcion_revisada";
+            /** @description Romaneo / planilla original en Documentos */
+            documento_id?: components["schemas"]["Uuid"] | null;
+            reses: components["schemas"]["ResFaenaInput"][];
+            operacion_id?: components["schemas"]["Uuid"] | null;
+            egreso_evento_id?: components["schemas"]["Uuid"] | null;
+            liquidacion?: components["schemas"]["LiquidacionFaena"] | null;
+            liquidacion_documento_id?: components["schemas"]["Uuid"] | null;
+            factura_documento_id?: components["schemas"]["Uuid"] | null;
+            observaciones?: string | null;
+            confirmar_advertencias?: boolean;
+        };
+        ResultadoFaena: {
+            id: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            estado: "vigente" | "anulado";
+            /** @enum {string} */
+            origen: "declarado" | "importado" | "transcripcion_revisada";
+            origen_leyenda?: string;
+            operacion_id?: string | null;
+            egreso_evento_id?: string | null;
+            documento_id?: string | null;
+            liquidacion_documento_id?: string | null;
+            factura_documento_id?: string | null;
+            /** @description Si vino de la lectura asistida (familia `resultado_faena`) */
+            borrador_id?: string | null;
+            /** @description Dato del frigorífico tal como figura en el original. */
+            oficial: {
+                leyenda?: string;
+                frigorifico?: string;
+                frigorifico_cuit?: string | null;
+                faenador_numero?: string | null;
+                fecha_faena?: components["schemas"]["Fecha"];
+                tropa_numero?: string | null;
+                romaneo_numero?: string | null;
+                dte_numero?: string | null;
+                cabezas_declaradas?: number | null;
+                tipificador?: string | null;
+                totales?: {
+                    reses?: number;
+                    kg?: components["schemas"]["Decimal"];
+                    asociadas?: number;
+                };
+                /** @description Solo en el detalle */
+                reses?: (components["schemas"]["ResFaenaInput"] & {
+                    orden?: number;
+                })[];
+            };
+            liquidacion?: components["schemas"]["LiquidacionFaena"] | null;
+            observaciones?: string | null;
+            row_version: number;
+            creado_por?: components["schemas"]["Uuid"];
+            created_at?: components["schemas"]["FechaHora"];
+            updated_at?: components["schemas"]["FechaHora"];
+            anulado_en?: string | null;
+            anulado_motivo?: string | null;
+        };
+        ResultadoFaenaDetalle: components["schemas"]["ResultadoFaena"] & {
+            /** @description Cálculo propio de TROPILLA (orientativo, no reemplaza la liquidación). Enviados = animales de la venta o del egreso vinculado. Rinde individual = res / último peso vivo; de la tropa = kg de reses / kg vivos de la venta. Importe esperado solo si la venta es al gancho. */
+            conciliacion: {
+                leyenda?: string;
+                venta?: {
+                    [key: string]: unknown;
+                } | null;
+                cabezas?: {
+                    enviadas?: number | null;
+                    reses?: number;
+                    conciliadas?: number;
+                    faltantes?: number;
+                    no_estaban_en_la_venta?: number;
+                    sin_asociar?: number;
+                };
+                kg?: {
+                    reses?: string;
+                    vivo?: string | null;
+                    liquidados?: string | null;
+                    diferencia_liquidados_vs_reses?: string | null;
+                };
+                rinde_pct?: string | null;
+                rinde_promedio_individual_pct?: string | null;
+                importe?: {
+                    esperado_al_gancho?: string | null;
+                    liquidado_bruto?: string | null;
+                    deducciones?: string | null;
+                    liquidado_neto?: string | null;
+                    diferencia_bruto_vs_esperado?: string | null;
+                    moneda?: string;
+                };
+                animales?: {
+                    animal_id?: components["schemas"]["Uuid"];
+                    identificacion?: string | null;
+                    categoria?: string | null;
+                    enviado?: boolean;
+                    garron?: string | null;
+                    peso_res_kg?: string | null;
+                    peso_vivo_kg?: string | null;
+                    peso_vivo_fecha?: string | null;
+                    rinde_pct?: string | null;
+                    /** @enum {string} */
+                    estado?: "conciliado" | "faltante" | "no_estaba_en_la_venta";
+                }[];
+                avisos?: string[];
+            };
+        };
+        /** @description Borrador de documento desde foto (TPA-61/62). Estados: `esperando_archivos` → `en_cola` → `extrayendo` → `para_revisar` | `fallido` → `confirmado` | `descartado`. Esquemas versionados: `acta_vacunacion.711_2025/1` (Acta Única, Res. 711/2025) y `acta_vacunacion.879_2002/1` (acta histórica). Advertencias (nunca se autocorrige): `vacunados_mayor_existentes`, `totales_no_cierran`, `existencias_distintas`, `renspa_distinto`, `renspa_formato`, `fecha_faltante`, `fecha_futura`, `firma_no_detectada`, `calidad_imagen`, `formulario_no_reconocido`, `categoria_otra_especie` (bloquea la confirmación). `aviso`: transcripción asistida, no es presentación oficial. TPA-64: `dte.356_2008/1` (DT-e de SIGSA), `dte.dta_historico/1` (DTA en papel), `guia_provincial.dut_chaco/1` (DUT Chaco) y `guia_provincial.generica/1` (otras provincias, `variante_no_verificada`). Campos propios `movimiento_sentido` (egreso/ingreso, sugerido por RENSPA), `movimiento_registro` (vincular/registrar, sugerido si hay un movimiento con el mismo N.º de DT-e), `movimiento_evento_id`, `movimiento_lote_id`, `movimiento_caravanas`. Advertencias: `totales_no_cierran`, `cantidades_no_concilian`, `dte_no_coincide`, `dte_faltante`, `sentido_no_coincide`, `renspa_ajeno`, `vigencia_invalida`, `documento_anulado`, `conteo_insuficiente`; bloqueantes: `movimiento_sin_definir`, `sentido_sin_definir`, `movimiento_sin_elegir`, `movimiento_inexistente`, `lote_sin_elegir`, `lote_no_anonimo`, `lote_otra_especie`, `caravana_desconocida`, `detalle_sin_categoria`. TPA-65: `libro_tratamientos.666_2011/1` (filas `tratamientos.N.*`: fecha, animales, caravanas, `lote_id`, diagnóstico, producto, principio activo, dosis, vía, duración, responsable, retiros; la fecha «no aplica» omite la fila; confirmar = un `sanidad.tratamiento` por fila) y `fidha.655_2026/1` / `fidha.anterior/1` (inspección, tropa, tratamiento precaucional; `lote_id`/`caravanas` propios; confirmar = `sanidad.observacion_clinica` con el signo «inspección de garrapata: <resultado>» + `sanidad.desparasitacion` externo si hubo tratamiento, y vínculo al movimiento con el mismo DT-e). Advertencias: `retiro_faltante`, `dato_minimo_faltante`, `inspeccion_positiva`, `formulario_anterior`, `tratamiento_sin_producto`, `fecha_tratamiento_posterior`; bloqueantes `fila_sin_animales`, `sin_animales`, `caravana_desconocida`. */
         BorradorDocumento: {
             id: components["schemas"]["Uuid"];
             documento_id: components["schemas"]["Uuid"];
             documento_version_id?: components["schemas"]["Uuid"];
             /** @enum {string} */
-            familia: "acta_vacunacion" | "dte" | "guia_provincial";
+            familia: "acta_vacunacion" | "dte" | "guia_provincial" | "protocolo_sanitario" | "libro_tratamientos" | "fidha" | "resultado_faena";
             esquema?: string | null;
             /** @enum {string} */
             estado: "esperando_archivos" | "en_cola" | "extrayendo" | "para_revisar" | "fallido" | "confirmado" | "descartado";
@@ -5779,7 +6593,7 @@ export interface components {
             evento_ids: components["schemas"]["Uuid"][];
             /** @description Eventos existentes con los que la confirmación relacionó el documento (TPA-64). */
             eventos_vinculados: components["schemas"]["Uuid"][];
-            /** @description Cómo mostrar la familia: nombre de cada esquema, títulos de grupo (`:n` = número de fila) y filas que se pueden agregar. */
+            /** @description Cómo mostrar la familia (TPA-64; también la usan TPA-65/66): nombre de cada esquema, títulos de grupo (`:n` = número de fila) y filas que se pueden agregar. */
             presentacion: {
                 esquemas?: {
                     [key: string]: string;
@@ -10504,6 +11318,405 @@ export interface operations {
             404: components["responses"]["NoEncontrado"];
         };
     };
+    get_establecimientos_establecimiento_sanidad_oficial: {
+        parameters: {
+            query?: {
+                horizonte_dias?: number;
+            };
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CondicionSanitaria"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_establecimientos_establecimiento_sanidad_oficial_resumen_veterinario: {
+        parameters: {
+            query?: {
+                formato?: "pdf" | "csv";
+                meses?: number;
+            };
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Archivo */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                    "text/csv": string;
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            /** @description Gotenberg no respondió (code: servicio_no_disponible) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    get_establecimientos_establecimiento_sanidad_protocolos: {
+        parameters: {
+            query?: {
+                enfermedad?: "brucelosis" | "tuberculosis";
+                motivo?: "does" | "recertificacion" | "saneamiento" | "movimiento" | "rutina" | "otro";
+                estado?: "vigente" | "anulado" | "todos";
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK (paginado por cursor) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProtocoloSanitario"][];
+                        meta: components["schemas"]["MetaCursor"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    post_establecimientos_establecimiento_sanidad_protocolos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProtocoloSanitarioInput"];
+            };
+        };
+        responses: {
+            /** @description Creado (200 si el id ya existía) */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProtocoloSanitario"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            409: components["responses"]["Conflicto"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_establecimientos_establecimiento_sanidad_protocolos_protocolo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                protocolo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProtocoloSanitario"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    post_establecimientos_establecimiento_sanidad_protocolos_protocolo_anular: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                protocolo: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProtocoloSanitario"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            409: components["responses"]["Conflicto"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_establecimientos_establecimiento_sanidad_estatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EstatusSanitarioInput"];
+            };
+        };
+        responses: {
+            /** @description Creado (200 si el id ya existía) */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EstatusSanitario"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_establecimientos_establecimiento_sanidad_estatus_estatus_anular: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                estatus: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EstatusSanitario"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_establecimientos_establecimiento_sanidad_saneamiento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanSaneamientoInput"];
+            };
+        };
+        responses: {
+            /** @description Creado (200 si el id ya existía) */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlanSaneamiento"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            409: components["responses"]["Conflicto"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    patch_establecimientos_establecimiento_sanidad_saneamiento_plan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                plan: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanSaneamientoInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlanSaneamiento"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            409: components["responses"]["Conflicto"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_establecimientos_establecimiento_animales_animal_pruebas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                animal: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PruebaAnimal"][];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    get_establecimientos_establecimiento_sanidad_libro_tratamientos: {
+        parameters: {
+            query?: {
+                q?: string;
+                desde?: string;
+                hasta?: string;
+                tipo?: "tratamiento" | "desparasitacion" | "inspeccion";
+                lote_id?: components["schemas"]["Uuid"];
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["LibroTratamientoFila"][];
+                        meta: components["schemas"]["MetaCursor"];
+                        aviso: string;
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
     get_establecimientos_establecimiento_documentos: {
         parameters: {
             query?: {
@@ -11780,6 +12993,265 @@ export interface operations {
             403: components["responses"]["Prohibido"];
             404: components["responses"]["NoEncontrado"];
             422: components["responses"]["Validacion"];
+        };
+    };
+    get_establecimientos_establecimiento_faena_resultados: {
+        parameters: {
+            query?: {
+                operacion_id?: components["schemas"]["Uuid"];
+                borrador_id?: components["schemas"]["Uuid"];
+                estado?: "vigente" | "anulado" | "todos";
+                cursor?: string;
+                /** @description Default 25, máx. 100 */
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK (paginado por cursor) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ResultadoFaena"][];
+                        meta: components["schemas"]["MetaCursor"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_establecimientos_establecimiento_faena_resultados: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResultadoFaenaInput"];
+            };
+        };
+        responses: {
+            /** @description Reintento idempotente */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ResultadoFaenaDetalle"];
+                    };
+                };
+            };
+            /** @description Creado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ResultadoFaenaDetalle"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            409: components["responses"]["Conflicto"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_establecimientos_establecimiento_faena_planilla: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description CSV (`,` o `;`) o XLSX, ≤ 5 MiB
+                     */
+                    archivo: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            reses: components["schemas"]["ResFaenaInput"][];
+                            errores: {
+                                fila: number;
+                                mensaje: string;
+                            }[];
+                            /** @description Columnas normalizadas reconocidas */
+                            columnas: string[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_establecimientos_establecimiento_faena_resultados_resultado: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                resultado: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ResultadoFaenaDetalle"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    patch_establecimientos_establecimiento_faena_resultados_resultado: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                resultado: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResultadoFaenaPatch"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ResultadoFaenaDetalle"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            409: components["responses"]["Conflicto"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_establecimientos_establecimiento_faena_resultados_resultado_anular: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                resultado: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MotivoInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ResultadoFaena"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_establecimientos_establecimiento_faena_resultados_resultado_exportar: {
+        parameters: {
+            query?: {
+                formato?: "pdf" | "csv";
+            };
+            header?: never;
+            path: {
+                establecimiento: string;
+                resultado: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Archivo */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                    "text/csv": string;
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            /** @description Gotenberg no respondió (code: servicio_no_disponible) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
         };
     };
     get_establecimientos_establecimiento_precios_historial: {
