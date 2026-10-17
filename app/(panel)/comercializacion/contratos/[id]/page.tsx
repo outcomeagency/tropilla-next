@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { Card, CardBody, CardHeader, DataList, MockNotice, Notice, PageHeader, Progress, Table, Td, Th, Tr, TrustBadge, buttonClass } from "@/components/ui";
+import { Badge, Card, CardBody, CardHeader, DataList, MockNotice, Notice, PageHeader, Progress, Table, Td, Th, Tr, TrustBadge, buttonClass } from "@/components/ui";
 import { IconAlert, IconArrowLeft, IconCheckCircle, IconExternal, IconGlobe, IconLock } from "@/components/icons";
 import { EstadoContratoBadge, EstadoTomaBadge } from "@/components/panel/contratos/estado";
 import { AccionesContrato } from "@/components/panel/contratos/acciones";
@@ -94,6 +94,7 @@ async function Detalle({ params, searchParams }: Props) {
                         <span className="block text-[12.5px] text-muted">
                           {x.comprador?.nombre} · {fecha(x.created_at)}
                         </span>
+                        {x.comprador?.validacion_cuit_estado && <span className="mt-1 inline-block"><Badge tone={x.comprador.validacion_cuit_estado === "validado" ? "success" : x.comprador.validacion_cuit_estado === "inconsistente" ? "warning" : "info"}>{x.comprador.validacion_cuit_estado === "validado" ? "CUIT validado" : x.comprador.validacion_cuit_estado === "inconsistente" ? "Datos inconsistentes" : "Validación pendiente"}</Badge></span>}
                       </Td>
                       <Td numeric>
                         {x.estado === "devuelta_parcial" && x.tokens_vigentes != null && x.tokens_vigentes !== x.tokens ? (
