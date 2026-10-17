@@ -779,6 +779,14 @@ botón de verificación, más la aclaración de qué prueba la integridad. Si el
 **Comentario del dev:** El panel usa formularios por dominio para sanidad/RENSPA, polígono (GeoJSON/KML), potreros y aguadas, suelos/pasturas/carga, infraestructura, personal, marcas y señales, clima, logística y certificaciones; cada bloque publica solo tras optar por visibilidad. La ficha pública `/es/p/{slug}` muestra los campos autorizados: vencimientos y plan sanitario se publican solo si se opta, y nunca se envían identificadores registrales ni observaciones libres. El perímetro se carga explícitamente y se valida en la API; no se infiere del punto de GPS. Verificado con typecheck, ESLint y build de producción Next.
 El editor incluye bloques JSON de ficha y configuración de visibilidad por bloque; los datos no publicados permanecen privados en API. Es un editor de transición: falta reemplazarlo por formularios por dominio y mostrar datos en la ficha de lectura; también falta la vista offline de Flutter. Verificado: API types regenerados desde OpenAPI, `next typegen`, `tsc --noEmit` y ESLint. La ficha extensa usa como base el contexto de investigación SENASA/negocio; el clima incluye fuente y fecha para integrar TPA-70.
 
+### TPA-81 · Escenarios climáticos con IA y plan de respuesta · 🟦 en curso
+
+**Ruta:** `/clima/escenarios`, enlazada desde Clima y alertas. API server-side; el endpoint devuelve el último análisis y señal de actualización diferida.
+**Datos:** NASA POWER Daily (precipitación mensual observada), NDVI MODIS/ORNL, NOAA CPC ENSO; licencia, fecha y zona visibles. Probabilidad de impacto local: no disponible; no se infiere de ENSO.
+**UI:** tarjetas por sequía, exceso hídrico, déficit forrajero y estrés térmico; gráfico accesible de precipitación observada; horizonte/incertidumbre, fuentes y salida hacia campos, fletes, proveedores y venta anticipada. Sin mock de valores.
+
+**Comentario del dev:** La lectura del análisis y de las fuentes es server-side, siguiendo el cliente API existente y sin exponer el token Sanctum. Las tarjetas distinguen señales de escenarios indeterminados y explican que la información satelital e histórica no pronostica el estado de cada potrero. El gráfico mensual muestra precipitación observada con la fecha y atribución de NASA POWER. Las opciones llevan a herramientas del ecosistema; son caminos para evaluar y no órdenes de manejo. Cuando falla la API, la pantalla explica el estado y permite volver a consultar.
+
 ### TPA-70 · Alertas climáticas y riesgo por establecimiento (en curso)
 
 **Rutas:** `/clima` (nueva, en sidebar y `proxy.ts`) y tarjeta «Alertas climáticas» en `/inicio`.

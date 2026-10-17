@@ -262,7 +262,7 @@ async function Contenido({ searchParams }: { searchParams: Promise<SP> }) {
 export default function ClimaPage(props: { searchParams: Promise<SP> }) {
   return (
     <>
-      <PageHeader title="Clima y alertas" subtitle="Pronóstico y riesgos climáticos para la zona del establecimiento." />
+      <PageHeader title="Clima y alertas" subtitle="Pronóstico y riesgos climáticos para la zona del establecimiento." actions={<Button href="/clima/escenarios" variant="outline">Escenarios a 6 meses</Button>} />
       <Suspense
         fallback={
           <div className="space-y-4" aria-hidden="true">
