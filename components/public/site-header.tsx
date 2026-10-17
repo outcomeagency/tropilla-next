@@ -18,7 +18,7 @@ export function SiteHeader({
   locale: Locale;
   dict: Dictionary;
   path?: string;
-  current?: "directory" | "offers" | "providers";
+  current?: "directory" | "offers" | "providers" | "financing";
   /** Ficha de un productor: «Agropecuaria Don Ramón · La Esperanza» en lugar de las secciones. */
   context?: string;
   /** Botón principal (ej. «Consultar» en una oferta) en lugar de «Ingresar». */
@@ -39,6 +39,11 @@ export function SiteHeader({
       key: "providers",
       href: `/${locale}/proveedores`,
       label: dict.nav.providers,
+    },
+    {
+      key: "financing",
+      href: `/${locale}/financiamiento`,
+      label: dict.nav.financing,
     },
     { key: "producers", href: "/registro", label: dict.nav.producers },
   ];

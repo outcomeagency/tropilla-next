@@ -10,6 +10,7 @@ export const pt: Dictionary = {
     directory: "Diretório",
     offers: "Ofertas",
     providers: "Fornecedores",
+    financing: "Visão de financiamento",
     producers: "Para produtores",
     login: "Entrar",
     language: "Idioma",
