@@ -232,6 +232,278 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/agregados/contexto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Contexto del tablero agregado
+         * @description TPA-75. Cualquier usuario autenticado: `acceso` indica si es equipo o integrante de una licencia activa. Fuente siempre `sintetico`.
+         */
+        get: operations["get_agregados_contexto"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agregados/tablero": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Consulta del cubo agregado protegido
+         * @description TPA-75. Licencia activa y vigente con la métrica (`metrica_no_habilitada`, `licencia_suspendida`, `licencia_vencida` → 403); `cliente` obligatorio salvo equipo (vista previa sin cupo). Descuenta cupo diario (`cupo_consultas_agotado` → 429) y queda auditada. Celdas con menos de k establecimientos, aportante dominante o despejables por resta se devuelven `suprimida` con `motivo`. Rango por defecto: últimos 4 trimestres; `escala` exige política con desglose (`desglose_no_permitido` → 422).
+         */
+        get: operations["get_agregados_tablero"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agregados/tablero/exportar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export CSV del recorte (datos sintéticos)
+         * @description TPA-75. Mismos parámetros, permisos y cupo que el tablero; registra una consulta `exportacion`. Primera línea `#` con aviso de datos sintéticos, dataset, política y consulta; header `X-Tropilla-Fuente: sintetico`.
+         */
+        get: operations["get_agregados_tablero_exportar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agregados/consultas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Consultas auditadas
+         * @description TPA-75. Equipo: todas (filtro opcional `cliente`). Integrante: solo las de su licencia (`cliente` obligatorio). Cursor, más nuevas primero.
+         */
+        get: operations["get_agregados_consultas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agregados/gobernanza": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Gobernanza: política, gate, última prueba, uso y bitácora
+         * @description TPA-75. Solo equipo (`es_staff`); otro usuario → 404.
+         */
+        get: operations["get_agregados_gobernanza"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agregados/politicas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Nueva versión de la política de divulgación
+         * @description TPA-75. Solo equipo. Append-only; las revisiones del gate quedan atadas a la versión anterior (el gate vuelve a pendiente). Límites: k 5–100, dominancia 30–90 %.
+         */
+        post: operations["post_agregados_politicas"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agregados/pruebas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pruebas de reidentificación (últimas 20)
+         * @description TPA-75. Solo equipo. Resumen sin controles.
+         */
+        get: operations["get_agregados_pruebas"];
+        put?: never;
+        /**
+         * Ejecutar la prueba de reidentificación
+         * @description TPA-75. Solo equipo. Recorre todo lo publicable bajo la política vigente: celda chica, dominancia, diferenciación por resta, vinculación con perfil público y entrada/salida de un aportante entre trimestres (advertencia). Append-only.
+         */
+        post: operations["post_agregados_pruebas"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agregados/pruebas/{prueba}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Prueba con sus controles
+         * @description TPA-75. Solo equipo.
+         */
+        get: operations["get_agregados_pruebas_prueba"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agregados/revisiones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revisar un aspecto del gate
+         * @description TPA-75. Solo equipo. Aspectos `reidentificacion`, `permisos`, `cohortes`, `auditoria`; aprobar reidentificación exige que la última prueba de la política vigente esté aprobada (`prueba_pendiente` → 409). Con los cuatro aprobados `habilita_opt_in_real` = true (planificar el opt-in; no conecta datos reales).
+         */
+        post: operations["post_agregados_revisiones"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agregados/clientes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Licencias de clientes institucionales
+         * @description TPA-75. Solo equipo.
+         */
+        get: operations["get_agregados_clientes"];
+        put?: never;
+        /**
+         * Alta de licencia
+         * @description TPA-75. Solo equipo. Finalidad contractual, versión de contrato, vigencia, métricas licenciadas y cupo diario (nunca mayor que el de la política).
+         */
+        post: operations["post_agregados_clientes"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agregados/clientes/{cliente}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Cambiar o suspender una licencia
+         * @description TPA-75. Solo equipo. `row_version` obligatorio (409 `conflicto_row_version`); queda en la bitácora con antes/después.
+         */
+        patch: operations["patch_agregados_clientes_cliente"];
+        trace?: never;
+    };
+    "/agregados/clientes/{cliente}/miembros": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Integrantes de la licencia
+         * @description TPA-75. Solo equipo.
+         */
+        get: operations["get_agregados_clientes_cliente_miembros"];
+        put?: never;
+        /**
+         * Sumar un integrante por email
+         * @description TPA-75. Solo equipo. Idempotente.
+         */
+        post: operations["post_agregados_clientes_cliente_miembros"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agregados/clientes/{cliente}/miembros/{usuario}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Quitar un integrante
+         * @description TPA-75. Solo equipo.
+         */
+        delete: operations["delete_agregados_clientes_cliente_miembros_usuario"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/notificaciones": {
         parameters: {
             query?: never;
@@ -4988,6 +5260,258 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description Política de divulgación versionada (append-only). TPA-75. */
+        AgregadosPolitica: {
+            version: number;
+            /** @description Mínimo de establecimientos por celda publicada */
+            k_minimo: number;
+            /** @description Máximo % del total que puede aportar un solo establecimiento */
+            dominancia_max_pct: number;
+            /** @enum {integer} */
+            redondeo_cabezas: 10 | 50 | 100 | 500;
+            /** @description Cupo diario máximo por licencia (zona horaria AR) */
+            consultas_por_dia: number;
+            desglose_escala: boolean;
+            nota?: string | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        AgregadosPoliticaInput: {
+            k_minimo: number;
+            dominancia_max_pct: number;
+            /** @enum {integer} */
+            redondeo_cabezas: 10 | 50 | 100 | 500;
+            consultas_por_dia: number;
+            desglose_escala: boolean;
+            /** @description Motivo del cambio */
+            nota: string;
+        };
+        AgregadosLicencia: {
+            /** Format: uuid */
+            id: string;
+            nombre: string;
+            /** @enum {string} */
+            tipo: "frigorifico" | "consignataria" | "banco" | "aseguradora" | "gobierno" | "proveedor" | "asociacion" | "otro";
+            finalidad: string;
+            contrato_version: string;
+            /** Format: date */
+            vigente_hasta: string | null;
+            /** @enum {string} */
+            estado: "activo" | "suspendido";
+            metricas: ("existencias" | "cobertura_sanitaria" | "precios")[];
+            cupo_diario: number;
+            consultas_hoy: number;
+        };
+        AgregadosCliente: components["schemas"]["AgregadosLicencia"] & {
+            consultas_por_dia: number | null;
+            integrantes: number;
+            consultas_30_dias: number;
+            row_version: number;
+            /** Format: date-time */
+            created_at: string;
+        };
+        AgregadosClienteInput: {
+            nombre: string;
+            /** @enum {string} */
+            tipo: "frigorifico" | "consignataria" | "banco" | "aseguradora" | "gobierno" | "proveedor" | "asociacion" | "otro";
+            finalidad: string;
+            contrato_version: string;
+            /**
+             * Format: date
+             * @description Posterior a hoy
+             */
+            vigente_hasta?: string | null;
+            consultas_por_dia?: number | null;
+            metricas: ("existencias" | "cobertura_sanitaria" | "precios")[];
+        };
+        /** @description Mismos campos que AgregadosClienteInput, todos opcionales, más estado y row_version. */
+        AgregadosClienteCambio: {
+            nombre?: string;
+            tipo?: string;
+            finalidad?: string;
+            contrato_version?: string;
+            /** Format: date */
+            vigente_hasta?: string | null;
+            consultas_por_dia?: number | null;
+            metricas?: string[];
+            /** @enum {string} */
+            estado?: "activo" | "suspendido";
+            row_version: number;
+        };
+        AgregadosContexto: {
+            acceso: boolean;
+            es_staff: boolean;
+            licencias: components["schemas"]["AgregadosLicencia"][];
+            politica: components["schemas"]["AgregadosPolitica"];
+            /**
+             * @example [
+             *       "2024T3",
+             *       "2026T2"
+             *     ]
+             */
+            trimestres: string[];
+            metricas: string[];
+            especies: string[];
+            zonas: components["schemas"]["AgregadosZona"][];
+            /** @description chico < 300 cabezas, mediano 300–1500, grande > 1500 */
+            escalas: ("chico" | "mediano" | "grande")[];
+            /** @constant */
+            fuente: "sintetico";
+            dataset_version: string;
+            opt_in_real_habilitado: boolean;
+            aviso: string;
+        };
+        AgregadosZona: {
+            /** @enum {string} */
+            codigo: "nea" | "corrientes" | "chaco" | "formosa" | "misiones";
+            nombre: string;
+        };
+        AgregadosFila: {
+            trimestre: string;
+            zona: components["schemas"]["AgregadosZona"];
+            /** @enum {string} */
+            escala: "todas" | "chico" | "mediano" | "grande";
+            /** @enum {string} */
+            estado: "publicada" | "suprimida" | "sin_datos";
+            /** @enum {string|null} */
+            motivo: "celda_chica" | "dominancia" | "complementaria" | null;
+            /** @description Solo si publicada. establecimientos redondeado a 5; existencias → cabezas (redondeo de la política); cobertura_sanitaria → cobertura_pct (aftosa vigente); precios → precio_kg ($/kg vivo ponderado, a $10). */
+            valores: {
+                establecimientos?: number;
+                cabezas?: number;
+                cobertura_pct?: number;
+                precio_kg?: number;
+            } | null;
+        };
+        AgregadosTablero: {
+            metrica: string;
+            especie: string;
+            /** @enum {string} */
+            geo: "nea" | "provincia";
+            desglose_escala: boolean;
+            trimestres: string[];
+            filas: components["schemas"]["AgregadosFila"][];
+            resumen: {
+                celdas?: number;
+                suprimidas?: number;
+            };
+            consulta: {
+                /** Format: uuid */
+                id?: string;
+                /** Format: uuid */
+                cliente_id?: string | null;
+                politica_version?: number;
+                dataset_version?: string;
+                cupo_diario?: number | null;
+                cupo_restante?: number | null;
+            };
+            politica: components["schemas"]["AgregadosPolitica"];
+            /** @constant */
+            fuente: "sintetico";
+            aviso: string;
+        };
+        AgregadosConsulta: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            tipo: "tablero" | "exportacion";
+            cliente: {
+                /** Format: uuid */
+                id?: string;
+                nombre?: string;
+            } | null;
+            usuario: {
+                /** Format: uuid */
+                id?: string;
+                nombre?: string;
+            };
+            parametros: Record<string, never>;
+            celdas: number;
+            suprimidas: number;
+            politica_version: number;
+            dataset_version: string;
+            /** @constant */
+            fuente: "sintetico";
+            /** Format: date-time */
+            created_at: string;
+        };
+        AgregadosPrueba: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            resultado: "aprobada" | "fallida";
+            politica_version: number;
+            dataset_version: string;
+            fallas: number;
+            advertencias: number;
+            ejecutada_por: string;
+            /** Format: date-time */
+            created_at: string;
+            /** @description Solo en el detalle y al ejecutar. */
+            controles?: {
+                /** @enum {string} */
+                codigo?: "celda_chica" | "dominancia" | "diferenciacion" | "vinculacion" | "temporal";
+                titulo?: string;
+                evaluadas?: number;
+                fallas?: number;
+                advertencias?: number;
+                mitigacion?: string;
+                /** @description Hasta 5 ubicaciones (métrica · especie · trimestre · celda o referencia sintética) */
+                ejemplos?: string[];
+            }[];
+        };
+        AgregadosRevisionInput: {
+            /** @enum {string} */
+            aspecto: "reidentificacion" | "permisos" | "cohortes" | "auditoria";
+            /** @enum {string} */
+            resultado: "aprobado" | "observado";
+            nota: string;
+        };
+        AgregadosGate: {
+            aspectos: {
+                /** @enum {string} */
+                aspecto?: "reidentificacion" | "permisos" | "cohortes" | "auditoria";
+                /** @enum {string} */
+                estado?: "pendiente" | "aprobado" | "observado";
+                nota?: string | null;
+                revisor?: string | null;
+                /** Format: uuid */
+                prueba_id?: string | null;
+                /** Format: date-time */
+                revisado_en?: string | null;
+            }[];
+            habilita_opt_in_real: boolean;
+            politica_version: number;
+        };
+        AgregadosGobernanza: {
+            politica: components["schemas"]["AgregadosPolitica"];
+            politicas: components["schemas"]["AgregadosPolitica"][];
+            gate: components["schemas"]["AgregadosGate"];
+            ultima_prueba: components["schemas"]["AgregadosPrueba"] | null;
+            dataset: {
+                version?: string;
+                /** @constant */
+                fuente?: "sintetico";
+                filas?: number;
+                establecimientos?: number;
+                trimestres?: string[];
+            };
+            uso_30_dias: {
+                consultas?: number;
+                exportaciones?: number;
+                suprimidas_pct?: number;
+            };
+            bitacora: {
+                id?: number;
+                /** @enum {string} */
+                accion?: "politica_nueva" | "prueba_reidentificacion" | "revision_gate" | "licencia_alta" | "licencia_cambio" | "licencia_activo" | "licencia_suspendido" | "integrante_alta" | "integrante_baja";
+                usuario?: string;
+                cliente?: string | null;
+                detalle?: Record<string, never>;
+                /** Format: date-time */
+                created_at?: string;
+            }[];
+        };
         /**
          * Format: uuid
          * @description UUID (v7 si lo genera el cliente), minúsculas
@@ -9443,6 +9967,456 @@ export interface operations {
             };
             401: components["responses"]["NoAutenticado"];
             422: components["responses"]["Validacion"];
+        };
+    };
+    get_agregados_contexto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AgregadosContexto"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+        };
+    };
+    get_agregados_tablero: {
+        parameters: {
+            query: {
+                cliente?: string;
+                metrica: "existencias" | "cobertura_sanitaria" | "precios";
+                especie: "BOV" | "BUB";
+                geo?: "nea" | "provincia";
+                escala?: boolean;
+                desde?: string;
+                hasta?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AgregadosTablero"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+            429: components["responses"]["DemasiadosIntentos"];
+        };
+    };
+    get_agregados_tablero_exportar: {
+        parameters: {
+            query: {
+                cliente?: string;
+                metrica: "existencias" | "cobertura_sanitaria" | "precios";
+                especie: "BOV" | "BUB";
+                geo?: "nea" | "provincia";
+                escala?: boolean;
+                desde?: string;
+                hasta?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description CSV */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+            429: components["responses"]["DemasiadosIntentos"];
+        };
+    };
+    get_agregados_consultas: {
+        parameters: {
+            query?: {
+                cliente?: string;
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AgregadosConsulta"][];
+                        meta: components["schemas"]["MetaCursor"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    get_agregados_gobernanza: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AgregadosGobernanza"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    post_agregados_politicas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgregadosPoliticaInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AgregadosPolitica"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_agregados_pruebas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AgregadosPrueba"][];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    post_agregados_pruebas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AgregadosPrueba"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    get_agregados_pruebas_prueba: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                prueba: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AgregadosPrueba"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    post_agregados_revisiones: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgregadosRevisionInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AgregadosGate"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            404: components["responses"]["NoEncontrado"];
+            409: components["responses"]["Conflicto"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_agregados_clientes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AgregadosCliente"][];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    post_agregados_clientes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgregadosClienteInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AgregadosCliente"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    patch_agregados_clientes_cliente: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cliente: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgregadosClienteCambio"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AgregadosCliente"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            404: components["responses"]["NoEncontrado"];
+            409: components["responses"]["Conflicto"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_agregados_clientes_cliente_miembros: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cliente: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            usuario?: {
+                                /** Format: uuid */
+                                id?: string;
+                                nombre?: string;
+                                email?: string;
+                            };
+                            /** Format: date-time */
+                            desde?: string;
+                        }[];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    post_agregados_clientes_cliente_miembros: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cliente: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: email */
+                    email: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Sin contenido */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["NoAutenticado"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    delete_agregados_clientes_cliente_miembros_usuario: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cliente: string;
+                usuario: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sin contenido */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["NoAutenticado"];
+            404: components["responses"]["NoEncontrado"];
         };
     };
     get_me_notificaciones: {
