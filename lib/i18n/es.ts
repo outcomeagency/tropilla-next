@@ -72,7 +72,7 @@ export const es = {
     legend:
       "Información declarada por el productor. TROPILLA registra evidencia de integridad; no certifica su contenido ni reemplaza habilitaciones oficiales.",
     androidDownload: "Descargá la app para Android",
-    androidDownloadNote: "Android · v0.1.0+1 · 16/10/2026",
+    androidDownloadNote: "Android · v0.1.0+1 · 17/10/2026 · instalación directa (APK)",
     rights: "TROPILLA · La plataforma integral del productor ganadero del NEA.",
   },
 };

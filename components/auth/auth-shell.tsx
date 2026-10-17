@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Logo } from "@/components/brand";
@@ -34,8 +35,9 @@ export function AuthShell({
           <Logo onDark height={38} />
         </Link>
 
-        <figure className="flex min-h-[220px] flex-1 items-end rounded-[16px] border border-sidebar-border bg-monte p-6">
-          <figcaption className="max-w-[18ch] font-display text-3xl font-bold leading-tight text-sidebar-ink">Hecho en Corrientes, para el NEA</figcaption>
+        <figure className="relative flex min-h-[220px] flex-1 items-end overflow-hidden rounded-[16px] border border-sidebar-border bg-monte p-6">
+          <Image src="/brand/auth-campo.webp" alt="Rodeo Braford al atardecer entre palmares de Corrientes" fill priority sizes="(min-width:1024px) 40vw, 0px" className="object-cover" />
+          <figcaption className="relative max-w-[18ch] rounded-[10px] bg-monte/85 px-4 py-3 font-display text-3xl font-bold leading-tight text-sidebar-ink">Hecho en Corrientes, para el NEA</figcaption>
         </figure>
 
         <div>

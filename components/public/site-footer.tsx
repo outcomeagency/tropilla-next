@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/brand";
-import { IconInfo } from "@/components/icons";
+import { IconAndroid, IconDownload, IconInfo } from "@/components/icons";
 import type { Dictionary, Locale } from "@/lib/i18n";
 
 /** Pie público con la leyenda fija de no certificación (invariante de producto). */
@@ -30,11 +30,20 @@ export function SiteFooter({ locale, dict, legend }: { locale: Locale; dict: Dic
         </div>
         <a
           href={androidUrl}
-          className="mt-5 inline-flex flex-col text-[13px] text-ink hover:underline"
           download
+          className="mt-6 flex flex-wrap items-center gap-4 rounded-[var(--radius-card)] border border-campo bg-campo-50 px-5 py-4 text-ink transition-shadow hover:shadow-sm"
         >
-          <span>{dict.footer.androidDownload}</span>
-          <span className="text-[12px] text-muted">{dict.footer.androidDownloadNote}</span>
+          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-campo text-blanco">
+            <IconAndroid size={26} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[16px] font-semibold">{dict.footer.androidDownload}</span>
+            <span className="block text-[13px] text-muted">{dict.footer.androidDownloadNote}</span>
+          </span>
+          <span className="inline-flex items-center gap-2 rounded-[10px] bg-campo px-4 py-2.5 text-[14px] font-semibold text-blanco">
+            <IconDownload size={18} />
+            APK
+          </span>
         </a>
       </div>
     </footer>

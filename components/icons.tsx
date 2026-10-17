@@ -377,6 +377,17 @@ export const IconWhatsapp = (p: IconProps) => (
   </Icon>
 );
 
+export const IconAndroid = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M6 11a6 6 0 0 1 12 0Z" />
+    <path d="M8.2 5.6 7 4M15.8 5.6 17 4" />
+    <circle cx="9.5" cy="8.4" r=".6" />
+    <circle cx="14.5" cy="8.4" r=".6" />
+    <rect x="6" y="12.5" width="12" height="7" rx="1.5" />
+    <path d="M4 13v4.5M20 13v4.5M9.5 19.5V22M14.5 19.5V22" />
+  </Icon>
+);
+
 export const IconQr = (p: IconProps) => (
   <Icon {...p}>
     <rect x="4" y="4" width="6" height="6" rx="1" />

@@ -1,6 +1,6 @@
 import { Photo } from "@/components/public/photo";
 import { IconBuffalo, IconCow, IconArrowRight } from "@/components/icons";
-import { cx } from "@/components/ui";
+import { buttonClass, cx } from "@/components/ui";
 import type { Locale } from "@/lib/i18n";
 import type { PortalDict } from "@/lib/i18n/portal";
 
@@ -12,28 +12,62 @@ export type PublicReproductor = {
   foto?: { sha256: string; url: string; alt: string | null; ancho: number | null; alto: number | null } | null; madre?: PublicReproductor | null; padre?: PublicReproductor | null;
 };
 
-function NodoArbol({ nodo, nivel, rol, locale, t }: { nodo: PublicReproductor; nivel: number; rol?: "padre" | "madre"; locale: Locale; t: PortalDict }) {
+function FichaAncestro({ id, nodo, rol, nivel, locale, t }: { id: string; nodo: PublicReproductor; rol?: "padre" | "madre"; nivel: number; locale: Locale; t: PortalDict }) {
+  const idioma = locale === "es" ? "es-AR" : locale === "pt" ? "pt-BR" : "en-US";
+  const fecha = nodo.fecha_nacimiento ? new Intl.DateTimeFormat(idioma, { dateStyle: "long" }).format(new Date(`${nodo.fecha_nacimiento}T12:00:00`)) : null;
+  const filas: Array<[string, string | null | undefined]> = [
+    [t.profile.born, fecha],
+    ["RP", nodo.rp],
+    [t.profile.registry, nodo.registro],
+    [t.profile.center, nodo.centro],
+    [t.profile.sire, nodo.padre?.nombre],
+    [t.profile.dam, nodo.madre?.nombre],
+  ];
+  return (
+    <div id={id} popover="auto" className="m-auto w-[min(92vw,420px)] rounded-[var(--radius-card)] border border-border bg-surface p-0 text-ink shadow-lg backdrop:bg-carbon/40">
+      <div className={cx("border-b border-border border-l-4 px-5 py-4", (rol ? rol === "padre" : nodo.sexo === "M") ? "border-l-campo" : "border-l-tierra")}>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
+          {rol ? (rol === "padre" ? t.profile.sire : t.profile.dam) : nodo.sexo === "M" ? t.profile.male : t.profile.female} · {t.profile.generation} {nivel + 1}
+        </p>
+        <p className="mt-1 text-[20px] font-bold tracking-[-0.01em]">{nodo.nombre || t.profile.declared}</p>
+        <p className="text-[13px] text-muted">{[nodo.raza, nodo.especie === "BUB" ? t.common.speciesOne.BUB : nodo.especie === "BOV" ? t.common.speciesOne.BOV : null].filter(Boolean).join(" · ")}</p>
+      </div>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 px-5 py-4 text-[14px]">
+        {filas.filter(([, v]) => v).map(([k, v]) => (
+          <div key={k} className="contents"><dt className="text-muted">{k}</dt><dd className="font-medium">{v}</dd></div>
+        ))}
+      </dl>
+      <p className="border-t border-border px-5 py-3 text-[12px] text-muted">{t.profile.declared}: {t.profile.pedigreeNote}</p>
+      <div className="px-5 pb-4">
+        <button type="button" popoverTarget={id} popoverTargetAction="hide" className={buttonClass("secondary", "sm")}>{t.profile.close}</button>
+      </div>
+    </div>
+  );
+}
+
+function NodoArbol({ nodo, nivel, rol, uid, locale, t }: { nodo: PublicReproductor; nivel: number; rol?: "padre" | "madre"; uid: string; locale: Locale; t: PortalDict }) {
   const idioma = locale === "es" ? "es-AR" : locale === "pt" ? "pt-BR" : "en-US";
   const anio = nodo.fecha_nacimiento ? new Intl.DateTimeFormat(idioma, { year: "numeric" }).format(new Date(`${nodo.fecha_nacimiento}T12:00:00`)) : null;
   const macho = rol ? rol === "padre" : nodo.sexo === "M";
   const hijos = (nodo.madre || nodo.padre) && nivel < 3;
   return (
     <div className="flex w-max items-center">
-      <article className={cx("w-[188px] shrink-0 rounded-lg border border-border border-l-[3px] bg-surface px-3 py-2.5", macho ? "border-l-campo" : "border-l-tierra", nivel === 0 && "w-[208px] bg-campo-50")}>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">
+      <button type="button" popoverTarget={uid} aria-haspopup="dialog" className={cx("w-[188px] shrink-0 cursor-pointer rounded-lg border border-border border-l-[3px] bg-surface px-3 py-2.5 text-left transition-shadow hover:shadow-sm focus-visible:outline-2 focus-visible:outline-campo", macho ? "border-l-campo" : "border-l-tierra", nivel === 0 && "w-[208px] bg-campo-50")}>
+        <span className="block text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">
           {rol ? (rol === "padre" ? t.profile.sire : t.profile.dam) : nodo.sexo ? (nodo.sexo === "M" ? t.profile.male : t.profile.female) : t.profile.declared}
           <span className="font-normal normal-case tracking-normal text-subtle"> · {t.profile.generation} {nivel + 1}</span>
-        </p>
-        <p className="mt-0.5 truncate text-[14px] font-semibold text-ink" title={nodo.nombre ?? undefined}>{nodo.nombre || t.profile.declared}</p>
-        <p className="truncate text-[11px] text-muted">{[nodo.rp, nodo.raza, anio].filter(Boolean).join(" · ")}</p>
-        {nodo.centro && <p className="mt-0.5 truncate text-[11px] text-subtle" title={nodo.centro}>{nodo.centro}</p>}
-      </article>
+        </span>
+        <span className="mt-0.5 block truncate text-[14px] font-semibold text-ink">{nodo.nombre || t.profile.declared}</span>
+        <span className="block truncate text-[11px] text-muted">{[nodo.rp, nodo.raza, anio].filter(Boolean).join(" · ")}</span>
+        {nodo.centro && <span className="mt-0.5 block truncate text-[11px] text-subtle">{nodo.centro}</span>}
+      </button>
+      <FichaAncestro id={uid} nodo={nodo} rol={rol} nivel={nivel} locale={locale} t={t} />
       {hijos && (
         <>
           <span className="h-px w-4 shrink-0 bg-border-strong" aria-hidden="true" />
           <div className="relative flex flex-col gap-2 py-1 before:absolute before:top-[25%] before:bottom-[25%] before:left-0 before:w-px before:bg-border-strong">
-            {nodo.padre && <div className="flex items-center"><span className="h-px w-4 shrink-0 bg-border-strong" aria-hidden="true" /><NodoArbol nodo={nodo.padre} nivel={nivel + 1} rol="padre" locale={locale} t={t} /></div>}
-            {nodo.madre && <div className="flex items-center"><span className="h-px w-4 shrink-0 bg-border-strong" aria-hidden="true" /><NodoArbol nodo={nodo.madre} nivel={nivel + 1} rol="madre" locale={locale} t={t} /></div>}
+            {nodo.padre && <div className="flex items-center"><span className="h-px w-4 shrink-0 bg-border-strong" aria-hidden="true" /><NodoArbol nodo={nodo.padre} nivel={nivel + 1} rol="padre" uid={`${uid}-p`} locale={locale} t={t} /></div>}
+            {nodo.madre && <div className="flex items-center"><span className="h-px w-4 shrink-0 bg-border-strong" aria-hidden="true" /><NodoArbol nodo={nodo.madre} nivel={nivel + 1} rol="madre" uid={`${uid}-m`} locale={locale} t={t} /></div>}
           </div>
         </>
       )}
@@ -65,7 +99,7 @@ export function ReproductoresPublicos({ items, locale, t }: { items: PublicRepro
       {(a.padre || a.madre) && <details open={i === 0} className="group border-t border-border">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-5 py-3 text-[14px] font-semibold text-campo"><span>{t.profile.pedigree}</span><IconArrowRight size={16} className="rotate-90 transition-transform group-open:rotate-[270deg]" /></summary>
         <div className="max-w-full overflow-x-auto overscroll-x-contain border-t border-border bg-base p-4" tabIndex={0} aria-label={t.profile.pedigree}>
-          <div className="w-max"><NodoArbol nodo={a} nivel={0} locale={locale} t={t} /></div>
+          <div className="w-max"><NodoArbol nodo={a} nivel={0} uid={`ped-${i}`} locale={locale} t={t} /></div>
         </div>
       </details>}
     </article>)}
