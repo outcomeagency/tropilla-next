@@ -915,3 +915,18 @@ El editor incluye bloques JSON de ficha y configuración de visibilidad por bloq
 **Real vs mock:** métricas del caso ilustrativo son datos ficticios estáticos, marcados como demo; no se consulta una API financiera ni se ejecutan movimientos.
 
 **Comentario del dev:** La pantalla presenta la visión como “Próximamente” y muestra conteos ganaderos de ejemplo sin valuaciones, montos, emisión o retornos. Aclara que la evidencia de integridad registra cambios, no prueba la veracidad del dato declarado. El documento deja como pendientes el encuadre CNV vigente, la estructura legal, la custodia, los derechos de cada parte y la protección de datos. La navegación y textos están disponibles en español, inglés y portugués. Verificado junto al DoD de Next: `next typegen`, tsc, lint y build.
+
+### TPA-74 · Mercado de campos y pastajes · ✅ (parte web)
+
+**Rutas:** `/campos` (buscar, compatibles con el rodeo), `/campos/[id]` (detalle, consulta y reporte), `/campos/mis-avisos` (+ `/nuevo`, `/[id]`, `/[id]/editar`), `/campos/consultas` (recibidas / enviadas) y `/campos/moderacion` (solo `es_staff`). Ítem «Campos y pastajes» en el sidebar (ícono nuevo `IconFence`) y matcher `/campos/:path*` en `proxy.ts`.
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Vocabulario, provincias piloto, checklist y límites | `GET /campos/condiciones` | 🔌 |
+| Búsqueda con filtros y compatibilidad con el rodeo | `GET /campos?establecimiento_id=…` | 🔌 |
+| Detalle, consulta con consentimiento y reporte | `GET /campos/{a}`, `POST /campos/{a}/consultas`, `POST /campos/{a}/disputas` | 🔌 |
+| Alta, edición, publicar/pausar/cerrar (con motivo), descargo | `…/campos/avisos*` | 🔌 |
+| Consultas recibidas/enviadas: responder, visita, acuerdo | `…/campos/consultas/{lado}*` | 🔌 |
+| Moderación y verificación (staff) | `/staff/campos/*` | 🔌 |
+
+**Comentario del dev:** El mercado compara cada aviso con las existencias del establecimiento activo y, por defecto, muestra solo los compatibles; la capacidad se compara con las cabezas que el productor indica en el filtro, porque rara vez se mueve el rodeo entero. Cada aviso muestra «Publicado por…», el nivel real de comprobación (declarado, contacto verificado, documentación revisada) y los límites fijos: sin inspección ni garantía del inmueble. La zona se ve por departamento y provincia (nombres NEA desde `lib/geo.ts`), nunca coordenadas. La consulta exige el consentimiento explícito para compartir el contacto; el anunciante comparte el suyo al responder y ambas partes registran visita y acuerdo. El reporte llega al anunciante sin identidad, con descargo y resolución del equipo. Sin mock. Verificado: typegen + tsc, ESLint, `next build` y capturas 1440/390 contra una API aislada con el demo regional (alta y publicación real por la UI, consulta enviada y moderación con un reporte real).

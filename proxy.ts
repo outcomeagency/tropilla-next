@@ -74,6 +74,7 @@ export const config = {
     "/trazabilidad/:path*",
     "/comercializacion/:path*",
     "/fletes/:path*",
+    "/campos/:path*",
     "/perfil-publico/:path*",
     "/organizaciones/:path*",
     "/configuracion/:path*",
