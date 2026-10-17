@@ -5379,6 +5379,294 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/campos/condiciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vocabulario, provincias del piloto, checklist y límites del mercado de campos
+         * @description TPA-74. Cualquier usuario con sesión.
+         */
+        get: operations["get_campos_condiciones"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Buscar campos publicados (compatibles con mi rodeo)
+         * @description TPA-74. Avisos `publicado` con temporada vigente. Con `establecimiento_id` (ability `campos.ver`) cada aviso trae `compatibilidad` contra las existencias del rodeo y la distancia aproximada (centro del departamento, redondeada a 10 km); orden por defecto `compatibilidad`. Piloto: hasta 200 resultados, sin cursor. Nunca devuelve coordenadas.
+         */
+        get: operations["get_campos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campos/{aviso}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Detalle de un aviso de campo
+         * @description TPA-74. Publicado (o propio / staff). Con `establecimiento_id` agrega `compatibilidad` y `mi_consulta`. Incluye `checklist` de diligencias y `avisos` (sin garantía del inmueble).
+         */
+        get: operations["get_campos_aviso"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campos/{aviso}/consultas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Consultar por un campo en nombre de mi establecimiento
+         * @description **Ability:** `campos.consultar` sobre `establecimiento_id` (dueño/admin). TPA-74. Requiere `consentimiento: true` para compartir nombre, email y teléfono con el anunciante. Una consulta abierta por aviso y establecimiento; no se consulta un aviso propio (422 `regla_bloqueante`). Tope diario por establecimiento (429). Notifica `campo_consulta` al anunciante.
+         */
+        post: operations["post_campos_aviso_consultas"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campos/{aviso}/disputas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reportar un aviso de campo (inicio de disputa)
+         * @description TPA-74. Cualquier usuario con sesión salvo miembros del establecimiento anunciante. Un reporte abierto por persona y aviso. El anunciante es notificado sin la identidad de quien reporta y puede dejar descargo. Con `umbral_revision` reportes abiertos el aviso pasa a `en_revision` hasta que el equipo resuelva.
+         */
+        post: operations["post_campos_aviso_disputas"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/campos/disputas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Disputas del mercado de campos (moderación)
+         * @description Solo `es_staff`. TPA-74. `estado` = pendientes (default: abierta + en_revision) | abierta | en_revision | resuelta | desestimada. Incluye identidad de quien reporta y resumen del aviso.
+         */
+        get: operations["get_staff_campos_disputas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/campos/disputas/{disputa}/resolver": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Tomar o resolver una disputa
+         * @description Solo `es_staff`. TPA-74. `en_revision` la toma; `resuelta`/`desestimada` la cierran con `resolucion` y `accion` (default `ninguna`). Si el aviso estaba `en_revision`, sin acción y sin otros reportes abiertos vuelve a `publicado`. Notifica a ambas partes (`campo_disputa`).
+         */
+        post: operations["post_staff_campos_disputas_disputa_resolver"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/campos/avisos/{aviso}/verificacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Asignar el nivel real de comprobación de un aviso
+         * @description Solo `es_staff`. TPA-74. `contacto_verificado` o `documentacion_revisada` no implican inspección ni garantía del inmueble. Si el anunciante cambia modalidad, capacidad, especies, superficie o zona, vuelve a `declarado`.
+         */
+        put: operations["put_staff_campos_avisos_aviso_verificacion"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/campos/avisos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Avisos de campo del establecimiento
+         * @description **Ability:** `campos.ver` (dueño/admin/asesor). TPA-74. En revisión primero; incluye contadores de consultas y disputas.
+         */
+        get: operations["get_establecimientos_establecimiento_campos_avisos"];
+        put?: never;
+        /**
+         * Crear aviso de campo (borrador)
+         * @description **Ability:** `campos.gestionar` (dueño/admin). TPA-74. Zona por defecto: la del establecimiento; solo provincias del piloto. Auditoría `campo_aviso`.
+         */
+        post: operations["post_establecimientos_establecimiento_campos_avisos"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/campos/avisos/{aviso}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Aviso propio con disputas
+         * @description **Ability:** `campos.ver`. TPA-74. `disputas` sin identidad de quien reportó.
+         */
+        get: operations["get_establecimientos_establecimiento_campos_avisos_aviso"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Editar aviso de campo
+         * @description **Ability:** `campos.gestionar`. TPA-74. Parcial con `row_version` (409 si cambió). No se edita un aviso cerrado.
+         */
+        patch: operations["patch_establecimientos_establecimiento_campos_avisos_aviso"];
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/campos/avisos/{aviso}/{accion}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publicar, pausar o cerrar un aviso
+         * @description **Ability:** `campos.gestionar`. TPA-74. publicar: desde borrador/pausado, exige email verificado y temporada vigente. pausar: desde publicado. cerrar: requiere `motivo` (acuerdo_tropilla | acuerdo_otro_medio | no_disponible | otro). Un aviso `en_revision` solo se puede cerrar.
+         */
+        post: operations["post_establecimientos_establecimiento_campos_avisos_aviso_accion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/campos/avisos/{aviso}/disputas/{disputa}/descargo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Descargo del anunciante ante un reporte
+         * @description **Ability:** `campos.gestionar`. TPA-74. Solo con la disputa abierta o en revisión.
+         */
+        post: operations["post_establecimientos_establecimiento_campos_avisos_aviso_disputas_disputa_descargo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/campos/consultas/{lado}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Consultas por campos recibidas o enviadas
+         * @description **Ability:** `campos.ver`. TPA-74. `recibidas`: por avisos del establecimiento, con el contacto del interesado. `enviadas`: con el contacto del anunciante cuando respondió. `estado=abiertas` filtra enviada/respondida/visita_coordinada.
+         */
+        get: operations["get_establecimientos_establecimiento_campos_consultas_lado"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/campos/consultas/{lado}/{consulta}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Avanzar una consulta (respuesta, visita, acuerdo)
+         * @description **Ability:** `campos.gestionar` (recibidas) o `campos.consultar` (enviadas). TPA-74. Anunciante: enviada → respondida (con `respuesta`; comparte su contacto) | descartada; respondida → visita_coordinada | acuerdo | sin_acuerdo; visita_coordinada → acuerdo | sin_acuerdo. Interesado: retirada desde cualquier estado abierto; respondida/visita → visita_coordinada | acuerdo | sin_acuerdo. Transición inválida: 422 `regla_bloqueante`.
+         */
+        patch: operations["patch_establecimientos_establecimiento_campos_consultas_lado_consulta"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -9754,6 +10042,211 @@ export interface components {
             /** @enum {string} */
             rol: "admin" | "encargado" | "asesor" | "lectura";
             motivo?: string | null;
+        };
+        /** @description TPA-74. POST: obligatorios titulo, modalidad, especies, capacidad_cabezas, temporada_desde y precio_unidad. precio_valor obligatorio salvo a_convenir. Zona solo en provincias del piloto (TROPILLA_CAMPOS_PROVINCIAS). */
+        CampoAvisoInput: {
+            titulo?: string;
+            descripcion?: string | null;
+            /** @enum {string} */
+            modalidad?: "pastaje" | "arrendamiento" | "capitalizacion";
+            especies?: string[];
+            /** @description Vacío = cualquier categoría de las especies. */
+            categorias?: string[];
+            /** @description Receptividad declarada por el anunciante. */
+            capacidad_cabezas?: number;
+            superficie_ha?: string | null;
+            /** Format: date */
+            temporada_desde?: string;
+            /** Format: date */
+            temporada_hasta?: string | null;
+            plazo_minimo_meses?: number | null;
+            /** @enum {string} */
+            precio_unidad?: "por_cabeza_mes" | "por_ha_anio" | "kg_carne_ha_anio" | "porcentaje_ganancia" | "a_convenir";
+            precio_valor?: string | null;
+            condiciones?: string | null;
+            agua?: ("aguada_natural" | "tajamar" | "rio_arroyo" | "perforacion" | "molino" | "bebederos")[];
+            /** @enum {string|null} */
+            alambrado?: "bueno" | "regular" | "a_reparar" | null;
+            instalaciones?: ("manga" | "corrales" | "balanza" | "embarcadero" | "casa_puesto" | "galpon" | "potreros_divididos")[];
+            accesos?: string | null;
+            provincia_codigo?: string;
+            departamento_codigo?: string;
+            localidad?: string | null;
+            /** @description Por defecto false: el mercado muestra solo provincia y departamento. */
+            mostrar_localidad?: boolean;
+        };
+        /** @description TPA-74. Declaración del anunciante; `verificacion` informa el nivel real de comprobación de TROPILLA (no es inspección ni garantía). Los campos marcados como «propio» solo vienen en endpoints del establecimiento. */
+        CampoAviso: {
+            /** Format: uuid */
+            id: string;
+            titulo: string;
+            descripcion: string | null;
+            /** @enum {string} */
+            modalidad: "pastaje" | "arrendamiento" | "capitalizacion";
+            modalidad_nombre: string;
+            especies: string[];
+            categorias: string[];
+            capacidad_cabezas: number;
+            superficie_ha: string | null;
+            /** Format: date */
+            temporada_desde: string;
+            /** Format: date */
+            temporada_hasta: string | null;
+            plazo_minimo_meses: number | null;
+            precio: {
+                unidad: string;
+                unidad_nombre: string;
+                valor: string | null;
+            };
+            condiciones: string | null;
+            agua: string[];
+            alambrado: string | null;
+            instalaciones: string[];
+            accesos: string | null;
+            zona: components["schemas"]["CampoZona"];
+            mostrar_localidad: boolean;
+            /** @enum {string} */
+            estado: "borrador" | "publicado" | "pausado" | "en_revision" | "cerrado";
+            verificacion: {
+                /** @enum {string} */
+                nivel: "declarado" | "contacto_verificado" | "documentacion_revisada";
+                nombre: string;
+                detalle: string;
+                /** Format: date-time */
+                verificado_en: string | null;
+            };
+            publicado_por: {
+                establecimiento: string;
+                perfil_slug: string | null;
+            };
+            /** Format: date-time */
+            publicado_en: string | null;
+            /** Format: date-time */
+            actualizado_en: string;
+            /**
+             * Format: uuid
+             * @description Propio.
+             */
+            establecimiento_id?: string;
+            /** @description Propio. */
+            row_version?: number;
+            /** @description Propio. */
+            verificacion_nota?: string | null;
+            /** @description Propio. */
+            motivo_cierre?: string | null;
+            /**
+             * Format: date-time
+             * @description Propio.
+             */
+            cerrado_en?: string | null;
+            /** @description Propio. */
+            consultas_abiertas?: number;
+            /** @description Propio. */
+            consultas_total?: number;
+            /** @description Propio. */
+            disputas_abiertas?: number;
+        };
+        /** @description TPA-74. Zona publicable del aviso: nunca coordenadas. `departamento` null si el padrón de la provincia no está cargado; `localidad` null si el anunciante no la muestra. */
+        CampoZona: {
+            provincia_codigo: string;
+            provincia: string | null;
+            departamento_codigo: string;
+            departamento: string | null;
+            localidad: string | null;
+        };
+        /** @description TPA-74. Puntaje 0–100: especie 40 + capacidad 30 (parcial o sin `cabezas` pedidas: 15) + categorías 15 + temporada 15. La capacidad se compara solo con las `cabezas` que pide el productor (no con todo el rodeo). `compatible` = especie común, capacidad no insuficiente y temporada coincidente. Distancia aproximada al centro del departamento del aviso, redondeada a 10 km. */
+        CampoCompatibilidad: {
+            puntaje: number;
+            compatible: boolean;
+            especie: string | null;
+            cabezas_requeridas: number;
+            /** @enum {string} */
+            capacidad: "suficiente" | "parcial" | "insuficiente" | "sin_dato";
+            categorias: boolean;
+            temporada: boolean;
+            distancia_km: number | null;
+            motivos: string[];
+        };
+        /** @description TPA-74. `contacto`: en recibidas, el del interesado (consentido al enviar); en enviadas, el del anunciante una vez que respondió (si no, null). */
+        CampoConsulta: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            lado: "recibida" | "enviada";
+            aviso: {
+                /** Format: uuid */
+                id: string;
+                titulo: string;
+                modalidad: string;
+                estado: string;
+                zona: components["schemas"]["CampoZona"];
+            };
+            interesado: {
+                establecimiento: string;
+                provincia: string | null;
+            };
+            /** @description Solo en enviadas. */
+            publicado_por?: string;
+            mensaje: string;
+            especie: string;
+            categorias: string[];
+            cabezas: number;
+            /** Format: date */
+            desde: string | null;
+            /** Format: date */
+            hasta: string | null;
+            /** @enum {string} */
+            estado: "enviada" | "respondida" | "visita_coordinada" | "acuerdo" | "sin_acuerdo" | "descartada" | "retirada";
+            estado_nombre: string;
+            respuesta: string | null;
+            nota_cierre: string | null;
+            contacto: {
+                nombre: string;
+                email: string | null;
+                telefono: string | null;
+            } | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            respondida_en: string | null;
+            /** Format: date-time */
+            cerrada_en: string | null;
+        };
+        /** @description TPA-74. `denunciante` y `aviso` solo para staff. */
+        CampoDisputa: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            aviso_id: string;
+            /** Format: uuid */
+            consulta_id: string | null;
+            /** @enum {string} */
+            motivo: "aviso_inexistente" | "datos_falsos" | "incumplimiento" | "conducta" | "otro";
+            motivo_nombre: string;
+            detalle: string;
+            /** @enum {string} */
+            estado: "abierta" | "en_revision" | "resuelta" | "desestimada";
+            descargo: string | null;
+            /** Format: date-time */
+            descargo_en: string | null;
+            resolucion: string | null;
+            /** @enum {string|null} */
+            accion: "ninguna" | "aviso_pausado" | "aviso_cerrado" | "verificacion_retirada" | null;
+            /** Format: date-time */
+            resuelta_en: string | null;
+            /** Format: date-time */
+            created_at: string;
+            denunciante?: {
+                nombre?: string;
+                email?: string | null;
+                telefono?: string | null;
+            };
+            aviso?: {
+                titulo?: string;
+                estado?: string;
+                verificacion?: string;
+                establecimiento?: string;
+            };
         };
     };
     responses: {
@@ -19445,6 +19938,572 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["NoAutenticado"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_campos_condiciones: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description provincias_piloto, modalidades, precio_unidades, agua, instalaciones, alambrado, verificacion, motivos_disputa, motivos_cierre, estados_consulta (listas {codigo, nombre}); checklist y avisos (textos); consentimiento_version; umbral_revision. */
+                        data: Record<string, never>;
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+        };
+    };
+    get_campos: {
+        parameters: {
+            query?: {
+                establecimiento_id?: string;
+                modalidad?: "pastaje" | "arrendamiento" | "capitalizacion";
+                especie?: string;
+                "categorias[]"?: string[];
+                provincia?: string;
+                departamento?: string;
+                cabezas?: number;
+                desde?: string;
+                hasta?: string;
+                solo_compatibles?: boolean;
+                orden?: "compatibilidad" | "recientes" | "capacidad" | "distancia";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: (components["schemas"]["CampoAviso"] & {
+                            compatibilidad?: components["schemas"]["CampoCompatibilidad"] | null;
+                            propio?: boolean;
+                        })[];
+                        meta: {
+                            total?: number;
+                            orden?: string;
+                            rodeo?: {
+                                especie?: string;
+                                cabezas?: number;
+                            }[] | null;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_campos_aviso: {
+        parameters: {
+            query?: {
+                establecimiento_id?: string;
+                cabezas?: number;
+            };
+            header?: never;
+            path: {
+                aviso: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CampoAviso"] & {
+                            compatibilidad?: components["schemas"]["CampoCompatibilidad"] | null;
+                            propio?: boolean;
+                            mi_consulta?: components["schemas"]["CampoConsulta"] | null;
+                            reportado?: boolean;
+                            checklist?: string[];
+                            avisos?: string[];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    post_campos_aviso_consultas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                aviso: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uuid */
+                    establecimiento_id: string;
+                    mensaje: string;
+                    /** @description Debe estar entre las especies del aviso. */
+                    especie: string;
+                    cabezas: number;
+                    categorias?: string[];
+                    /** Format: date */
+                    desde?: string | null;
+                    /** Format: date */
+                    hasta?: string | null;
+                    /** @description Debe ser true. */
+                    consentimiento: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CampoConsulta"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+            429: components["responses"]["DemasiadosIntentos"];
+        };
+    };
+    post_campos_aviso_disputas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                aviso: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    motivo: "aviso_inexistente" | "datos_falsos" | "incumplimiento" | "conducta" | "otro";
+                    detalle: string;
+                    /**
+                     * Format: uuid
+                     * @description Consulta propia sobre este aviso, si la hubo.
+                     */
+                    consulta_id?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CampoDisputa"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_staff_campos_disputas: {
+        parameters: {
+            query?: {
+                estado?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CampoDisputa"][];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+        };
+    };
+    post_staff_campos_disputas_disputa_resolver: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                disputa: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    estado: "en_revision" | "resuelta" | "desestimada";
+                    /** @description Obligatoria para resuelta/desestimada. */
+                    resolucion?: string;
+                    /** @enum {string} */
+                    accion?: "ninguna" | "aviso_pausado" | "aviso_cerrado" | "verificacion_retirada";
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CampoDisputa"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    put_staff_campos_avisos_aviso_verificacion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                aviso: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    nivel: "declarado" | "contacto_verificado" | "documentacion_revisada";
+                    nota: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CampoAviso"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_establecimientos_establecimiento_campos_avisos: {
+        parameters: {
+            query?: {
+                estado?: string;
+            };
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CampoAviso"][];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    post_establecimientos_establecimiento_campos_avisos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampoAvisoInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CampoAviso"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_establecimientos_establecimiento_campos_avisos_aviso: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                aviso: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CampoAviso"] & {
+                            disputas?: components["schemas"]["CampoDisputa"][];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    patch_establecimientos_establecimiento_campos_avisos_aviso: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                aviso: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampoAvisoInput"] & {
+                    row_version: number;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CampoAviso"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            409: components["responses"]["Conflicto"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_establecimientos_establecimiento_campos_avisos_aviso_accion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                aviso: string;
+                accion: "publicar" | "pausar" | "cerrar";
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    motivo?: "acuerdo_tropilla" | "acuerdo_otro_medio" | "no_disponible" | "otro";
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CampoAviso"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_establecimientos_establecimiento_campos_avisos_aviso_disputas_disputa_descargo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                aviso: string;
+                disputa: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    descargo: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CampoDisputa"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_establecimientos_establecimiento_campos_consultas_lado: {
+        parameters: {
+            query?: {
+                estado?: "abiertas";
+            };
+            header?: never;
+            path: {
+                establecimiento: string;
+                lado: "recibidas" | "enviadas";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CampoConsulta"][];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    patch_establecimientos_establecimiento_campos_consultas_lado_consulta: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                lado: "recibidas" | "enviadas";
+                consulta: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    estado: "respondida" | "visita_coordinada" | "acuerdo" | "sin_acuerdo" | "descartada" | "retirada";
+                    respuesta?: string | null;
+                    nota?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CampoConsulta"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
             404: components["responses"]["NoEncontrado"];
             422: components["responses"]["Validacion"];
         };

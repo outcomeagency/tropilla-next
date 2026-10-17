@@ -437,6 +437,14 @@ export const IconLeaf = (p: IconProps) => (
   </Icon>
 );
 
+/** Alambrado: postes e hilos (campos y pastajes). */
+export const IconFence = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M5 20V6l1.5-2L8 6v14M16 20V6l1.5-2L19 6v14" />
+    <path d="M3 9.5h18M3 15h18" />
+  </Icon>
+);
+
 export const IconHash = (p: IconProps) => (
   <Icon {...p}>
     <path d="M9.5 4 8 20M16 4l-1.5 16M4.5 9h15.5M4 15h15.5" />

@@ -14,6 +14,7 @@ export type NavIcon =
   | "building"
   | "cloud"
   | "leaf"
+  | "fence"
   | "truck"
   | "user"
   | "settings";
@@ -36,6 +37,7 @@ export const PANEL_NAV: NavItem[] = [
   { href: "/trazabilidad", label: "Trazabilidad", icon: "route" },
   { href: "/comercializacion", label: "Comercialización", icon: "chart" },
   { href: "/fletes", label: "Fletes", icon: "truck" },
+  { href: "/campos", label: "Campos y pastajes", icon: "fence" },
   { href: "/perfil-publico", label: "Perfil público", icon: "user" },
   { href: "/organizaciones", label: "Organizaciones", icon: "user" },
   { href: "/proveedor", label: "Cuenta de proveedor", icon: "building" },
