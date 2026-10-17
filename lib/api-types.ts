@@ -527,6 +527,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/establecimientos/{establecimiento}/contrapartes/fuentes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Chequeo de contraparte: fuentes, finalidades, checklist y límites
+         * @description **Ability:** `contrapartes.consultar` (dueño/admin). TPA-72. Describe cada fuente pública (cobertura, si está configurada y cómo corregir un dato), el estado de la revisión legal y el tope diario.
+         */
+        get: operations["get_establecimientos_establecimiento_contrapartes_fuentes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/contrapartes/consultas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Consultas de contraparte registradas
+         * @description **Ability:** `contrapartes.consultar`. TPA-72. Más nueva primero; sin `informe`.
+         */
+        get: operations["get_establecimientos_establecimiento_contrapartes_consultas"];
+        put?: never;
+        /**
+         * Consultar una contraparte por CUIT (consulta asistida)
+         * @description **Ability:** `contrapartes.consultar`. TPA-72. Requiere finalidad y consentimiento; si el CUIT es de persona humana, `titular_autorizo: true`. Consulta BCRA Central de Deudores (pública); ARCA queda `no_configurada`. Sin score ni bloqueo. Tope diario por establecimiento (429 `demasiados_intentos`).
+         */
+        post: operations["post_establecimientos_establecimiento_contrapartes_consultas"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/contrapartes/consultas/{consulta}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Consulta de contraparte con informe y checklist
+         * @description **Ability:** `contrapartes.consultar`. TPA-72. Vencida la retención, `informe` y `denominacion` vienen null y `depurada_en` informa cuándo se borraron.
+         */
+        get: operations["get_establecimientos_establecimiento_contrapartes_consultas_consulta"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/contrapartes/consultas/{consulta}/checklist/{item}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Marcar un ítem del checklist de diligencia
+         * @description **Ability:** `contrapartes.consultar`. TPA-72.
+         */
+        put: operations["put_establecimientos_establecimiento_contrapartes_consultas_consulta_checklist_item"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/establecimientos/{establecimiento}/forraje/insumos": {
         parameters: {
             query?: never;
@@ -4407,6 +4491,141 @@ export interface components {
             /** Format: date-time */
             calculada_en?: string;
         };
+        ContraparteFuente: {
+            /** @enum {string} */
+            codigo: "bcra_central_deudores" | "arca_constancia";
+            nombre: string;
+            url: string;
+            descripcion: string;
+            cobertura: string;
+            configurada: boolean;
+            como_corregir: string;
+        };
+        ContraparteFuentes: {
+            fuentes: components["schemas"]["ContraparteFuente"][];
+            finalidades: {
+                codigo: string;
+                nombre: string;
+            }[];
+            checklist: {
+                item: string;
+                texto: string;
+            }[];
+            avisos: string[];
+            consentimiento_version: string;
+            /** @description pendiente mientras no haya dictamen; sin automatizaciones. */
+            revision_legal: string;
+            max_consultas_dia: number;
+            consultas_hoy: number;
+            retencion_dias: number;
+        };
+        ContraparteResultadoFuente: {
+            codigo: string;
+            nombre: string;
+            url: string;
+            /** @enum {string} */
+            estado: "ok" | "sin_datos" | "no_configurada" | "error";
+            /** Format: date-time */
+            consultado_en: string | null;
+            mensaje: string;
+        };
+        /** @description BCRA Central de Deudores. Montos de deudas en miles de pesos; montos de cheques en pesos. */
+        ContraparteBcra: {
+            denominacion?: string | null;
+            actual?: {
+                /** @description AAAA-MM */
+                periodo: string;
+                peor_situacion: number | null;
+                monto_total_miles: number;
+                entidades: {
+                    entidad: string;
+                    situacion: number;
+                    situacion_descripcion: string;
+                    monto_miles: number;
+                    dias_atraso: number | null;
+                    refinanciaciones: boolean;
+                    situacion_juridica: boolean;
+                    proceso_judicial: boolean;
+                    en_revision: boolean;
+                }[];
+            } | null;
+            historial?: {
+                meses_con_situacion_2_o_mas: number;
+                periodos: {
+                    periodo: string;
+                    peor_situacion: number | null;
+                    entidades: number;
+                    monto_total_miles: number;
+                }[];
+            } | null;
+            cheques?: {
+                total: number;
+                sin_pago_informado: number;
+                causales: {
+                    causal: string;
+                    cantidad: number;
+                    detalle: {
+                        entidad: string;
+                        numero: string;
+                        fecha_rechazo: string | null;
+                        monto: number;
+                        fecha_pago: string | null;
+                        fecha_pago_multa?: string | null;
+                        estado_multa?: string | null;
+                        en_revision?: boolean;
+                        proceso_judicial?: boolean;
+                    }[];
+                }[];
+            } | null;
+        } | null;
+        ContraparteInforme: {
+            cuit: string;
+            /** @enum {string} */
+            tipo_persona: "humana" | "juridica";
+            denominacion: string | null;
+            fuentes: components["schemas"]["ContraparteResultadoFuente"][];
+            bcra: components["schemas"]["ContraparteBcra"];
+            /** @description Frases neutrales con fuente y período; nunca califican. */
+            lectura: string[];
+            avisos: string[];
+            senales_desactivadas: string[];
+        };
+        /** @description TPA-72. En el listado no vienen consentimiento, informe ni checklist. */
+        ConsultaContraparte: {
+            /** Format: uuid */
+            id: string;
+            cuit: string;
+            /** @enum {string} */
+            tipo_persona: "humana" | "juridica";
+            denominacion: string | null;
+            finalidad: string;
+            finalidad_nombre: string;
+            finalidad_detalle: string | null;
+            consultado_por: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            depurada_en: string | null;
+            checklist_hechos: number;
+            checklist_total: number;
+            consentimiento?: {
+                acepta?: boolean;
+                titular_autorizo?: boolean;
+                version?: string;
+                /** Format: date-time */
+                aceptado_en?: string;
+            };
+            informe?: components["schemas"]["ContraparteInforme"] | null;
+            checklist?: {
+                item: string;
+                texto: string;
+                /** @enum {string} */
+                estado: "pendiente" | "hecho" | "no_aplica";
+                nota: string | null;
+                /** Format: date-time */
+                actualizado_en: string | null;
+            }[];
+        };
         /** @description TPA-71. Todo opcional: lo que no se manda sale del inventario declarado, la ficha y los parámetros (`forraje_*`). */
         BriefForrajeInput: {
             nombre?: string | null;
@@ -7794,6 +8013,174 @@ export interface operations {
                 content: {
                     "application/json": {
                         data?: components["schemas"]["ClimaRegla"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_establecimientos_establecimiento_contrapartes_fuentes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ContraparteFuentes"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    get_establecimientos_establecimiento_contrapartes_consultas: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ConsultaContraparte"][];
+                        meta: components["schemas"]["MetaCursor"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    post_establecimientos_establecimiento_contrapartes_consultas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Con o sin guiones; se valida el dígito verificador. */
+                    cuit: string;
+                    /** @enum {string} */
+                    finalidad: "venta_contado" | "venta_plazo" | "cobro_cheque" | "contrato_futuro" | "compra" | "otra";
+                    /** @description Obligatorio si finalidad = otra. */
+                    finalidad_detalle?: string | null;
+                    /** @description Debe ser true. */
+                    consentimiento: boolean;
+                    /** @description Obligatorio (true) para CUIT de persona humana. */
+                    titular_autorizo?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ConsultaContraparte"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+            429: components["responses"]["DemasiadosIntentos"];
+        };
+    };
+    get_establecimientos_establecimiento_contrapartes_consultas_consulta: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                consulta: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ConsultaContraparte"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    put_establecimientos_establecimiento_contrapartes_consultas_consulta_checklist_item: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                consulta: string;
+                item: "identidad" | "constancia_arca" | "ruca" | "referencias" | "condiciones" | "garantias" | "cheques_denunciados";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    estado: "pendiente" | "hecho" | "no_aplica";
+                    nota?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ConsultaContraparte"];
                     };
                 };
             };

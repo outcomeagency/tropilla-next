@@ -813,3 +813,16 @@ El editor incluye bloques JSON de ficha y configuración de visibilidad por bloq
 | Revisión del asesor | `POST …/forraje/briefs/{b}/revisiones` | 🔌 |
 
 **Comentario del dev:** El formulario arranca con lo declarado (existencias, superficie y receptividad de la ficha) y manda a la API solo lo que el usuario cambia, para que cada número quede con su origen («Referencia TROPILLA», «Propio del campo», «Cargado en este brief»). Los escenarios se muestran en tres tarjetas con estado (ícono + texto), faltante de MS y una barra con el rango de días que cubren las reservas sobre el horizonte; se resalta el escenario más cercano al clima solo si hay clima calculado. Completan la vista las preguntas para el asesor, el contexto de TPA-70 con enlace a la fuente, la tabla de supuestos y lo que el cálculo no contempla. El brief guardado es de solo lectura y el asesor/dueño/admin deja su revisión con resultado y nota. Sin mock. Verificado: types regenerados, typegen + tsc, ESLint, `next build` y capturas 1440/390 contra una API aislada.
+
+### TPA-72 · Chequeo de contraparte por CUIT · ✅
+
+**Rutas:** `/comercializacion/contrapartes` (pestaña «Chequeo por CUIT», solo dueño/admin) y `/comercializacion/contrapartes/[id]`.
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Fuentes, finalidades, checklist y tope diario | `GET /establecimientos/{id}/contrapartes/fuentes` | 🔌 |
+| Consulta con consentimiento | `POST …/contrapartes/consultas` | 🔌 (BCRA real; ARCA manual) |
+| Listado e informe | `GET …/contrapartes/consultas`, `GET …/consultas/{c}` | 🔌 |
+| Checklist de diligencia | `PUT …/consultas/{c}/checklist/{item}` | 🔌 |
+
+**Comentario del dev:** El formulario valida el CUIT en el cliente, pide la finalidad y el consentimiento explícito y, si el prefijo es de persona humana, la autorización del titular. El informe muestra cada fuente con su estado (ícono + texto) y hora, las frases neutrales de la API, la tabla de deudas por entidad (montos en miles como los publica el BCRA), el historial y los cheques rechazados; las situaciones 2 o más se marcan como atención, nunca como veredicto. El checklist se marca por ítem con nota. Si la consulta se depuró, solo queda el registro. Sin mock. Verificado: typegen + tsc, ESLint, `next build` y capturas 1440/390 con una consulta real al BCRA en una API aislada.
