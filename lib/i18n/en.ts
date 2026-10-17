@@ -73,7 +73,7 @@ export const en: Dictionary = {
     legend:
       "Information declared by the producer. TROPILLA records integrity evidence; it does not certify its content or replace official approvals.",
     androidDownload: "Download the Android app",
-    androidDownloadNote: "Android · v0.1.0+1 · Oct 17, 2026 · direct install (APK)",
+    androidDownloadNote: "Android · v0.1.1 · Oct 17, 2026 · direct install (APK)",
     rights: "TROPILLA · The all-in-one platform for livestock producers in Northeast Argentina.",
   },
 };
