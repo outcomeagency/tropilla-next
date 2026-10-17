@@ -49,3 +49,27 @@ export async function marcarChecklistAction(_prev: EventoActionState, fd: FormDa
   revalidatePath(`/comercializacion/contrapartes/${id}`);
   return { ok: { mensaje: "Guardado." } };
 }
+
+export interface ResultadoCheque {
+  estado: string;
+  consultado_en: string;
+  fuente: string;
+  url: string;
+  datos: { numeroCheque: number; denunciado: boolean; fechaProcesamiento: string; denominacionEntidad: string; detalles: { sucursal: number; numeroCuenta: number; causal: string }[]; cuenta_consultada: string | null };
+}
+
+export interface ChequeActionState { error?: string; data?: ResultadoCheque }
+
+/** Consulta puntual de cheques denunciados BCRA, con auditoría server-side. */
+export async function verificarChequeAction(_prev: ChequeActionState, fd: FormData): Promise<ChequeActionState> {
+  const ctx = await requireContexto();
+  if (!ctx.can("contrapartes.consultar")) return { error: "Solo el dueño o la administración pueden consultar contrapartes." };
+  const banco_codigo = Number(fd.get("banco_codigo"));
+  const numero = Number(fd.get("numero"));
+  const cuenta = String(fd.get("cuenta") ?? "").trim() || null;
+  if (!Number.isInteger(banco_codigo) || banco_codigo < 1 || !Number.isInteger(numero) || numero < 1) return { error: "Completá el banco y el número del cheque." };
+  try {
+    const r = await api<{data: ResultadoCheque}>(`/establecimientos/${ctx.activa.establecimiento_id}/contrapartes/cheques/verificar`, { method: "POST", body: { banco_codigo, numero, cuenta } });
+    return { data: r.data };
+  } catch (e) { return { error: e instanceof Error ? e.message : "No pudimos consultar el cheque." }; }
+}
