@@ -19,6 +19,7 @@ import {
   IconRoute,
   IconSettings,
   IconShield,
+  IconTruck,
   IconUser,
   type IconProps,
 } from "@/components/icons";
@@ -35,6 +36,7 @@ const NAV_ICON: Record<NavIcon, ComponentType<IconProps>> = {
   chart: IconChart,
   cloud: IconCloud,
   leaf: IconLeaf,
+  truck: IconTruck,
   user: IconUser,
   settings: IconSettings,
 };

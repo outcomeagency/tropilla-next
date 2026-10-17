@@ -4552,6 +4552,438 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/establecimientos/{establecimiento}/fletes/opciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Fletes: catálogos del piloto (corredor, motivos, jaulas, checklist, avisos, consentimiento)
+         * @description **Ability:** `fletes.ver`. TPA-73. `emite_dte` siempre es false: TROPILLA no emite ni gestiona el DT-e.
+         */
+        get: operations["get_establecimientos_establecimiento_fletes_opciones"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/fletes/pedidos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar pedidos de flete
+         * @description **Ability:** `fletes.ver`. TPA-73. Sin consentimiento, checklist, propuestas ni historial. Paginado por cursor.
+         */
+        get: operations["get_establecimientos_establecimiento_fletes_pedidos"];
+        put?: never;
+        /**
+         * Pedir un flete (piloto concierge)
+         * @description **Ability:** `fletes.gestionar` (dueño/admin/encargado). TPA-73. Zona de carga = departamento (default: el del establecimiento); destino = provincia + localidad. Exige consentimiento para compartir datos mínimos con transportistas. Fuera del corredor se registra con `en_corredor: false` (lista de espera).
+         */
+        post: operations["post_establecimientos_establecimiento_fletes_pedidos"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/fletes/pedidos/{pedido}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver un pedido de flete
+         * @description **Ability:** `fletes.ver`. TPA-73. El contacto del transportista viene solo en la propuesta aceptada.
+         */
+        get: operations["get_establecimientos_establecimiento_fletes_pedidos_pedido"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/fletes/pedidos/{pedido}/cancelar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancelar un pedido abierto
+         * @description **Ability:** `fletes.gestionar`. TPA-73. Retira las propuestas pendientes.
+         */
+        post: operations["post_establecimientos_establecimiento_fletes_pedidos_pedido_cancelar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/fletes/pedidos/{pedido}/resultado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Registrar el resultado del pedido
+         * @description **Ability:** `fletes.gestionar`. TPA-73. `acordado` exige una propuesta aceptada; costo y km alimentan la métrica de costo por km.
+         */
+        post: operations["post_establecimientos_establecimiento_fletes_pedidos_pedido_resultado"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/fletes/pedidos/{pedido}/checklist/{item}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Marcar una diligencia del viaje
+         * @description **Ability:** `fletes.gestionar`. TPA-73.
+         */
+        put: operations["put_establecimientos_establecimiento_fletes_pedidos_pedido_checklist_item"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/fletes/pedidos/{pedido}/propuestas/{propuesta}/aceptar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Aceptar una propuesta (comparte el contacto)
+         * @description **Ability:** `fletes.gestionar`. TPA-73. El pedido pasa a `contactado`, las otras pendientes se retiran y queda en el historial qué datos se compartieron. 422 si la documentación del transportista dejó de estar vigente.
+         */
+        post: operations["post_establecimientos_establecimiento_fletes_pedidos_pedido_propuestas_propuesta_aceptar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/fletes/pedidos/{pedido}/propuestas/{propuesta}/rechazar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rechazar una propuesta
+         * @description **Ability:** `fletes.gestionar`. TPA-73.
+         */
+        post: operations["post_establecimientos_establecimiento_fletes_pedidos_pedido_propuestas_propuesta_rechazar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fletes/concierge/resumen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Concierge: catálogos y métricas del piloto
+         * @description **Solo staff** (`es_staff`). TPA-73. Pedidos por estado, tasa de acuerdo, mediana de horas hasta la primera propuesta, costo por km, transportistas documentados y motivos de rechazo.
+         */
+        get: operations["get_fletes_concierge_resumen"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fletes/concierge/pedidos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Concierge: cola de pedidos
+         * @description **Solo staff** (`es_staff`). TPA-73. Abiertos ordenados por fecha de carga. Hasta 200.
+         */
+        get: operations["get_fletes_concierge_pedidos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fletes/concierge/pedidos/{pedido}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Concierge: pedido con sugerencias de matching
+         * @description **Solo staff** (`es_staff`). TPA-73. Incluye establecimiento, contacto del productor y `sugerencias` (disponibilidades compatibles con criterios explicados).
+         */
+        get: operations["get_fletes_concierge_pedidos_pedido"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fletes/concierge/pedidos/{pedido}/tomar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Concierge: tomar el pedido
+         * @description **Solo staff** (`es_staff`). TPA-73. pendiente → en_gestion.
+         */
+        post: operations["post_fletes_concierge_pedidos_pedido_tomar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fletes/concierge/pedidos/{pedido}/propuestas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Concierge: proponer un camión
+         * @description **Solo staff** (`es_staff`). TPA-73. Exige transportista activo con toda la documentación verificada y vigente (`regla_bloqueante` si no). La compatibilidad queda congelada en la propuesta. Notifica al productor (`flete_propuesta`).
+         */
+        post: operations["post_fletes_concierge_pedidos_pedido_propuestas"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fletes/concierge/pedidos/{pedido}/resultado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Concierge: registrar resultado
+         * @description **Solo staff** (`es_staff`). TPA-73.
+         */
+        post: operations["post_fletes_concierge_pedidos_pedido_resultado"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fletes/concierge/propuestas/{propuesta}/retirar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Concierge: retirar una propuesta pendiente
+         * @description **Solo staff** (`es_staff`). TPA-73.
+         */
+        post: operations["post_fletes_concierge_propuestas_propuesta_retirar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fletes/concierge/transportistas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Concierge: transportistas
+         * @description **Solo staff** (`es_staff`). TPA-73.
+         */
+        get: operations["get_fletes_concierge_transportistas"];
+        put?: never;
+        /**
+         * Concierge: alta de transportista
+         * @description **Solo staff** (`es_staff`). TPA-73. `consentimiento` declara que el transportista aceptó figurar y que su contacto se comparta con productores que acepten su propuesta.
+         */
+        post: operations["post_fletes_concierge_transportistas"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fletes/concierge/transportistas/{transportista}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Concierge: ver transportista
+         * @description **Solo staff** (`es_staff`). TPA-73. Con documentos, disponibilidades e historial.
+         */
+        get: operations["get_fletes_concierge_transportistas_transportista"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Concierge: editar transportista
+         * @description **Solo staff** (`es_staff`). TPA-73. Campos de alta (sin `consentimiento`) y `activo`.
+         */
+        patch: operations["patch_fletes_concierge_transportistas_transportista"];
+        trace?: never;
+    };
+    "/fletes/concierge/transportistas/{transportista}/documentos/{item}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Concierge: verificar un documento del transportista
+         * @description **Solo staff** (`es_staff`). TPA-73. Verificación manual: `metodo` obligatorio si `verificado`, `nota` si `observado`; no se marca verificado un documento vencido; `identidad_cuit` no admite `no_aplica`. Queda quién y cuándo.
+         */
+        put: operations["put_fletes_concierge_transportistas_transportista_documentos_item"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fletes/concierge/transportistas/{transportista}/disponibilidades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Concierge: cargar disponibilidad de jaula
+         * @description **Solo staff** (`es_staff`). TPA-73. `destino_provincia_codigo` null = cualquier destino. `especies` default [BOV, BUB].
+         */
+        post: operations["post_fletes_concierge_transportistas_transportista_disponibilidades"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fletes/concierge/disponibilidades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Concierge: disponibilidades vigentes
+         * @description **Solo staff** (`es_staff`). TPA-73.
+         */
+        get: operations["get_fletes_concierge_disponibilidades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fletes/concierge/disponibilidades/{disponibilidad}/cerrar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Concierge: cerrar una disponibilidad
+         * @description **Solo staff** (`es_staff`). TPA-73.
+         */
+        post: operations["post_fletes_concierge_disponibilidades_disponibilidad_cerrar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5090,6 +5522,331 @@ export interface components {
                     senales_ids: string[];
                 };
                 cobertura: string[];
+            };
+        };
+        /** @description TPA-73. */
+        FletePedidoInput: {
+            /** @description Default: el del establecimiento */
+            origen_departamento_codigo?: string | null;
+            /** @description Código INDEC de provincia */
+            destino_provincia_codigo: string;
+            destino_localidad: string;
+            /** @enum {string} */
+            motivo: "venta_frigorifico" | "remate_feria" | "venta_campo" | "traslado_propio" | "pastaje" | "otro";
+            /**
+             * Format: date
+             * @description No anterior a hoy
+             */
+            fecha_desde: string;
+            /**
+             * Format: date
+             * @description Ventana de hasta 60 días
+             */
+            fecha_hasta: string;
+            /** @enum {string} */
+            especie_codigo: "BOV" | "BUB";
+            categoria?: string | null;
+            cabezas: number;
+            kg_promedio?: number | null;
+            /** @enum {string|null} */
+            jaula_preferida?: "chasis" | "acoplado" | "semi" | "doble_piso" | null;
+            observaciones?: string | null;
+            telefono_contacto: string;
+            /** @description Debe ser true */
+            consentimiento: boolean;
+        };
+        /** @description TPA-73. En el listado no vienen checklist, consentimiento, propuestas ni historial. */
+        FletePedido: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            estado: "pendiente" | "en_gestion" | "propuesto" | "contactado" | "acordado" | "sin_acuerdo" | "cancelado";
+            en_corredor: boolean;
+            motivo: string;
+            motivo_nombre?: string;
+            origen: {
+                departamento_codigo: string;
+                departamento_nombre?: string | null;
+            };
+            destino: {
+                provincia_codigo: string;
+                provincia_nombre: string;
+                localidad: string;
+            };
+            /** Format: date */
+            fecha_desde: string;
+            /** Format: date */
+            fecha_hasta: string;
+            especie_codigo: string;
+            categoria?: string | null;
+            cabezas: number;
+            kg_promedio?: number | null;
+            jaula_preferida?: string | null;
+            observaciones?: string | null;
+            telefono_contacto?: string;
+            creado_por?: string;
+            /** Format: date-time */
+            created_at: string;
+            propuestas_pendientes?: number;
+            resultado?: {
+                /** @enum {string} */
+                resultado?: "acordado" | "sin_acuerdo";
+                costo?: components["schemas"]["Decimal"];
+                km?: number | null;
+                costo_por_km?: components["schemas"]["Decimal"];
+                nota?: string | null;
+                /** Format: date-time */
+                registrado_en?: string;
+            } | null;
+            checklist?: {
+                item: string;
+                texto: string;
+                /** @enum {string} */
+                estado: "pendiente" | "hecho" | "no_aplica";
+                nota?: string | null;
+                /** Format: date-time */
+                actualizado_en?: string | null;
+            }[];
+            consentimiento?: {
+                [key: string]: unknown;
+            };
+            propuestas?: components["schemas"]["FletePropuesta"][];
+            historial?: {
+                accion?: string;
+                detalle?: {
+                    [key: string]: unknown;
+                };
+                /** @description Para el productor, las acciones del equipo figuran como «Equipo TROPILLA» */
+                quien?: string;
+                /** Format: date-time */
+                en?: string;
+            }[];
+        };
+        FletePedidoConcierge: components["schemas"]["FletePedido"] & {
+            establecimiento?: {
+                /** Format: uuid */
+                id?: string;
+                nombre?: string;
+                localidad?: string | null;
+            };
+            contacto?: {
+                nombre?: string;
+                telefono?: string;
+                email?: string;
+            };
+            sugerencias?: components["schemas"]["FleteCompatibilidad"][];
+        };
+        /** @description TPA-73. Sugerencia de matching (o compatibilidad congelada en una propuesta). Criterios explícitos; `proponible` = documentación completa. */
+        FleteCompatibilidad: {
+            /** Format: uuid */
+            disponibilidad_id?: string;
+            /** Format: uuid */
+            transportista_id?: string;
+            transportista_nombre?: string;
+            jaula?: string;
+            capacidad_cabezas?: number;
+            es_retorno?: boolean;
+            tarifa_km?: string | null;
+            fechas_en_comun?: {
+                /** Format: date */
+                desde: string;
+                /** Format: date */
+                hasta: string;
+            };
+            /** @description Línea recta entre cabeceras de departamento */
+            distancia_salida_km?: number | null;
+            puntaje?: number | null;
+            proponible: boolean;
+            documentacion_completa: boolean;
+            criterios: {
+                /** @enum {string} */
+                criterio: "fechas" | "salida" | "destino" | "capacidad" | "retorno" | "documentacion" | "manual";
+                cumple: boolean;
+                detalle: string;
+            }[];
+        };
+        /** @description TPA-73. `transportista.contacto` es null para el productor hasta que acepta la propuesta. */
+        FletePropuesta: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            estado: "propuesta" | "aceptada" | "rechazada" | "retirada";
+            /** Format: date */
+            fecha_propuesta: string;
+            tarifa_estimada?: components["schemas"]["Decimal"];
+            nota?: string | null;
+            motivo_rechazo?: string | null;
+            jaula?: string | null;
+            jaula_nombre?: string | null;
+            capacidad_cabezas?: number | null;
+            es_retorno: boolean;
+            compatibilidad?: components["schemas"]["FleteCompatibilidad"];
+            transportista: {
+                /** Format: uuid */
+                id: string;
+                nombre: string;
+                documentacion_completa: boolean;
+                documentos: components["schemas"]["FleteDocumento"][];
+                contacto?: {
+                    nombre: string;
+                    telefono: string;
+                    email?: string | null;
+                } | null;
+            };
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            respondida_en?: string | null;
+        };
+        FleteDocumento: {
+            /** @enum {string} */
+            item: "identidad_cuit" | "senasa_vehiculo" | "ruta" | "licencia_chofer" | "rto" | "seguro";
+            texto: string;
+            /** @enum {string} */
+            estado: "pendiente" | "verificado" | "observado" | "no_aplica" | "vencido";
+            metodo?: string | null;
+            /** Format: date */
+            vence_el?: string | null;
+            nota?: string | null;
+            verificado_por?: string | null;
+            /** Format: date-time */
+            actualizado_en?: string | null;
+        };
+        FleteTransportistaInput: {
+            nombre?: string;
+            cuit?: string | null;
+            contacto_nombre?: string;
+            telefono?: string;
+            /** Format: email */
+            email?: string | null;
+            base_departamento_codigo?: string;
+            notas?: string | null;
+            /** @description Solo en PATCH */
+            activo?: boolean;
+            /** @description Obligatorio (true) en el alta; prohibido en PATCH */
+            consentimiento?: boolean;
+        };
+        /** @description TPA-73. En el listado no vienen consentimiento, documentos, disponibilidades ni historial. */
+        FleteTransportista: {
+            /** Format: uuid */
+            id: string;
+            nombre: string;
+            cuit?: string | null;
+            contacto_nombre: string;
+            telefono: string;
+            email?: string | null;
+            base: {
+                departamento_codigo: string;
+                departamento_nombre?: string | null;
+            };
+            activo: boolean;
+            notas?: string | null;
+            documentacion_completa: boolean;
+            documentos_faltantes: number;
+            disponibilidades_abiertas: number;
+            /** Format: date-time */
+            created_at: string;
+            consentimiento?: {
+                [key: string]: unknown;
+            };
+            documentos?: components["schemas"]["FleteDocumento"][];
+            disponibilidades?: components["schemas"]["FleteDisponibilidad"][];
+            historial?: {
+                [key: string]: unknown;
+            }[];
+        };
+        FleteDisponibilidad: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            transportista_id: string;
+            transportista_nombre?: string | null;
+            origen: {
+                departamento_codigo: string;
+                departamento_nombre?: string | null;
+            };
+            destino_provincia_codigo?: string | null;
+            destino_provincia_nombre?: string | null;
+            /** Format: date */
+            desde: string;
+            /** Format: date */
+            hasta: string;
+            jaula: string;
+            jaula_nombre: string;
+            capacidad_cabezas: number;
+            especies: string[];
+            es_retorno: boolean;
+            tarifa_km?: components["schemas"]["Decimal"];
+            /** @enum {string} */
+            estado: "abierta" | "cerrada";
+            notas?: string | null;
+            vigente: boolean;
+        };
+        /** @description TPA-73. Catálogos del piloto. */
+        FleteOpciones: {
+            corredor?: {
+                provincias?: {
+                    codigo?: string;
+                    nombre?: string;
+                }[];
+                radio_km?: number;
+            };
+            motivos?: components["schemas"]["FleteCodigoNombre"][];
+            jaulas?: components["schemas"]["FleteCodigoNombre"][];
+            provincias?: components["schemas"]["FleteCodigoNombre"][];
+            checklist?: {
+                item: string;
+                texto: string;
+            }[];
+            documentos_transportista?: {
+                item?: string;
+                texto?: string;
+            }[];
+            avisos?: string[];
+            consentimiento?: {
+                texto?: string;
+                version?: string;
+            };
+            revision_legal?: string;
+            /** @enum {boolean} */
+            emite_dte?: false;
+            origen_sugerido?: {
+                departamento_codigo?: string;
+                departamento_nombre?: string | null;
+            };
+            en_corredor?: boolean;
+            departamentos?: {
+                codigo: string;
+                nombre: string;
+                provincia_nombre: string;
+            }[];
+            motivos_rechazo?: components["schemas"]["FleteCodigoNombre"][];
+        };
+        FleteCodigoNombre: {
+            codigo: string;
+            nombre: string;
+        };
+        FleteConciergeResumen: components["schemas"]["FleteOpciones"] & {
+            metodos_verificacion?: components["schemas"]["FleteCodigoNombre"][];
+            metricas?: {
+                pedidos_total?: number;
+                pedidos_por_estado?: {
+                    [key: string]: number;
+                };
+                pedidos_fuera_corredor?: number;
+                tasa_acuerdo_pct?: number | null;
+                /** @description Mediana */
+                horas_hasta_primera_propuesta?: string | null;
+                costo_por_km?: string | null;
+                acuerdos_con_costo?: number;
+                cabezas_acordadas?: number;
+                transportistas_activos?: number;
+                transportistas_documentados?: number;
+                disponibilidades_vigentes?: number;
+                rechazos_por_motivo?: {
+                    motivo?: string;
+                    n?: number;
+                }[];
             };
         };
         /** @description TPA-72. En el listado no vienen consentimiento, informe ni checklist. */
@@ -16499,6 +17256,788 @@ export interface operations {
                     "application/json": Record<string, never>;
                 };
             };
+        };
+    };
+    get_establecimientos_establecimiento_fletes_opciones: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FleteOpciones"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_establecimientos_establecimiento_fletes_pedidos: {
+        parameters: {
+            query?: {
+                estado?: "abiertos" | "cerrados";
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FletePedido"][];
+                        meta?: components["schemas"]["MetaCursor"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_establecimientos_establecimiento_fletes_pedidos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FletePedidoInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FletePedido"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_establecimientos_establecimiento_fletes_pedidos_pedido: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                pedido: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FletePedido"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_establecimientos_establecimiento_fletes_pedidos_pedido_cancelar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                pedido: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FletePedido"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_establecimientos_establecimiento_fletes_pedidos_pedido_resultado: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                pedido: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    resultado: "acordado" | "sin_acuerdo";
+                    costo?: number | null;
+                    km?: number | null;
+                    nota?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FletePedido"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    put_establecimientos_establecimiento_fletes_pedidos_pedido_checklist_item: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                pedido: string;
+                item: "dte" | "documentos_transportista" | "lavado_desinfeccion" | "condiciones_escritas" | "bienestar" | "responsabilidad";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    estado: "pendiente" | "hecho" | "no_aplica";
+                    nota?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FletePedido"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_establecimientos_establecimiento_fletes_pedidos_pedido_propuestas_propuesta_aceptar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                pedido: string;
+                propuesta: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FletePedido"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_establecimientos_establecimiento_fletes_pedidos_pedido_propuestas_propuesta_rechazar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                pedido: string;
+                propuesta: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    motivo: "precio" | "fecha" | "camion" | "ya_consegui" | "otro";
+                    detalle?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FletePedido"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_fletes_concierge_resumen: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FleteConciergeResumen"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_fletes_concierge_pedidos: {
+        parameters: {
+            query?: {
+                estado?: "abiertos" | "cerrados" | "pendiente" | "en_gestion" | "propuesto" | "contactado" | "acordado" | "sin_acuerdo" | "cancelado";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FletePedido"][];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_fletes_concierge_pedidos_pedido: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pedido: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FletePedidoConcierge"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_fletes_concierge_pedidos_pedido_tomar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pedido: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FletePedidoConcierge"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_fletes_concierge_pedidos_pedido_propuestas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pedido: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uuid */
+                    transportista_id: string;
+                    /** Format: uuid */
+                    disponibilidad_id?: string | null;
+                    /** Format: date */
+                    fecha_propuesta: string;
+                    tarifa_estimada?: number | null;
+                    nota?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FletePedidoConcierge"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_fletes_concierge_pedidos_pedido_resultado: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pedido: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    resultado: "acordado" | "sin_acuerdo";
+                    costo?: number | null;
+                    km?: number | null;
+                    nota?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FletePedidoConcierge"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_fletes_concierge_propuestas_propuesta_retirar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                propuesta: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FletePedidoConcierge"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_fletes_concierge_transportistas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FleteTransportista"][];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_fletes_concierge_transportistas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FleteTransportistaInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FleteTransportista"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_fletes_concierge_transportistas_transportista: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transportista: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FleteTransportista"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    patch_fletes_concierge_transportistas_transportista: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transportista: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FleteTransportistaInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FleteTransportista"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    put_fletes_concierge_transportistas_transportista_documentos_item: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transportista: string;
+                item: "identidad_cuit" | "senasa_vehiculo" | "ruta" | "licencia_chofer" | "rto" | "seguro";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    estado: "pendiente" | "verificado" | "observado" | "no_aplica";
+                    /** @enum {string|null} */
+                    metodo?: "documento_a_la_vista" | "consulta_autoridad" | "copia_digital" | null;
+                    /** Format: date */
+                    vence_el?: string | null;
+                    nota?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FleteTransportista"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_fletes_concierge_transportistas_transportista_disponibilidades: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transportista: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    origen_departamento_codigo: string;
+                    destino_provincia_codigo?: string | null;
+                    /** Format: date */
+                    desde: string;
+                    /** Format: date */
+                    hasta: string;
+                    /** @enum {string} */
+                    jaula: "chasis" | "acoplado" | "semi" | "doble_piso";
+                    capacidad_cabezas: number;
+                    especies?: ("BOV" | "BUB")[];
+                    es_retorno?: boolean;
+                    tarifa_km?: number | null;
+                    notas?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FleteTransportista"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_fletes_concierge_disponibilidades: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FleteDisponibilidad"][];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_fletes_concierge_disponibilidades_disponibilidad_cerrar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                disponibilidad: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FleteTransportista"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
         };
     };
 }
