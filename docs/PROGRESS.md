@@ -789,3 +789,14 @@ El editor incluye bloques JSON de ficha y configuración de visibilidad por bloq
 | Reglas y umbrales (activar/desactivar, solo dueño/admin) | `GET …/clima/reglas`, `PUT …/clima/reglas/{codigo}` | 🔌 |
 
 **Comentario del dev:** La tarjeta del inicio va en su propio `<Suspense>` y el pedido se precarga con `React.cache` en paralelo con `/inicio` (la API puede recalcular contra fuentes externas). Cada alerta muestra severidad (ícono + texto), período, zona, horizonte, umbral/valor, hora de los datos y enlace a la fuente; el texto aclara que es pronóstico, no certeza, y que la recomendación es «para revisar», no una indicación de manejo. Si el endpoint no existe la tarjeta no aparece y la página explica el estado (sin mock). Verificado: api types regenerados, typegen + tsc, ESLint y `next build`.
+
+### TPA-77 · Bot de Telegram del productor · ✅ (parte web)
+**Rutas:** `/configuracion/telegram` (tarjeta en `/configuracion`; cubierta por el matcher `/configuracion/:path*` de `proxy.ts`).
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Estado del vínculo (cuenta, teléfono compartido, establecimiento activo, avisos) | `GET /me/telegram` | 🔌 |
+| Código de un solo uso + deep link `t.me/tropilla_bot?start=<código>` | `POST /me/telegram/codigo` | 🔌 |
+| Pausar/activar avisos · desvincular | `PATCH /me/telegram`, `DELETE /me/telegram` | 🔌 |
+
+**Comentario del dev:** El código solo vive en el estado de `useActionState` (la API guarda el hash; no se cachea ni va en la URL). Server Actions verifican la sesión; resultado por `?ok=`/`?error=` como en usuarios. Si el bot no está configurado en el servidor la página lo dice (sin mock). `lib/api-types.ts` regenerado desde el openapi del API (trae además los aditivos de tickets anteriores). Verificado: typegen + tsc, ESLint y `next build`.
