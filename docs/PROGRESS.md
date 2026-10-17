@@ -826,3 +826,17 @@ El editor incluye bloques JSON de ficha y configuración de visibilidad por bloq
 | Checklist de diligencia | `PUT …/consultas/{c}/checklist/{item}` | 🔌 |
 
 **Comentario del dev:** El formulario valida el CUIT en el cliente, pide la finalidad y el consentimiento explícito y, si el prefijo es de persona humana, la autorización del titular. El informe muestra cada fuente con su estado (ícono + texto) y hora, las frases neutrales de la API, la tabla de deudas por entidad (montos en miles como los publica el BCRA), el historial y los cheques rechazados; las situaciones 2 o más se marcan como atención, nunca como veredicto. El checklist se marca por ítem con nota. Si la consulta se depuró, solo queda el registro. Sin mock. Verificado: typegen + tsc, ESLint, `next build` y capturas 1440/390 con una consulta real al BCRA en una API aislada.
+
+### TPA-67 · Resultado de faena y conciliación de venta · ✅ (parte web)
+
+**Rutas:** `/comercializacion/faena` (pestaña «Faena», sólo con `comercial.precios`), `/comercializacion/faena/nuevo` y `/comercializacion/faena/[id]` (+ `…/[id]/exportar?formato=csv|pdf`, route handler que descarga con el token server-side). Cubiertas por el matcher `/comercializacion/:path*` de `proxy.ts`.
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Listado (vigentes / anulados) | `GET …/faena/resultados` | 🔌 |
+| Carga a mano o desde la planilla del frigorífico (CSV/XLSX), con el original a Documentos | `POST …/faena/planilla`, `POST …/faena/resultados` (+ `POST /documentos`) | 🔌 |
+| Detalle: dato oficial vs conciliación (cálculo de TROPILLA) | `GET …/faena/resultados/{r}` | 🔌 |
+| Vincular venta, liquidación con deducciones, adjuntar liquidación y factura | `PATCH …/faena/resultados/{r}` (+ `POST /documentos`) | 🔌 |
+| Exportar CSV/PDF · anular con motivo | `GET …/exportar`, `POST …/anular` | 🔌 |
+
+**Comentario del dev:** El detalle separa visualmente la «Conciliación de la venta» (badge «Cálculo de TROPILLA», KPIs de reses/faltantes/kg/rinde, avisos, tabla de animales con estado ícono + texto e importes esperado vs liquidado) del «Dato del frigorífico» (romaneo res por res, tropa, liquidación como la emitió la contraparte y los adjuntos). Sin venta vinculada, los animales encontrados por caravana figuran como «Asociado», no «Conciliado». El formulario es controlado: el reintento con advertencias («Registrar igual») no pierde filas y el original se sube una sola vez (`documento_id` vuelve en el estado). La lectura asistida de foto/PDF del romaneo existe en la API (familia `resultado_faena`) pero la revisión campo a campo vive en la app; en la web se carga a mano o por planilla. Sin mock. Verificado: types regenerados, typegen + tsc, ESLint, `next build`, capturas 1440/390 y flujo completo en Chrome headless contra una API aislada (planilla CSV → 3 reses leídas → registro → detalle; export CSV y PDF real por Gotenberg).

@@ -490,3 +490,9 @@ export const IconLanguage = (p: IconProps) => (
     <path d="m12.5 20 3.5-8.5 3.5 8.5M13.7 17.2h4.6" />
   </Icon>
 );
+
+export const IconTrash = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4.5 7h15M9.5 7V5.2c0-.4.3-.7.7-.7h3.6c.4 0 .7.3.7.7V7M6.5 7l.8 11.6c.1.8.7 1.4 1.5 1.4h6.4c.8 0 1.4-.6 1.5-1.4L17.5 7M10 10.5v6M14 10.5v6" />
+  </Icon>
+);
