@@ -9,16 +9,18 @@ import { IDIOMAS_PERFIL, SECCIONES, type TextosPerfil } from "@/lib/perfil";
 export function PerfilEditor({
   perfil,
   slugBase,
+  reproductoresDisponibles = [],
 }: {
+  reproductoresDisponibles?: Array<{ value: string; label: string }>;
   perfil: {
     slug: string;
     rowVersion: number;
     enDirectorio: boolean;
-    secciones: Record<string, { activa?: boolean }>;
     textos: TextosPerfil;
     idiomas: string[];
     contacto: Record<string, boolean>;
     ubicacion: string;
+    secciones: Record<string, { activa?: boolean; ids?: Array<{ tipo: string; id: string }>; modo?: string }>;
   };
   slugBase: string;
 }) {
@@ -57,6 +59,25 @@ export function PerfilEditor({
             <SwitchRow key={s.k} name={`sec_${s.k}`} label={s.label} description={s.desc} defaultChecked={perfil.secciones[s.k]?.activa !== false} />
           ))}
         </div>
+      </Card>
+
+      <Card>
+        <CardHeader title="Reproductores destacados" description="Seleccioná animales del rodeo o reproductores externos. La ficha y el pedigrí aparecen solo si activás el bloque en Secciones." />
+        <CardBody className="space-y-4">
+          <Field label="Composición del rodeo" htmlFor="composicion_modo" hint="El modo por rangos oculta cantidades exactas.">
+            <select id="composicion_modo" name="composicion_modo" defaultValue={perfil.secciones.composicion?.modo === "exacto" ? "exacto" : "rango"} className="h-11 w-full rounded-[var(--radius-control)] border border-border-strong bg-surface px-3 text-sm text-ink">
+              <option value="rango">Mostrar rangos</option><option value="exacto">Mostrar cantidades exactas</option>
+            </select>
+          </Field>
+          <fieldset className="max-h-80 divide-y divide-border overflow-y-auto rounded-lg border border-border">
+            <legend className="sr-only">Reproductores que se publican</legend>
+            {reproductoresDisponibles.length ? reproductoresDisponibles.map((a) => <label key={a.value} className="flex cursor-pointer items-center gap-3 px-3 py-2.5 text-sm hover:bg-surface-2">
+              <input type="checkbox" name="reproductores" value={a.value} defaultChecked={perfil.secciones.reproductores?.ids?.some((x) => `${x.tipo}:${x.id}` === a.value)} className="size-4 accent-campo" />
+              <span className="min-w-0 flex-1 truncate text-ink">{a.label}</span>
+            </label>) : <p className="p-4 text-sm text-muted">No hay animales adultos ni reproductores externos cargados.</p>}
+          </fieldset>
+          <p className="text-xs text-muted">La publicación excluye caravanas oficiales, RENSPA y datos del establecimiento de origen.</p>
+        </CardBody>
       </Card>
 
       <Card>

@@ -8,6 +8,10 @@ export const SECCIONES = [
   { k: "documentos", label: "Documentos publicados", desc: "Sólo los que marcaste como públicos en Documentos." },
   { k: "oferta", label: "Ofertas y contratos", desc: "Tus ofertas publicadas y contratos a futuro abiertos." },
   { k: "contacto", label: "Formulario de contacto", desc: "Los compradores te escriben sin cuenta; llega a tu bandeja." },
+  { k: "reproductores", label: "Reproductores destacados", desc: "Elegí toros y vientres para mostrar junto a su genealogía." },
+  { k: "composicion", label: "Composición del rodeo", desc: "Categorías y razas por especie; elegí rangos o cantidades exactas." },
+  { k: "indicadores", label: "Indicadores e historia", desc: "Preñez, partos, plan sanitario optativo y antigüedad en TROPILLA, con fecha y fuente." },
+  { k: "galeria", label: "Galería", desc: "Fotos del establecimiento y reproductores seleccionados." },
 ] as const;
 
 export type SeccionPerfil = (typeof SECCIONES)[number]["k"];

@@ -2293,6 +2293,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/establecimientos/{establecimiento}/identificaciones/importaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Importaciones de identificaciones electrónicas
+         * @description **Ability:** `hacienda.ver`. TPA-63. Más nuevas primero, sin filas (las trae el GET por id).
+         */
+        get: operations["get_establecimientos_establecimiento_identificaciones_importaciones"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/identificaciones/importaciones/{importacion}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Importación de identificaciones con todas sus filas
+         * @description **Ability:** `hacienda.ver`. TPA-63.
+         */
+        get: operations["get_establecimientos_establecimiento_identificaciones_importaciones_importacion"];
+        /**
+         * Guardar (crear o actualizar) una importación armada en el teléfono
+         * @description **Ability:** `hacienda.crear`. TPA-63 (desvío aditivo). Idempotente por `importacion` (UUIDv7 del teléfono): 201 al crearla, 200 al actualizarla. Lleva **todas** las filas leídas (lector, archivo CSV/TXT del bastón, código de barras, tipeo o planilla), también las duplicadas, inválidas, sin conciliar u omitidas; el servidor las reverifica (`estado_servidor`) y nunca las borra: un PUT sin alguna fila ya guardada → 422. Las colocaciones viajan aparte como eventos `hacienda.identificacion` por el push (con `importacion_id`); la fila guarda su `evento_id`. Confirmada, la cabecera queda fija y solo cambian las filas.
+         */
+        put: operations["put_establecimientos_establecimiento_identificaciones_importaciones_importacion"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/establecimientos/{establecimiento}/borradores": {
         parameters: {
             query?: never;
@@ -4138,6 +4182,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/public/establecimientos/{slug}/{bloque}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bloque ampliado del perfil (solo si el productor lo publicó) */
+        get: operations["get_public_establecimientos_slug_bloque"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/public/establecimientos/{slug}/ofertas": {
         parameters: {
             query?: never;
@@ -5698,7 +5759,16 @@ export interface components {
             registro_genealogico?: string | null;
             raza?: string | null;
             especie_codigo: string;
+            /** @enum {string|null} */
+            sexo?: "M" | "H" | null;
             centro?: string | null;
+            /** Format: date */
+            fecha_nacimiento?: string | null;
+            peso_kg?: number | null;
+            /** Format: date */
+            peso_fecha?: string | null;
+            cc_valor?: number | null;
+            partos?: number | null;
             madre_id?: components["schemas"]["Uuid"] | null;
             padre_id?: components["schemas"]["Uuid"] | null;
             madre_externa_id?: components["schemas"]["Uuid"] | null;
@@ -6641,6 +6711,111 @@ export interface components {
                 avisos?: string[];
             };
         };
+        /**
+         * @description TPA-63. Importables: `lista` (colocación) y `reposicion` (reemplaza el RFID vigente, que queda en el historial). No se registran pero quedan: `sin_cambios`, `registrada` (ya tiene evento), `duplicada` (mismo RFID en otra fila), `invalida` (formato), `en_uso` (vigente en otro animal), `sin_conciliar` (no hay animal o hay más de uno), `otra_especie`, `omitida` (decisión de la persona).
+         * @enum {string}
+         */
+        EstadoFilaIdentificacion: "lista" | "reposicion" | "sin_cambios" | "registrada" | "duplicada" | "invalida" | "en_uso" | "sin_conciliar" | "otra_especie" | "omitida";
+        FilaImportacionIdentificacion: {
+            numero: number;
+            /** @description Solo dígitos (15 si es válido). */
+            rfid: string | null;
+            /** @description Caravana visual/oficial o tatuaje con que se concilió. */
+            visual: string | null;
+            /** @description Línea cruda del lector o del archivo. */
+            leido: string | null;
+            /** @enum {string} */
+            origen: "lector" | "archivo" | "escaner" | "manual" | "planilla";
+            /** Format: date */
+            fecha: string | null;
+            animal_id: components["schemas"]["Uuid"] | null;
+            animal_identificacion: string | null;
+            estado: components["schemas"]["EstadoFilaIdentificacion"];
+            estado_servidor: components["schemas"]["EstadoFilaIdentificacion"];
+            mensajes: {
+                /** @description sin_rfid, rfid_formato, duplicada, animal_desconocido, sin_animal, ambigua, animal_baja, otra_especie, sin_cambios, en_uso, reposicion, rfid_prefijo */
+                codigo: string;
+                /** @enum {string} */
+                nivel: "error" | "advertencia" | "info";
+                mensaje: string;
+            }[];
+            evento_id: components["schemas"]["Uuid"] | null;
+        };
+        /** @description Parámetro `identificacion_electronica_hitos` por especie (catálogo). */
+        HitoIdentificacion: {
+            /** Format: date */
+            desde: string;
+            /** @enum {string} */
+            alcance: "destete_primer_movimiento" | "stock_sin_oficial" | "todas_categorias";
+            texto: string;
+            norma: string;
+        };
+        /** @description TPA-63. Importación de identificaciones electrónicas (Res. SAGyP 71/2024, Res. SENASA 530/2025 y 841/2025). `reglas`: hitos vigentes y próximos a la `fecha` para la especie. `resumen`: total y cantidad por `estado_servidor`. `aviso`: registro interno, no reemplaza la declaración en SIGSA. `filas` solo en el detalle. */
+        ImportacionIdentificaciones: {
+            id: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            especie: "BOV" | "BUB";
+            /** Format: date */
+            fecha: string;
+            /** @enum {string} */
+            motivo: "destete" | "primer_movimiento" | "regularizacion" | "reposicion" | "ingreso" | "otro";
+            /** @enum {string} */
+            origen: "lector" | "archivo" | "escaner" | "manual" | "planilla";
+            /** @enum {string|null} */
+            dispositivo_tipo: "boton" | "tarjeta" | "bolo" | "inyectable" | "otro" | null;
+            lector: string | null;
+            archivo_nombre: string | null;
+            /** @description Foto de la planilla de caravanas (documento `planilla_identificacion`). */
+            documento_id: components["schemas"]["Uuid"] | null;
+            /** @enum {string} */
+            estado: "abierta" | "confirmada";
+            resumen: {
+                [key: string]: number;
+            };
+            reglas: {
+                vigentes: components["schemas"]["HitoIdentificacion"][];
+                proximos: components["schemas"]["HitoIdentificacion"][];
+            };
+            aviso: string;
+            creado_por: components["schemas"]["Uuid"];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: date-time */
+            confirmada_en: string | null;
+            filas?: components["schemas"]["FilaImportacionIdentificacion"][];
+        };
+        ImportacionIdentificacionesInput: {
+            /** @enum {string} */
+            especie: "BOV" | "BUB";
+            /** Format: date */
+            fecha: string;
+            /** @enum {string} */
+            motivo: "destete" | "primer_movimiento" | "regularizacion" | "reposicion" | "ingreso" | "otro";
+            /** @enum {string} */
+            origen: "lector" | "archivo" | "escaner" | "manual" | "planilla";
+            /** @enum {string|null} */
+            dispositivo_tipo?: "boton" | "tarjeta" | "bolo" | "inyectable" | "otro" | null;
+            lector?: string | null;
+            archivo_nombre?: string | null;
+            documento_id?: components["schemas"]["Uuid"] | null;
+            /** @enum {string} */
+            estado: "abierta" | "confirmada";
+            filas: {
+                numero: number;
+                rfid?: string | null;
+                visual?: string | null;
+                leido?: string | null;
+                /** @enum {string} */
+                origen: "lector" | "archivo" | "escaner" | "manual" | "planilla";
+                /** Format: date */
+                fecha?: string | null;
+                animal_id?: components["schemas"]["Uuid"] | null;
+                estado: components["schemas"]["EstadoFilaIdentificacion"];
+                evento_id?: components["schemas"]["Uuid"] | null;
+            }[];
+        };
         /** @description Borrador de documento desde foto (TPA-61/62). Estados: `esperando_archivos` → `en_cola` → `extrayendo` → `para_revisar` | `fallido` → `confirmado` | `descartado`. Esquemas versionados: `acta_vacunacion.711_2025/1` (Acta Única, Res. 711/2025) y `acta_vacunacion.879_2002/1` (acta histórica). Advertencias (nunca se autocorrige): `vacunados_mayor_existentes`, `totales_no_cierran`, `existencias_distintas`, `renspa_distinto`, `renspa_formato`, `fecha_faltante`, `fecha_futura`, `firma_no_detectada`, `calidad_imagen`, `formulario_no_reconocido`, `categoria_otra_especie` (bloquea la confirmación). `aviso`: transcripción asistida, no es presentación oficial. TPA-64: `dte.356_2008/1` (DT-e de SIGSA), `dte.dta_historico/1` (DTA en papel), `guia_provincial.dut_chaco/1` (DUT Chaco) y `guia_provincial.generica/1` (otras provincias, `variante_no_verificada`). Campos propios `movimiento_sentido` (egreso/ingreso, sugerido por RENSPA), `movimiento_registro` (vincular/registrar, sugerido si hay un movimiento con el mismo N.º de DT-e), `movimiento_evento_id`, `movimiento_lote_id`, `movimiento_caravanas`. Advertencias: `totales_no_cierran`, `cantidades_no_concilian`, `dte_no_coincide`, `dte_faltante`, `sentido_no_coincide`, `renspa_ajeno`, `vigencia_invalida`, `documento_anulado`, `conteo_insuficiente`; bloqueantes: `movimiento_sin_definir`, `sentido_sin_definir`, `movimiento_sin_elegir`, `movimiento_inexistente`, `lote_sin_elegir`, `lote_no_anonimo`, `lote_otra_especie`, `caravana_desconocida`, `detalle_sin_categoria`. TPA-65: `libro_tratamientos.666_2011/1` (filas `tratamientos.N.*`: fecha, animales, caravanas, `lote_id`, diagnóstico, producto, principio activo, dosis, vía, duración, responsable, retiros; la fecha «no aplica» omite la fila; confirmar = un `sanidad.tratamiento` por fila) y `fidha.655_2026/1` / `fidha.anterior/1` (inspección, tropa, tratamiento precaucional; `lote_id`/`caravanas` propios; confirmar = `sanidad.observacion_clinica` con el signo «inspección de garrapata: <resultado>» + `sanidad.desparasitacion` externo si hubo tratamiento, y vínculo al movimiento con el mismo DT-e). Advertencias: `retiro_faltante`, `dato_minimo_faltante`, `inspeccion_positiva`, `formulario_anterior`, `tratamiento_sin_producto`, `fecha_tratamiento_posterior`; bloqueantes `fila_sin_animales`, `sin_animales`, `caravana_desconocida`. */
         BorradorDocumento: {
             id: components["schemas"]["Uuid"];
@@ -7530,6 +7705,91 @@ export interface components {
             asociaciones_visibles?: boolean | null;
             row_version: number;
         };
+        PerfilReproductoresPublicos: {
+            /** @enum {string} */
+            tipo?: "interno" | "externo";
+            nombre?: string | null;
+            rp?: string | null;
+            registro?: string | null;
+            raza?: string | null;
+            especie?: string | null;
+            /** @enum {string|null} */
+            sexo?: "M" | "H" | null;
+            centro?: string | null;
+            /** Format: date */
+            fecha_nacimiento?: string | null;
+            peso_kg?: number | null;
+            /** Format: date */
+            peso_fecha?: string | null;
+            condicion_corporal?: number | null;
+            partos?: number | null;
+            crias?: number | null;
+            foto?: components["schemas"]["Foto"] | null;
+            madre?: components["schemas"]["PerfilReproductorPublico"] | null;
+            padre?: components["schemas"]["PerfilReproductorPublico"] | null;
+        }[];
+        PerfilReproductorPublico: {
+            /** @enum {string} */
+            tipo?: "interno" | "externo";
+            nombre?: string | null;
+            rp?: string | null;
+            registro?: string | null;
+            raza?: string | null;
+            especie?: string | null;
+            /** @enum {string|null} */
+            sexo?: "M" | "H" | null;
+            centro?: string | null;
+            /** Format: date */
+            fecha_nacimiento?: string | null;
+            peso_kg?: number | null;
+            /** Format: date */
+            peso_fecha?: string | null;
+            condicion_corporal?: number | null;
+            partos?: number | null;
+            crias?: number | null;
+            foto?: components["schemas"]["Foto"] | null;
+            madre?: components["schemas"]["PerfilReproductorPublico"] | null;
+            padre?: components["schemas"]["PerfilReproductorPublico"] | null;
+        };
+        PerfilComposicionPublica: {
+            por_especie?: {
+                [key: string]: unknown;
+            }[];
+            razas?: {
+                [key: string]: unknown;
+            }[];
+        };
+        PerfilIndicadoresPublicos: {
+            prenez_ultimo_tacto?: {
+                porcentaje?: number;
+                evaluados?: number;
+                /** Format: date */
+                fecha?: string;
+                fuente?: string;
+            } | null;
+            partos_por_temporada?: {
+                temporada?: number;
+                partos?: number;
+                fuente?: string;
+                /** Format: date */
+                fecha?: string;
+            }[];
+            anios_en_tropilla?: number;
+            antiguedad_fuente?: {
+                fuente?: string;
+                /** Format: date */
+                fecha?: string;
+            };
+            plan_sanitario?: {
+                texto?: string;
+                fuente?: string;
+                /** Format: date */
+                fecha?: string;
+            } | null;
+        };
+        PerfilGaleriaPublica: {
+            fotos?: components["schemas"]["Foto"][];
+        };
         PerfilPublico: {
             slug?: string;
             nombre?: string;
@@ -7576,6 +7836,10 @@ export interface components {
                     pct_identificacion_individual?: components["schemas"]["Decimal"] | null;
                     pct_rfid?: components["schemas"]["Decimal"] | null;
                 } | null;
+                reproductores?: components["schemas"]["PerfilReproductorPublico"][] | null;
+                composicion?: components["schemas"]["PerfilComposicionPublica"] | null;
+                indicadores?: components["schemas"]["PerfilIndicadoresPublicos"] | null;
+                galeria?: components["schemas"]["PerfilGaleriaPublica"] | null;
                 sanidad?: {
                     ultimos_12_meses?: {
                         enfermedad?: string;
@@ -12181,6 +12445,111 @@ export interface operations {
             422: components["responses"]["Validacion"];
         };
     };
+    get_establecimientos_establecimiento_identificaciones_importaciones: {
+        parameters: {
+            query?: {
+                estado?: "abierta" | "confirmada";
+                especie?: "BOV" | "BUB";
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK (paginado por cursor) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ImportacionIdentificaciones"][];
+                        meta: components["schemas"]["MetaCursor"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    get_establecimientos_establecimiento_identificaciones_importaciones_importacion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                importacion: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ImportacionIdentificaciones"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    put_establecimientos_establecimiento_identificaciones_importaciones_importacion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                importacion: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportacionIdentificacionesInput"];
+            };
+        };
+        responses: {
+            /** @description Actualizada (reintento idempotente o filas resueltas después) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ImportacionIdentificaciones"];
+                    };
+                };
+            };
+            /** @description Creada */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ImportacionIdentificaciones"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
     get_establecimientos_establecimiento_borradores: {
         parameters: {
             query?: {
@@ -15500,6 +15869,34 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["PerfilPublico"];
+                    };
+                };
+            };
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    get_public_establecimientos_slug_bloque: {
+        parameters: {
+            query?: {
+                locale?: "es" | "en" | "pt";
+            };
+            header?: never;
+            path: {
+                slug: string;
+                bloque: "reproductores" | "composicion" | "indicadores" | "galeria";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bloque opt-in; sin publicación devuelve null o lista vacía */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PerfilReproductoresPublicos"] | components["schemas"]["PerfilComposicionPublica"] | components["schemas"]["PerfilIndicadoresPublicos"] | components["schemas"]["PerfilGaleriaPublica"];
                     };
                 };
             };

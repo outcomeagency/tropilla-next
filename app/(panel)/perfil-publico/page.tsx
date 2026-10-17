@@ -11,6 +11,7 @@ import { congelarSeccionAction, publicarPerfilAction } from "@/lib/perfil-action
 import { DERIVADAS, FALTANTES, type TextosPerfil } from "@/lib/perfil";
 import { SITE_URL } from "@/lib/site";
 import { Photo } from "@/components/public/photo";
+import { api } from "@/lib/api";
 
 export const metadata: Metadata = { title: "Perfil público" };
 
@@ -21,7 +22,14 @@ const fmt = (iso?: string | null) =>
 async function Contenido({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const ctx = await requireContexto();
   const sp = await searchParams;
-  const p = await getPerfilConfig(ctx.activa.establecimiento_id);
+  const [p, inventario] = await Promise.all([getPerfilConfig(ctx.activa.establecimiento_id), Promise.allSettled([
+    api<{ data: Array<{ id: string; nombre: string; rp?: string | null; raza?: string | null; especie_codigo: string }> }>(`/establecimientos/${ctx.activa.establecimiento_id}/reproductores-externos`),
+    api<{ data: Array<{ id: string; sexo: string; edad_meses?: number | null; identificacion_principal?: string | null; categoria_nombre?: string; raza?: string | null; especie?: string }> }>(`/establecimientos/${ctx.activa.establecimiento_id}/animales?limit=200`),
+  ])]);
+  const reproductoresDisponibles = [
+    ...(inventario[0].status === "fulfilled" ? inventario[0].value.data.map((a) => ({ value: `externo:${a.id}`, label: `${a.nombre}${a.rp ? ` · ${a.rp}` : ""}${a.raza ? ` · ${a.raza}` : ""}` })) : []),
+    ...(inventario[1].status === "fulfilled" ? inventario[1].value.data.filter((a) => ["M", "H"].includes(a.sexo) && (a.edad_meses == null || a.edad_meses >= 18)).map((a) => ({ value: `interno:${a.id}`, label: `${a.identificacion_principal ?? a.categoria_nombre ?? "Animal"} · ${a.raza ?? a.especie ?? ""}` })) : []),
+  ];
   const url = `${SITE_URL}/es/p/${p.slug}`;
   const secciones = (p.secciones ?? {}) as Record<string, { activa?: boolean; congelada_en?: string | null }>;
   const contacto = (p.contacto_visible ?? {}) as Record<string, boolean>;
@@ -59,6 +67,7 @@ async function Contenido({ searchParams }: { searchParams: Promise<Record<string
         {!!p.fotos?.length && <Card><CardHeader title="Fotos del establecimiento" description="La primera foto se usa como portada." /><div className="grid gap-2 p-4 sm:grid-cols-2">{p.fotos.slice(0, 4).map((foto, i) => <Photo key={foto.sha256} src={foto} alt={foto.alt ?? `Foto ${i + 1} del establecimiento`} sizes="(min-width:768px) 420px, 100vw" className={`aspect-[16/10] rounded-lg border border-border ${i > 0 ? "hidden sm:block" : "sm:col-span-2"}`} preload={i === 0} />)}</div></Card>}
         <PerfilEditor
           slugBase="tropilla.ar/p/"
+          reproductoresDisponibles={reproductoresDisponibles}
           perfil={{
             slug: p.slug ?? "",
             rowVersion: p.row_version ?? 0,
