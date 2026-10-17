@@ -59,6 +59,7 @@ export const config = {
     "/registro",
     "/bienvenida",
     "/comprador/:path*",
+    "/datos/:path*",
     "/profesional/:path*",
     "/inicio/:path*",
     "/hacienda/:path*",

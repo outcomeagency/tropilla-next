@@ -888,3 +888,17 @@ El editor incluye bloques JSON de ficha y configuración de visibilidad por bloq
 | Transportistas, verificación de documentos, disponibilidad | `/fletes/concierge/transportistas…`, `/disponibilidades…` | 🔌 |
 
 **Comentario del dev:** El productor pide el flete por departamento de carga, provincia y localidad de destino, ventana de fechas y carga, con un consentimiento que explica qué se comparte y con quién. Cada propuesta muestra transportista, camión, fecha, tarifa estimada, criterios de compatibilidad y la documentación verificada a mano; el contacto aparece recién al aceptar. El checklist del viaje arranca por el DT-e, que TROPILLA no emite. La mesa del concierge (staff) junta la cola de pedidos, KPIs del piloto (mediana hasta la primera propuesta, tasa de acuerdo, costo por km), sugerencias ordenadas con su porqué y la verificación documental con método y vencimiento. Todo real contra la API; capturas revisadas en 1440 y 390 px con datos de prueba locales.
+
+### TPA-75 · Tablero agregado con gobernanza y permisos · ✅ (parte web, prototipo sintético)
+
+**Rutas:** `/datos` (tablero), `/datos/consultas` (registro), `/datos/gobernanza` y `/datos/licencias` (solo equipo; el resto vuelve a `/datos`) y `/datos/exportar` (route handler CSV con el token server-side). Viven en `app/(auth)` con un marco propio (`components/datos/shell.tsx`): el comprador institucional no tiene establecimiento y el panel lo mandaría al onboarding. Matcher `/datos/:path*` en `proxy.ts`. Demo local: `analista@tropilla.test` y `equipo@tropilla.test` / `tropilla-demo` (`DemoAgregadosSeeder`).
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Contexto: licencias, política, trimestres, gate | `GET /agregados/contexto` | 🔌 |
+| Consulta zona × trimestre (con desglose por escala) y export CSV | `GET /agregados/tablero`, `…/tablero/exportar` | 🔌 (datos sintéticos) |
+| Registro de consultas | `GET /agregados/consultas` | 🔌 |
+| Gate, prueba de reidentificación, política, bitácora | `GET /agregados/gobernanza`, `POST /agregados/pruebas`, `GET …/pruebas/{p}`, `POST /agregados/revisiones`, `POST /agregados/politicas` | 🔌 |
+| Licencias e integrantes | `GET|POST /agregados/clientes`, `PATCH …/{c}`, `GET|POST|DELETE …/{c}/miembros` | 🔌 |
+
+**Comentario del dev:** El tablero es un formulario GET (la URL es el recorte, compartible) y solo consulta al pedirlo: cada consulta descuenta cupo, así que los links llevan `prefetch={false}` y el export es un `<a download>`. Las celdas reservadas muestran «Reservada» con candado y el motivo (celda chica, aportante dominante, reserva complementaria) más la leyenda; la variación entre trimestres aparece solo entre celdas publicadas y sin color de juicio. Las métricas fuera de la licencia se ven deshabilitadas con el motivo. El aviso de datos sintéticos es fijo en el tablero, el CSV y la gobernanza. Sin mock. Verificado: types regenerados, typegen + tsc, ESLint, `next build`, capturas 1440/390 contra una API aislada (consulta de búfalos con supresión, precios, gobernanza con prueba aprobada, alta de licencia por Server Action y export CSV por el route handler).
