@@ -9,6 +9,7 @@ export const en: Dictionary = {
   nav: {
     directory: "Directory",
     offers: "Offers",
+    providers: "Suppliers",
     producers: "For producers",
     login: "Sign in",
     language: "Language",
