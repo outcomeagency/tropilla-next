@@ -9,6 +9,7 @@ export const pt: Dictionary = {
   nav: {
     directory: "Diretório",
     offers: "Ofertas",
+    providers: "Fornecedores",
     producers: "Para produtores",
     login: "Entrar",
     language: "Idioma",

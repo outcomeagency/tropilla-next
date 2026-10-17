@@ -5256,10 +5256,218 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/proveedor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Perfil privado de proveedor */
+        get: operations["get_me_proveedor"];
+        /**
+         * Crear/editar perfil y registrarse como proveedor
+         * @description CUIT cifrado; validar dígito módulo 11. La consulta con fuentes externas queda pendiente y el estado inicia como pendiente.
+         */
+        put: operations["put_me_proveedor"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/proveedor/leads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pedidos de presupuesto recibidos por el proveedor */
+        get: operations["get_proveedor_leads"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/directorio/proveedores/rubros": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Catálogo de rubros de proveedores */
+        get: operations["get_public_proveedores_rubros"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/directorio/proveedores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Buscar proveedores por rubro y zona */
+        get: operations["get_public_directorio_proveedores"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/proveedores/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Perfil público de proveedor */
+        get: operations["get_public_proveedores_slug"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/proveedores/{slug}/leads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pedir presupuesto a un proveedor */
+        post: operations["post_proveedores_slug_leads"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/proveedores/{slug}/operaciones/{operacion}/resenas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dejar reseña de una operación registrada con el proveedor */
+        post: operations["post_proveedores_slug_operaciones_operacion_resenas"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        RubroProveedor: {
+            codigo: string;
+            nombre: string;
+        };
+        ProveedorInput: {
+            slug: string;
+            nombre_publico: string;
+            /** @description Privado */
+            razon_social_declarada: string;
+            /** @description Privado; requerido al alta. En ediciones se omite para conservar el valor cifrado; dígito verificador módulo 11 */
+            cuit?: string;
+            rubros: string[];
+            provincias: string[];
+            /** @description GeoJSON MultiPolygon para búsqueda espacial; no se devuelve públicamente. */
+            cobertura?: {
+                /** @constant */
+                type: "MultiPolygon";
+                coordinates: unknown[][];
+            };
+            descripciones: {
+                es: string;
+                en: string;
+                pt: string;
+            };
+            idiomas?: ("es" | "en" | "pt")[];
+            publico?: boolean;
+        };
+        ProveedorPerfil: {
+            slug: string;
+            nombre_publico: string;
+            razon_social_declarada: string | null;
+            /** @description CUIT nunca se devuelve en la API */
+            cuit: null;
+            /** @enum {string} */
+            estado_cuit: "pendiente" | "inconsistente" | "validado";
+            /** @description Privado; cotejo de BCRA */
+            razon_social_informada: string | null;
+            fuente_cuit: string | null;
+            /** Format: date-time */
+            cuit_validado_en: string | null;
+            rubros: string[];
+            provincias: string[];
+            descripciones: {
+                [key: string]: string;
+            };
+            idiomas: string[];
+            publico: boolean;
+        };
+        ProveedorDirectorioItem: {
+            slug: string;
+            nombre: string;
+            descripcion: string;
+            provincias: string[];
+            idiomas: string[];
+            /** @description Debe etiquetarse como patrocinado en la UI */
+            patrocinado: boolean;
+            es_demo: boolean;
+        };
+        ProveedorPublico: components["schemas"]["ProveedorDirectorioItem"] & {
+            rubros: components["schemas"]["RubroProveedor"][];
+            calificacion: number | null;
+            cantidad_resenas: number;
+            leyenda: string;
+        };
+        LeadProveedorInput: {
+            /** Format: uuid */
+            establecimiento_id: string;
+            rubro: string;
+            mensaje: string;
+        };
+        LeadProveedor: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            estado: "nuevo";
+        };
+        LeadProveedorRecibido: {
+            id: components["schemas"]["Uuid"];
+            rubro: string;
+            mensaje: string;
+            /** @enum {string} */
+            estado: "nuevo";
+            establecimiento_nombre: string;
+            creado_en: components["schemas"]["FechaHora"];
+        };
         /** @description Política de divulgación versionada (append-only). TPA-75. */
         AgregadosPolitica: {
             version: number;
@@ -5570,6 +5778,8 @@ export interface components {
             foto?: components["schemas"]["Foto"] | null;
             es_comprador?: boolean;
             es_profesional?: boolean;
+            /** @description Aditivo TPA-82: existe perfil de proveedor */
+            es_proveedor?: boolean;
             es_staff?: boolean;
             created_at?: components["schemas"]["FechaHora"];
         };
@@ -8568,6 +8778,8 @@ export interface components {
             animal_ids?: components["schemas"]["Uuid"][];
             /** @description Aditivo TPA-46: oferta de origen (pasa a vendida) */
             oferta_id?: components["schemas"]["Uuid"] | null;
+            /** @description Aditivo TPA-82: contraparte proveedor para permitir reseña de operación registrada */
+            proveedor_id?: components["schemas"]["Uuid"] | null;
         };
         /** @description `trato`: comprador, destino (catálogo), lugar_pesada, hora_pesada (HH:MM), modalidad (en_pie|al_gancho, obligatoria), desbaste_pct, tolerancias, plazo_pago_dias, flete_a_cargo (vendedor|comprador), comision_pct, intermediario. `liquidacion`: peso_bruto_kg y precio_kg obligatorios; desbaste/rendimiento/iva/flete/arranque/seguro/comision/moneda opcionales — el servidor calcula las líneas con la fórmula del simulador (TPA-45); con flete del comprador no se descuenta. 409 `comprometido` si un animal está en un contrato a futuro o ya vendido en otra operación. `motivo` obligatorio en correcciones. */
         OperacionInput: {
@@ -8589,6 +8801,7 @@ export interface components {
             trazabilidad?: {
                 [key: string]: unknown;
             };
+            proveedor_id?: components["schemas"]["Uuid"] | null;
             precio_referencia_id?: components["schemas"]["Uuid"] | null;
             motivo?: string | null;
             generar_pdf?: boolean;
@@ -19010,6 +19223,228 @@ export interface operations {
             };
             401: components["responses"]["NoAutenticado"];
             403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_me_proveedor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Perfil propio; el CUIT se conserva privado y no se devuelve. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProveedorPerfil"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+        };
+    };
+    put_me_proveedor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProveedorInput"];
+            };
+        };
+        responses: {
+            /** @description Perfil guardado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProveedorPerfil"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_proveedor_leads: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Leads privados del proveedor autenticado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["LeadProveedorRecibido"][];
+                        meta: components["schemas"]["MetaCursor"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    get_public_proveedores_rubros: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Rubros activos traducidos */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RubroProveedor"][];
+                    };
+                };
+            };
+        };
+    };
+    get_public_directorio_proveedores: {
+        parameters: {
+            query?: {
+                rubro?: string;
+                provincia?: string;
+                lat?: number;
+                lon?: number;
+                locale?: "es" | "en" | "pt";
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Coincidencias públicas, sin CUIT, razón social ni geometría exacta */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProveedorDirectorioItem"][];
+                        meta: components["schemas"]["MetaCursor"];
+                    };
+                };
+            };
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_public_proveedores_slug: {
+        parameters: {
+            query?: {
+                locale?: "es" | "en" | "pt";
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Perfil con whitelist de campos públicos */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProveedorPublico"];
+                    };
+                };
+            };
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    post_proveedores_slug_leads: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeadProveedorInput"];
+            };
+        };
+        responses: {
+            /** @description Pedido creado y aviso al proveedor */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["LeadProveedor"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_proveedores_slug_operaciones_operacion_resenas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                operacion: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    puntaje: number;
+                    comentario?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Reseña creada */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["NoAutenticado"];
             404: components["responses"]["NoEncontrado"];
             422: components["responses"]["Validacion"];
         };

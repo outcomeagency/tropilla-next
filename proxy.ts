@@ -61,6 +61,7 @@ export const config = {
     "/comprador/:path*",
     "/datos/:path*",
     "/profesional/:path*",
+    "/proveedor/:path*",
     "/inicio/:path*",
     "/hacienda/:path*",
     "/reproduccion/:path*",

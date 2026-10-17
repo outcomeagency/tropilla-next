@@ -8,6 +8,7 @@ export const es = {
   nav: {
     directory: "Directorio",
     offers: "Ofertas",
+    providers: "Proveedores",
     producers: "Para productores",
     login: "Ingresar",
     language: "Idioma",
