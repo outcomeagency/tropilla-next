@@ -527,6 +527,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/establecimientos/{establecimiento}/forraje/insumos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Brief de forraje: datos de partida (inventario declarado, superficie, receptividad, supuestos y clima)
+         * @description **Ability:** `forraje.ver`. TPA-71. Inventario desde `existencias` con equivalencias EV (parámetro `forraje_ev_categoria` por especie), superficie del establecimiento (o suma de potreros), receptividad de la ficha (`capacidad_carga.carga_ug_ha`), supuestos con fuente/origen y contexto climático ya calculado por TPA-70 (no consulta fuentes).
+         */
+        get: operations["get_establecimientos_establecimiento_forraje_insumos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/forraje/briefs/calcular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Brief de forraje: calcular escenarios sin guardar
+         * @description **Ability:** `forraje.crear`. TPA-71. Escenarios base/moderado/severo de oferta de pasto con rango de incertidumbre. Exploratorio: no receta manejo ni calcula carga óptima.
+         */
+        post: operations["post_establecimientos_establecimiento_forraje_briefs_calcular"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/forraje/briefs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Briefs de forraje guardados
+         * @description **Ability:** `forraje.ver`. TPA-71. Paginado por cursor, más nuevo primero; resumen sin `resultado`.
+         */
+        get: operations["get_establecimientos_establecimiento_forraje_briefs"];
+        put?: never;
+        /**
+         * Guardar un brief de forraje (inmutable)
+         * @description **Ability:** `forraje.crear`. TPA-71. Guarda entradas, supuestos usados y resultado; cambiar un supuesto = brief nuevo.
+         */
+        post: operations["post_establecimientos_establecimiento_forraje_briefs"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/forraje/briefs/{brief}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Brief de forraje con resultado y revisiones
+         * @description **Ability:** `forraje.ver`. TPA-71.
+         */
+        get: operations["get_establecimientos_establecimiento_forraje_briefs_brief"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/forraje/briefs/{brief}/revisiones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revisión humana del brief (piloto con asesor)
+         * @description **Ability:** `forraje.revisar` (asesor, dueño o admin). TPA-71. Append-only; la última revisión define `estado_revision` y queda el rol de quien revisó.
+         */
+        post: operations["post_establecimientos_establecimiento_forraje_briefs_brief_revisiones"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/establecimientos/{establecimiento}/existencias": {
         parameters: {
             query?: never;
@@ -1900,7 +2004,7 @@ export interface paths {
         head?: never;
         /**
          * Revisar campos (correcto / editado / no legible / no aplica)
-         * @description **Ability:** `documentos.crear`. Solo en `para_revisar` (si no, 409 `estado_invalido`). Cada decisión queda en el historial (quién, cuándo, valor anterior y nuevo). `editado` exige `valor` válido para el `tipo` del campo (fecha YYYY-MM-DD, entero ≥ 0, booleano, una de `opciones`, texto ≤ 200). `agregar_fila` suma una fila vacía (`vacunas` | `categorias`) que el modelo no vio. Las advertencias se recalculan. `row_version` opcional (409 `conflicto_row_version`).
+         * @description **Ability:** `documentos.crear`. Solo en `para_revisar` (si no, 409 `estado_invalido`). Cada decisión queda en el historial (quién, cuándo, valor anterior y nuevo). `editado` exige `valor` válido para el `tipo` del campo (fecha YYYY-MM-DD, entero ≥ 0, booleano, una de `opciones`, texto ≤ 500). `agregar_fila` suma una fila vacía que el modelo no vio (grupos de `presentacion.agregables`: `vacunas` | `categorias` en el acta, `detalle` en DT-e y guía). Tipos `lote` y `evento` = UUID de un lote / movimiento del establecimiento (sus `opciones` se calculan al leer; la pertenencia se verifica en las advertencias y al confirmar). Las advertencias se recalculan. `row_version` opcional (409 `conflicto_row_version`).
          */
         patch: operations["patch_establecimientos_establecimiento_borradores_borrador_campos"];
         trace?: never;
@@ -1916,7 +2020,7 @@ export interface paths {
         put?: never;
         /**
          * Confirmar: registra los eventos y versiona el documento
-         * @description **Ability:** `documentos.crear` + la del tipo de evento (`sanidad.crear`). Única forma de que un borrador modifique datos. Exige todos los campos revisados (422 `revision_incompleta`) y, si hay advertencias, `confirmar_advertencias: true` (422 `requiere_confirmacion` con `advertencias`). Acta de vacunación (TPA-62): un `sanidad.vacunacion` por vacuna (aftosa / brucelosis) con fecha, producto, serie, vencimiento, vacunador y campaña; sujetos = animales activos de las categorías con vacunados (tandas de 1000) y lotes anónimos con esas categorías (422 `regla_bloqueante` si no hay); alcance `cero` no crea eventos. Las páginas originales van como `adjuntos` y el documento recibe una versión `correccion_metadatos` vinculada a los eventos (si el rol puede versionarlo). Todo o nada; idempotente (reconfirmar devuelve el mismo resultado).
+         * @description **Ability:** `documentos.crear` + la del tipo de evento (`sanidad.crear` / `hacienda.crear`); vincular a un movimiento existente exige poder versionar el documento (`documentos.versionar`). Única forma de que un borrador modifique datos. Exige todos los campos revisados (422 `revision_incompleta`) y, si hay advertencias, `confirmar_advertencias: true` (422 `requiere_confirmacion` con `advertencias`). Acta de vacunación (TPA-62): un `sanidad.vacunacion` por vacuna (aftosa / brucelosis) con fecha, producto, serie, vencimiento, vacunador y campaña; sujetos = animales activos de las categorías con vacunados (tandas de 1000) y lotes anónimos con esas categorías (422 `regla_bloqueante` si no hay); alcance `cero` no crea eventos. DT-e y guía provincial (TPA-64): según el grupo `movimiento`, `vincular` relaciona el documento con el ingreso/egreso ya cargado (sin eventos nuevos; queda en `eventos_vinculados`) o `registrar` crea un `hacienda.egreso` (conteo del lote anónimo o animales por caravana) o `hacienda.ingreso` (conteo a un lote anónimo) con `dte_numero`, contraparte declarada y `documento_ids`. Las advertencias bloqueantes de la familia (p. ej. `caravana_desconocida`, `lote_sin_elegir`, `categoria_otra_especie`) dan 422 `regla_bloqueante` aunque se confirmen. Las páginas originales van como `adjuntos` y el documento recibe una versión `correccion_metadatos` vinculada a los eventos (si el rol puede versionarlo). Todo o nada; idempotente (reconfirmar devuelve el mismo resultado).
          */
         post: operations["post_establecimientos_establecimiento_borradores_borrador_confirmar"];
         delete?: never;
@@ -4303,6 +4407,242 @@ export interface components {
             /** Format: date-time */
             calculada_en?: string;
         };
+        /** @description TPA-71. Todo opcional: lo que no se manda sale del inventario declarado, la ficha y los parámetros (`forraje_*`). */
+        BriefForrajeInput: {
+            nombre?: string | null;
+            /** @default 90 */
+            horizonte_dias: number;
+            superficie_ha?: number | null;
+            receptividad_ev_ha?: number | null;
+            /** @description Reemplaza las existencias para explorar (categorías de especies del establecimiento, sin repetir). */
+            inventario?: {
+                categoria: string;
+                cabezas: number;
+            }[];
+            reservas?: {
+                rollos?: {
+                    cantidad?: number | null;
+                    kg_por_rollo?: number | null;
+                } | null;
+                silo?: {
+                    toneladas?: number | null;
+                } | null;
+                suplemento?: {
+                    kg?: number | null;
+                } | null;
+            };
+            supuestos?: {
+                consumo_ms_kg_ev_dia?: number | null;
+                aprovechamiento_reservas_pct?: number | null;
+                incertidumbre_pct?: number | null;
+                reduccion_moderado_pct?: number | null;
+                reduccion_severo_pct?: number | null;
+                rollo_kg?: number | null;
+                ms_rollos_pct?: number | null;
+                ms_silo_pct?: number | null;
+                ms_suplemento_pct?: number | null;
+            };
+        };
+        BriefInventarioFila: {
+            especie: string;
+            categoria: string;
+            categoria_nombre: string;
+            cabezas: number;
+            ev_por_cabeza: components["schemas"]["Decimal"];
+            ev: components["schemas"]["Decimal"];
+            /** @enum {string} */
+            ev_origen: "parametro" | "establecimiento" | "sin_coeficiente";
+        };
+        BriefSupuestoVigente: {
+            valor: components["schemas"]["Decimal"];
+            /** @enum {string} */
+            origen: "parametro" | "establecimiento";
+            fuente: string;
+            validado: boolean;
+        };
+        /** @description Contexto de TPA-70 al momento del cálculo; `disponible: false` si todavía no se calculó. */
+        BriefClima: {
+            disponible: boolean;
+            mensaje?: string;
+            zona?: string;
+            /** Format: date-time */
+            calculado_en?: string;
+            alertas?: {
+                tipo?: string;
+                severidad?: string;
+                titulo?: string;
+                fuente?: string;
+                fuente_url?: string;
+                /** Format: date */
+                desde?: string;
+                /** Format: date */
+                hasta?: string;
+            }[];
+            lluvia?: {
+                ventana_dias?: number | null;
+                anomalia_pct?: number | null;
+                acumulada_mm?: number | null;
+                normal_mm?: number | null;
+                fuente?: string;
+            } | null;
+            enso?: {
+                fase?: string | null;
+                oni?: number | null;
+                fuente?: string;
+            } | null;
+        };
+        BriefForrajeInsumos: {
+            inventario: components["schemas"]["BriefInventarioFila"][];
+            /** Format: date-time */
+            inventario_actualizado_en: string | null;
+            superficie: {
+                valor: components["schemas"]["Decimal"] | null;
+                /** @enum {string} */
+                origen: "establecimiento" | "potreros" | "sin_dato";
+                detalle: string;
+            };
+            receptividad: {
+                valor: components["schemas"]["Decimal"] | null;
+                /** @enum {string} */
+                origen: "ficha" | "sin_dato";
+                periodo: string | null;
+                criterio: string | null;
+            };
+            supuestos: {
+                [key: string]: components["schemas"]["BriefSupuestoVigente"];
+            };
+            clima: components["schemas"]["BriefClima"];
+            reservas_ultimo_brief: {
+                [key: string]: unknown;
+            } | null;
+            aviso: string;
+        };
+        /** @description Días que cubren las reservas; rango aplicando ±incertidumbre a la demanda. */
+        BriefCobertura: {
+            dias: number;
+            dias_min: number;
+            dias_max: number;
+        } | null;
+        BriefEscenario: {
+            /** @enum {string} */
+            codigo: "base" | "moderado" | "severo";
+            nombre: string;
+            reduccion_oferta_pct: components["schemas"]["Decimal"];
+            /** @enum {string} */
+            estado: "sin_datos" | "sin_faltante" | "sin_reservas" | "cubierto" | "parcial";
+            lectura: string;
+            ev_referencia?: components["schemas"]["Decimal"];
+            /** @description EV declarados − EV de referencia del escenario (negativo = margen). */
+            diferencia_ev?: string;
+            faltante_ms_kg_dia?: components["schemas"]["Decimal"];
+            faltante_ms_kg_horizonte?: components["schemas"]["Decimal"];
+            balance_reservas_kg?: string;
+            cobertura?: components["schemas"]["BriefCobertura"];
+        };
+        BriefForrajeResultado: {
+            aviso: string;
+            piloto: boolean;
+            horizonte_dias: number;
+            inventario: {
+                /** @enum {string} */
+                origen: "existencias" | "brief";
+                cabezas: number;
+                ev: components["schemas"]["Decimal"];
+                filas: components["schemas"]["BriefInventarioFila"][];
+                /** Format: date-time */
+                actualizado_en: string | null;
+            };
+            superficie: {
+                valor_ha: string | null;
+                origen: string;
+                detalle: string;
+            };
+            receptividad: {
+                valor_ev_ha: string | null;
+                origen: string;
+                periodo: string | null;
+                criterio: string | null;
+            };
+            carga_declarada_ev_ha: string | null;
+            reservas: {
+                items: {
+                    /** @enum {string} */
+                    tipo: "rollos" | "silo" | "suplemento";
+                    nombre: string;
+                    kg_tal_cual: components["schemas"]["Decimal"];
+                    ms_pct: components["schemas"]["Decimal"];
+                    ms_utilizable_kg: components["schemas"]["Decimal"];
+                }[];
+                ms_utilizable_kg: components["schemas"]["Decimal"];
+                cobertura_rodeo_completo: components["schemas"]["BriefCobertura"];
+            };
+            escenarios: components["schemas"]["BriefEscenario"][];
+            /** @description Referencia para leer los escenarios según las señales de TPA-70; no es un pronóstico del pasto. */
+            escenario_cercano_al_clima: {
+                /** @enum {string} */
+                codigo: "base" | "moderado" | "severo";
+                motivo: string;
+            };
+            supuestos: {
+                clave: string;
+                nombre: string;
+                unidad: string;
+                valor: components["schemas"]["Decimal"];
+                /** @enum {string} */
+                origen: "parametro" | "establecimiento" | "brief";
+                fuente: string;
+                validado: boolean;
+            }[];
+            incertidumbre: {
+                margen_pct: components["schemas"]["Decimal"];
+                explicacion: string;
+                no_contempla: string[];
+            };
+            clima: components["schemas"]["BriefClima"];
+            faltantes: {
+                campo: string;
+                mensaje: string;
+            }[];
+            avisos: string[];
+            /** @description Protocolo de preguntas para el asesor; nunca indicaciones de manejo. */
+            preguntas_asesor: string[];
+        };
+        BriefRevision: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            resultado: "revisado" | "con_observaciones";
+            nota: string;
+            rol: string;
+            revisor: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        /** @description TPA-71. Inmutable. En el listado no vienen `entradas`, `resultado` ni `revisiones`. */
+        BriefForraje: {
+            /** Format: uuid */
+            id: string;
+            nombre: string | null;
+            horizonte_dias: number;
+            autor: string;
+            /** Format: date-time */
+            created_at: string;
+            /** @enum {string} */
+            estado_revision: "sin_revisar" | "revisado" | "con_observaciones";
+            revisado_por_asesor: boolean;
+            resumen: {
+                cabezas: number;
+                ev: components["schemas"]["Decimal"];
+                /** @enum {string} */
+                escenario_cercano: "base" | "moderado" | "severo";
+                estados: {
+                    [key: string]: string;
+                };
+            };
+            entradas?: components["schemas"]["BriefForrajeInput"];
+            resultado?: components["schemas"]["BriefForrajeResultado"];
+            revisiones?: components["schemas"]["BriefRevision"][];
+        };
         ClimaRegla: {
             codigo?: string;
             tipo?: string;
@@ -5136,7 +5476,7 @@ export interface components {
             id: components["schemas"]["Uuid"];
             documento_id: components["schemas"]["Uuid"];
             /** @enum {string} */
-            familia: "acta_vacunacion";
+            familia: "acta_vacunacion" | "dte" | "guia_provincial";
         };
         BorradorCamposInput: {
             campos: {
@@ -5150,21 +5490,21 @@ export interface components {
                 /** @description Obligatorio con `editado`; tipo según el campo (string | integer | boolean | null) */
                 valor?: unknown;
             }[];
-            /** @enum {string|null} */
-            agregar_fila?: "vacunas" | "categorias" | null;
+            /** @description Grupo de `presentacion.agregables` (vacunas, categorias, detalle) */
+            agregar_fila?: string | null;
             row_version?: number | null;
         };
         BorradorConfirmarInput: {
             confirmar_advertencias?: boolean;
         };
-        /** @description Campo revisable (TPA-61). `valor_extraido` = lo que leyó el modelo tal cual; `valor` = interpretación (fecha ISO, entero, opción) o lo que editó la persona; `sugerido` = valor propuesto por TROPILLA (p. ej. categoría del catálogo), no leído. `confianza` 0–1 (null en filas agregadas a mano); `alternativas` = otras lecturas posibles del trazo. Rutas de filas: `vacunas.N.*`, `categorias.N.*`. */
+        /** @description Campo revisable (TPA-61). `valor_extraido` = lo que leyó el modelo tal cual; `valor` = interpretación (fecha ISO, entero, opción) o lo que editó la persona; `sugerido` = valor propuesto por TROPILLA (p. ej. categoría del catálogo), no leído. `confianza` 0–1 (null en filas agregadas a mano y en campos propios de TROPILLA); `alternativas` = otras lecturas posibles del trazo. Rutas de filas: `vacunas.N.*`, `categorias.N.*`, `detalle.N.*`. */
         BorradorCampo: {
             ruta: string;
-            /** @enum {string} */
-            grupo: "acta" | "vacunador" | "firmas" | "totales" | "vacunas" | "categorias";
+            /** @description Grupo visible; títulos en `BorradorDocumento.presentacion.grupos` */
+            grupo: string;
             etiqueta: string;
             /** @enum {string} */
-            tipo: "texto" | "fecha" | "entero" | "booleano" | "opcion" | "categoria";
+            tipo: "texto" | "fecha" | "entero" | "booleano" | "opcion" | "categoria" | "lote" | "evento";
             opciones: {
                 valor?: string;
                 etiqueta?: string;
@@ -5179,13 +5519,13 @@ export interface components {
             /** @enum {string} */
             estado: "pendiente" | "correcto" | "editado" | "no_legible" | "no_aplica";
         };
-        /** @description Borrador de documento desde foto (TPA-61/62). Estados: `esperando_archivos` → `en_cola` → `extrayendo` → `para_revisar` | `fallido` → `confirmado` | `descartado`. Esquemas versionados: `acta_vacunacion.711_2025/1` (Acta Única, Res. 711/2025) y `acta_vacunacion.879_2002/1` (acta histórica). Advertencias (nunca se autocorrige): `vacunados_mayor_existentes`, `totales_no_cierran`, `existencias_distintas`, `renspa_distinto`, `renspa_formato`, `fecha_faltante`, `fecha_futura`, `firma_no_detectada`, `calidad_imagen`, `formulario_no_reconocido`, `categoria_otra_especie` (bloquea la confirmación). `aviso`: transcripción asistida, no es presentación oficial. */
+        /** @description Borrador de documento desde foto (TPA-61/62). Estados: `esperando_archivos` → `en_cola` → `extrayendo` → `para_revisar` | `fallido` → `confirmado` | `descartado`. Esquemas versionados: `acta_vacunacion.711_2025/1` (Acta Única, Res. 711/2025) y `acta_vacunacion.879_2002/1` (acta histórica). Advertencias (nunca se autocorrige): `vacunados_mayor_existentes`, `totales_no_cierran`, `existencias_distintas`, `renspa_distinto`, `renspa_formato`, `fecha_faltante`, `fecha_futura`, `firma_no_detectada`, `calidad_imagen`, `formulario_no_reconocido`, `categoria_otra_especie` (bloquea la confirmación). `aviso`: transcripción asistida, no es presentación oficial. TPA-64: `dte.356_2008/1` (DT-e de SIGSA), `dte.dta_historico/1` (DTA en papel), `guia_provincial.dut_chaco/1` (DUT Chaco) y `guia_provincial.generica/1` (otras provincias, `variante_no_verificada`). Campos propios `movimiento_sentido` (egreso/ingreso, sugerido por RENSPA), `movimiento_registro` (vincular/registrar, sugerido si hay un movimiento con el mismo N.º de DT-e), `movimiento_evento_id`, `movimiento_lote_id`, `movimiento_caravanas`. Advertencias: `totales_no_cierran`, `cantidades_no_concilian`, `dte_no_coincide`, `dte_faltante`, `sentido_no_coincide`, `renspa_ajeno`, `vigencia_invalida`, `documento_anulado`, `conteo_insuficiente`; bloqueantes: `movimiento_sin_definir`, `sentido_sin_definir`, `movimiento_sin_elegir`, `movimiento_inexistente`, `lote_sin_elegir`, `lote_no_anonimo`, `lote_otra_especie`, `caravana_desconocida`, `detalle_sin_categoria`. */
         BorradorDocumento: {
             id: components["schemas"]["Uuid"];
             documento_id: components["schemas"]["Uuid"];
             documento_version_id?: components["schemas"]["Uuid"];
             /** @enum {string} */
-            familia: "acta_vacunacion";
+            familia: "acta_vacunacion" | "dte" | "guia_provincial";
             esquema?: string | null;
             /** @enum {string} */
             estado: "esperando_archivos" | "en_cola" | "extrayendo" | "para_revisar" | "fallido" | "confirmado" | "descartado";
@@ -5216,7 +5556,23 @@ export interface components {
                 modelo?: string;
                 creada_en?: components["schemas"]["FechaHora"];
             } | null;
+            /** @description Eventos creados por la confirmación. */
             evento_ids: components["schemas"]["Uuid"][];
+            /** @description Eventos existentes con los que la confirmación relacionó el documento (TPA-64). */
+            eventos_vinculados: components["schemas"]["Uuid"][];
+            /** @description Cómo mostrar la familia: nombre de cada esquema, títulos de grupo (`:n` = número de fila) y filas que se pueden agregar. */
+            presentacion: {
+                esquemas?: {
+                    [key: string]: string;
+                };
+                grupos?: {
+                    [key: string]: string;
+                };
+                agregables?: {
+                    grupo?: string;
+                    etiqueta?: string;
+                }[];
+            };
             aviso: string;
             row_version: number;
             creado_por?: components["schemas"]["Uuid"];
@@ -7438,6 +7794,193 @@ export interface operations {
                 content: {
                     "application/json": {
                         data?: components["schemas"]["ClimaRegla"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_establecimientos_establecimiento_forraje_insumos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BriefForrajeInsumos"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    post_establecimientos_establecimiento_forraje_briefs_calcular: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BriefForrajeInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BriefForrajeResultado"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_establecimientos_establecimiento_forraje_briefs: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BriefForraje"][];
+                        meta: components["schemas"]["MetaCursor"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    post_establecimientos_establecimiento_forraje_briefs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BriefForrajeInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BriefForraje"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_establecimientos_establecimiento_forraje_briefs_brief: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                brief: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BriefForraje"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    post_establecimientos_establecimiento_forraje_briefs_brief_revisiones: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                brief: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    resultado: "revisado" | "con_observaciones";
+                    nota: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BriefForraje"];
                     };
                 };
             };

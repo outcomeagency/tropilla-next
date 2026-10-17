@@ -800,3 +800,16 @@ El editor incluye bloques JSON de ficha y configuración de visibilidad por bloq
 | Pausar/activar avisos · desvincular | `PATCH /me/telegram`, `DELETE /me/telegram` | 🔌 |
 
 **Comentario del dev:** El código solo vive en el estado de `useActionState` (la API guarda el hash; no se cachea ni va en la URL). Server Actions verifican la sesión; resultado por `?ok=`/`?error=` como en usuarios. Si el bot no está configurado en el servidor la página lo dice (sin mock). `lib/api-types.ts` regenerado desde el openapi del API (trae además los aditivos de tickets anteriores). Verificado: typegen + tsc, ESLint y `next build`.
+
+### TPA-71 · Brief preventivo de forraje y carga animal · ✅
+
+**Rutas:** `/forraje` (nueva, en sidebar como «Forraje y carga» y en `proxy.ts`) y `/forraje/[id]`.
+
+| Pieza | Endpoint | Estado |
+|---|---|---|
+| Datos de partida (inventario, superficie, receptividad, supuestos, clima) | `GET /establecimientos/{id}/forraje/insumos` | 🔌 |
+| Cálculo en vivo de escenarios | `POST …/forraje/briefs/calcular` | 🔌 |
+| Guardar, listar y ver briefs | `POST|GET …/forraje/briefs`, `GET …/forraje/briefs/{b}` | 🔌 |
+| Revisión del asesor | `POST …/forraje/briefs/{b}/revisiones` | 🔌 |
+
+**Comentario del dev:** El formulario arranca con lo declarado (existencias, superficie y receptividad de la ficha) y manda a la API solo lo que el usuario cambia, para que cada número quede con su origen («Referencia TROPILLA», «Propio del campo», «Cargado en este brief»). Los escenarios se muestran en tres tarjetas con estado (ícono + texto), faltante de MS y una barra con el rango de días que cubren las reservas sobre el horizonte; se resalta el escenario más cercano al clima solo si hay clima calculado. Completan la vista las preguntas para el asesor, el contexto de TPA-70 con enlace a la fuente, la tabla de supuestos y lo que el cálculo no contempla. El brief guardado es de solo lectura y el asesor/dueño/admin deja su revisión con resultado y nota. Sin mock. Verificado: types regenerados, typegen + tsc, ESLint, `next build` y capturas 1440/390 contra una API aislada.
