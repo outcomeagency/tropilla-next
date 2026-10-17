@@ -275,15 +275,80 @@ export interface paths {
         };
         /**
          * Preferencias guardadas (aditivo TPA-53)
-         * @description Lista [{establecimiento_id, tipo, push, email, resumen_diario}] + `meta.defaults` (push sí, email y resumen no).
+         * @description Lista [{establecimiento_id, tipo, push, email, resumen_diario, telegram}] + `meta.defaults` (push y telegram sí, email y resumen no). `telegram` aditivo TPA-77.
          */
         get: operations["get_me_preferencias_notificacion"];
         /**
          * Preferencias push/email/resumen diario
-         * @description Body [{establecimiento_id?, tipo, push, email, resumen_diario}]
+         * @description Body [{establecimiento_id?, tipo, push, email, resumen_diario, telegram?}]. `telegram` (aditivo TPA-77) es opcional: si no viene, no se cambia (por defecto sí).
          */
         put: operations["put_me_preferencias_notificacion"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/telegram": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vínculo con el bot de Telegram (TPA-77)
+         * @description Estado del vínculo del usuario autenticado con @tropilla_bot. `disponible` false si el servidor no tiene el bot configurado.
+         */
+        get: operations["get_me_telegram"];
+        put?: never;
+        post?: never;
+        /**
+         * Desvincular el chat de Telegram
+         * @description Idempotente. Cancela lo pendiente del bot y avisa en el chat. Queda en la auditoría.
+         */
+        delete: operations["delete_me_telegram"];
+        options?: never;
+        head?: never;
+        /** Activar o pausar los avisos por Telegram */
+        patch: operations["patch_me_telegram"];
+        trace?: never;
+    };
+    "/me/telegram/codigo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Código de vinculación de un solo uso (TPA-77)
+         * @description Código de 10 caracteres, vale 10 minutos y una sola vez (generar otro invalida el anterior). Se canjea en Telegram con `/start <código>` o abriendo `url` (deep link). Solo se devuelve acá: en la base queda su SHA-256. 503 `no_disponible` si el bot no está configurado.
+         */
+        post: operations["post_me_telegram_codigo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/telegram/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Webhook de la Bot API de Telegram (TPA-77)
+         * @description Lo llama Telegram, no los clientes. Autenticado por el header `X-Telegram-Bot-Api-Secret-Token` (el `secret_token` de setWebhook, comparación en tiempo constante). Idempotente por `update_id`; procesa `message` y `callback_query` en cola. 404 si el bot no está configurado.
+         */
+        post: operations["post_telegram_webhook"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1770,6 +1835,130 @@ export interface paths {
          * @description **Ability:** `documentos.compartir` (modelo-datos.md §13).
          */
         post: operations["post_establecimientos_establecimiento_documentos_documento_enlaces_enlace_revocar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/borradores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Borradores de documento
+         * @description **Ability:** `documentos.ver`. TPA-61. Los de documentos fiscales solo con `documentos.fiscal`. Más nuevos primero.
+         */
+        get: operations["get_establecimientos_establecimiento_borradores"];
+        put?: never;
+        /**
+         * Pedir la lectura asistida de un documento capturado
+         * @description **Ability:** `documentos.crear`. TPA-61. Idempotente por `id` (UUIDv7 generado en el teléfono al capturar sin señal): el reintento devuelve 200 con el mismo borrador; el mismo id con otro documento/familia → 409 `id_reutilizado`. El documento tiene que haber llegado por el push (si no, 409 `dependencia_faltante`, reintentable). Páginas = archivos de la versión vigente (≤ 10). Si alguna página no terminó de subir queda `esperando_archivos` y pasa a `en_cola` sola al completarse la subida; la lectura es asíncrona (202 + polling de GET). Nunca crea eventos.
+         */
+        post: operations["post_establecimientos_establecimiento_borradores"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/borradores/{borrador}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Borrador con campos, advertencias e historial
+         * @description **Ability:** `documentos.ver`. Incluye `historial` (extracciones y correcciones campo por campo, append-only).
+         */
+        get: operations["get_establecimientos_establecimiento_borradores_borrador"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/borradores/{borrador}/campos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Revisar campos (correcto / editado / no legible / no aplica)
+         * @description **Ability:** `documentos.crear`. Solo en `para_revisar` (si no, 409 `estado_invalido`). Cada decisión queda en el historial (quién, cuándo, valor anterior y nuevo). `editado` exige `valor` válido para el `tipo` del campo (fecha YYYY-MM-DD, entero ≥ 0, booleano, una de `opciones`, texto ≤ 200). `agregar_fila` suma una fila vacía (`vacunas` | `categorias`) que el modelo no vio. Las advertencias se recalculan. `row_version` opcional (409 `conflicto_row_version`).
+         */
+        patch: operations["patch_establecimientos_establecimiento_borradores_borrador_campos"];
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/borradores/{borrador}/confirmar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirmar: registra los eventos y versiona el documento
+         * @description **Ability:** `documentos.crear` + la del tipo de evento (`sanidad.crear`). Única forma de que un borrador modifique datos. Exige todos los campos revisados (422 `revision_incompleta`) y, si hay advertencias, `confirmar_advertencias: true` (422 `requiere_confirmacion` con `advertencias`). Acta de vacunación (TPA-62): un `sanidad.vacunacion` por vacuna (aftosa / brucelosis) con fecha, producto, serie, vencimiento, vacunador y campaña; sujetos = animales activos de las categorías con vacunados (tandas de 1000) y lotes anónimos con esas categorías (422 `regla_bloqueante` si no hay); alcance `cero` no crea eventos. Las páginas originales van como `adjuntos` y el documento recibe una versión `correccion_metadatos` vinculada a los eventos (si el rol puede versionarlo). Todo o nada; idempotente (reconfirmar devuelve el mismo resultado).
+         */
+        post: operations["post_establecimientos_establecimiento_borradores_borrador_confirmar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/borradores/{borrador}/reextraer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Volver a leer
+         * @description **Ability:** `documentos.crear`. Desde `fallido` o `para_revisar` (o `extrayendo` colgado > 15 min): nueva extracción versionada; las correcciones previas quedan en el historial con su `extraccion_version`.
+         */
+        post: operations["post_establecimientos_establecimiento_borradores_borrador_reextraer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/establecimientos/{establecimiento}/borradores/{borrador}/descartar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Descartar el borrador
+         * @description **Ability:** `documentos.crear`. El documento y sus fotos se conservan. Un borrador confirmado no se descarta (409).
+         */
+        post: operations["post_establecimientos_establecimiento_borradores_borrador_descartar"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3879,6 +4068,37 @@ export interface components {
             leida_en?: components["schemas"]["FechaHora"] | null;
             created_at?: components["schemas"]["FechaHora"];
         };
+        /** @description Vínculo del usuario con el bot de Telegram (TPA-77). Uno activo por usuario y por chat. */
+        TelegramVinculo: {
+            /** @description El servidor tiene el bot configurado */
+            disponible: boolean;
+            bot: {
+                username: string;
+                url: string;
+            };
+            vinculado: boolean;
+            username: string | null;
+            /** @description Compartido por el usuario en Telegram (solo referencia) */
+            telefono: string | null;
+            /** @description Avisos del Notificador por Telegram activos (null sin vínculo) */
+            avisos: boolean | null;
+            vinculado_en: components["schemas"]["FechaHora"] | null;
+            ultimo_mensaje_en: components["schemas"]["FechaHora"] | null;
+            /** @description Establecimiento activo del bot (/campo) */
+            establecimiento: {
+                id: components["schemas"]["Uuid"];
+                nombre: string;
+            } | null;
+        };
+        TelegramCodigo: {
+            codigo: string;
+            /** @description Deep link https://t.me/<bot>?start=<código> */
+            url: string;
+            expira_en: components["schemas"]["FechaHora"];
+        };
+        TelegramVinculoInput: {
+            avisos: boolean;
+        };
         Productor: {
             id?: components["schemas"]["Uuid"];
             /** @enum {string} */
@@ -4578,7 +4798,11 @@ export interface components {
                 rol?: string | null;
             };
             dispositivo_id?: components["schemas"]["Uuid"] | null;
-            origen?: string;
+            /**
+             * @description `telegram`: cargado por el bot con confirmación del usuario (aditivo TPA-77)
+             * @enum {string}
+             */
+            origen?: "app" | "web" | "importacion" | "sistema" | "telegram";
             responsable?: string | null;
             observaciones?: string | null;
             adjuntos?: {
@@ -4907,6 +5131,110 @@ export interface components {
             huella?: components["schemas"]["Hash"];
             /** @enum {string} */
             confianza?: "declarado" | "integridad_registrada";
+        };
+        BorradorInput: {
+            id: components["schemas"]["Uuid"];
+            documento_id: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            familia: "acta_vacunacion";
+        };
+        BorradorCamposInput: {
+            campos: {
+                /**
+                 * @example fecha
+                 * @example categorias.0.existentes
+                 */
+                ruta: string;
+                /** @enum {string} */
+                estado: "correcto" | "editado" | "no_legible" | "no_aplica";
+                /** @description Obligatorio con `editado`; tipo según el campo (string | integer | boolean | null) */
+                valor?: unknown;
+            }[];
+            /** @enum {string|null} */
+            agregar_fila?: "vacunas" | "categorias" | null;
+            row_version?: number | null;
+        };
+        BorradorConfirmarInput: {
+            confirmar_advertencias?: boolean;
+        };
+        /** @description Campo revisable (TPA-61). `valor_extraido` = lo que leyó el modelo tal cual; `valor` = interpretación (fecha ISO, entero, opción) o lo que editó la persona; `sugerido` = valor propuesto por TROPILLA (p. ej. categoría del catálogo), no leído. `confianza` 0–1 (null en filas agregadas a mano); `alternativas` = otras lecturas posibles del trazo. Rutas de filas: `vacunas.N.*`, `categorias.N.*`. */
+        BorradorCampo: {
+            ruta: string;
+            /** @enum {string} */
+            grupo: "acta" | "vacunador" | "firmas" | "totales" | "vacunas" | "categorias";
+            etiqueta: string;
+            /** @enum {string} */
+            tipo: "texto" | "fecha" | "entero" | "booleano" | "opcion" | "categoria";
+            opciones: {
+                valor?: string;
+                etiqueta?: string;
+            }[] | null;
+            critico: boolean;
+            valor_extraido: string | null;
+            valor: string | number | boolean | null;
+            confianza: number | null;
+            pagina: number | null;
+            alternativas: string[];
+            sugerido: boolean;
+            /** @enum {string} */
+            estado: "pendiente" | "correcto" | "editado" | "no_legible" | "no_aplica";
+        };
+        /** @description Borrador de documento desde foto (TPA-61/62). Estados: `esperando_archivos` → `en_cola` → `extrayendo` → `para_revisar` | `fallido` → `confirmado` | `descartado`. Esquemas versionados: `acta_vacunacion.711_2025/1` (Acta Única, Res. 711/2025) y `acta_vacunacion.879_2002/1` (acta histórica). Advertencias (nunca se autocorrige): `vacunados_mayor_existentes`, `totales_no_cierran`, `existencias_distintas`, `renspa_distinto`, `renspa_formato`, `fecha_faltante`, `fecha_futura`, `firma_no_detectada`, `calidad_imagen`, `formulario_no_reconocido`, `categoria_otra_especie` (bloquea la confirmación). `aviso`: transcripción asistida, no es presentación oficial. */
+        BorradorDocumento: {
+            id: components["schemas"]["Uuid"];
+            documento_id: components["schemas"]["Uuid"];
+            documento_version_id?: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            familia: "acta_vacunacion";
+            esquema?: string | null;
+            /** @enum {string} */
+            estado: "esperando_archivos" | "en_cola" | "extrayendo" | "para_revisar" | "fallido" | "confirmado" | "descartado";
+            error?: string | null;
+            intentos?: number;
+            paginas: {
+                numero?: number;
+                sha256?: components["schemas"]["Hash"];
+                /** @enum {string} */
+                estado?: "pendiente" | "completo" | "corrupto";
+                foto?: components["schemas"]["Foto"] | null;
+            }[];
+            campos: components["schemas"]["BorradorCampo"][];
+            /** @description Campos sin revisar */
+            pendientes: number;
+            advertencias: {
+                codigo: string;
+                mensaje: string;
+                ruta?: string;
+                detalle?: {
+                    [key: string]: unknown;
+                };
+            }[];
+            extraccion: {
+                version?: number;
+                esquema?: string;
+                proveedor?: string;
+                modelo?: string;
+                creada_en?: components["schemas"]["FechaHora"];
+            } | null;
+            evento_ids: components["schemas"]["Uuid"][];
+            aviso: string;
+            row_version: number;
+            creado_por?: components["schemas"]["Uuid"];
+            created_at?: components["schemas"]["FechaHora"];
+            updated_at?: components["schemas"]["FechaHora"];
+            /** Format: uuid */
+            confirmado_por?: string | null;
+            confirmado_en?: string | null;
+            descartado_en?: string | null;
+            /** @description Solo en GET por id y en confirmar. */
+            historial?: {
+                extracciones?: {
+                    [key: string]: unknown;
+                }[];
+                correcciones?: {
+                    [key: string]: unknown;
+                }[];
+            };
         };
         Documento: {
             id?: components["schemas"]["Uuid"];
@@ -6658,6 +6986,144 @@ export interface operations {
             };
             401: components["responses"]["NoAutenticado"];
             422: components["responses"]["Validacion"];
+        };
+    };
+    get_me_telegram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TelegramVinculo"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+        };
+    };
+    delete_me_telegram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sin contenido */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["NoAutenticado"];
+        };
+    };
+    patch_me_telegram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TelegramVinculoInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TelegramVinculo"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            404: components["responses"]["NoEncontrado"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_me_telegram_codigo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Creado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TelegramCodigo"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            429: components["responses"]["DemasiadosIntentos"];
+            /** @description Bot no configurado (code: no_disponible) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    post_telegram_webhook: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Telegram-Bot-Api-Secret-Token": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    update_id?: number;
+                } & {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Recibido */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        ok?: boolean;
+                    };
+                };
+            };
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
         };
     };
     post_onboarding: {
@@ -9390,6 +9856,237 @@ export interface operations {
             403: components["responses"]["Prohibido"];
             404: components["responses"]["NoEncontrado"];
             422: components["responses"]["Validacion"];
+        };
+    };
+    get_establecimientos_establecimiento_borradores: {
+        parameters: {
+            query?: {
+                estado?: "esperando_archivos" | "en_cola" | "extrayendo" | "para_revisar" | "fallido" | "confirmado" | "descartado";
+                documento_id?: components["schemas"]["Uuid"];
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK (paginado por cursor) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BorradorDocumento"][];
+                        meta: components["schemas"]["MetaCursor"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    post_establecimientos_establecimiento_borradores: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BorradorInput"];
+            };
+        };
+        responses: {
+            /** @description OK (202 creado y encolado; 200 reintento idempotente) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BorradorDocumento"];
+                    };
+                };
+            };
+            /** @description OK (202 creado y encolado; 200 reintento idempotente) */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BorradorDocumento"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            409: components["responses"]["Conflicto"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    get_establecimientos_establecimiento_borradores_borrador: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                borrador: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BorradorDocumento"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+        };
+    };
+    patch_establecimientos_establecimiento_borradores_borrador_campos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                borrador: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BorradorCamposInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BorradorDocumento"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            409: components["responses"]["Conflicto"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_establecimientos_establecimiento_borradores_borrador_confirmar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                borrador: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BorradorConfirmarInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BorradorDocumento"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            409: components["responses"]["Conflicto"];
+            422: components["responses"]["Validacion"];
+        };
+    };
+    post_establecimientos_establecimiento_borradores_borrador_reextraer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                borrador: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BorradorDocumento"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            409: components["responses"]["Conflicto"];
+        };
+    };
+    post_establecimientos_establecimiento_borradores_borrador_descartar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                establecimiento: string;
+                borrador: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BorradorDocumento"];
+                    };
+                };
+            };
+            401: components["responses"]["NoAutenticado"];
+            403: components["responses"]["Prohibido"];
+            404: components["responses"]["NoEncontrado"];
+            409: components["responses"]["Conflicto"];
         };
     };
     post_archivos_subidas: {
